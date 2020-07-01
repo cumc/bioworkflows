@@ -1,0 +1,37 @@
+hosts:
+  localhost:
+    address: localhost
+    paths:
+      home: /home/{user_name}
+  midway2:
+    description: UChicago RCC cluster Midway 2
+    address: localhost
+    paths:
+      home: /home/{user_name}
+    queue_type: pbs
+    status_check_interval: 30
+    account: ""
+    partition: SBATCH --partition=broadwl
+    job_template: | 
+      #!/bin/bash
+      #{partition}
+      #{account}
+      #SBATCH --time={walltime}
+      #SBATCH --nodes={nodes}
+      #SBATCH --cpus-per-task={cores}
+      #SBATCH --mem={mem//10**9}G
+      #SBATCH --job-name={job_name}
+      #SBATCH --output={cur_dir}/{job_name}.out
+      #SBATCH --error={cur_dir}/{job_name}.err
+      cd {cur_dir}
+      module load R 2> /dev/null
+      sos execute {task} -v {verbosity} -s {sig_mode}
+    kill_cmd: scancel {job_id}
+    max_cores: 40
+    max_mem: 64G
+    max_running_jobs: 50
+    max_walltime: '36:00:00'
+    status_cmd: squeue --job {job_id}
+    submit_cmd: sbatch {job_file}
+    submit_cmd_output: Submitted batch job {job_id}
+localhost: localhost
