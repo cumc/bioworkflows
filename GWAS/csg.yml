@@ -16,13 +16,14 @@ hosts:
       #!/bin/sh
       #$ -l h_rt={walltime}
       #$ -l h_vmem={mem//10**9}G
-      #$ -pe smp {cores}
-      #$ -N {job_name}
+      #$ -pe openmp {cores}
+      #$ -N job_{job_name}
       #$ -o {cur_dir}/{job_name}.out
       #$ -e {cur_dir}/{job_name}.err
       #$ -cwd
       #$ -S /bin/bash
       module load Singularity
+      module load R
       export PATH=$HOME/miniconda3/bin:$PATH
       set -e
       sos execute {task} -v {verbosity} -s {sig_mode}
@@ -33,5 +34,5 @@ hosts:
     max_walltime: '240:00:00'
     status_cmd: qstat -j {job_id}
     submit_cmd: qsub {job_file}
-    submit_cmd_output: Submitted batch job {job_id}
+    submit_cmd_output: Your job {job_id} ("{job_name}") has been submitted
 localhost: localhost
