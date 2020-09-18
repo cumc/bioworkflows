@@ -12,7 +12,7 @@ hosts:
     status_check_interval: 30
     account: ""
     partition: SBATCH --partition=broadwl
-    job_template: | 
+    task_template: | 
       #!/bin/bash
       #{partition}
       #{account}
