@@ -33,7 +33,8 @@ RUN wget http://s3.amazonaws.com/plink2-assets/plink2_linux_x86_64_20200831.zip 
     rm -rf plink2*
 
 #Download and install R packages
-RUN Rscript -e 'p = c("ggplot2", "ggrepel", "dplyr", "qqman"); install.packages(p, repos="https://cloud.r-project.org")'
+RUN Rscript -e 'p = c("ggplot2", "ggrepel", "dplyr", "qqman", "remotes"); install.packages(p, repos="https://cloud.r-project.org")'
+RUN Rscript -e 'remotes::install_github("anastasia-lucas/hudson")'
 
 #Download and intall BOLT-LMM
 
