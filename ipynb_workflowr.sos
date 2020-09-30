@@ -1,0 +1,41 @@
+#!/usr/bin/env sos-runner
+#fileformat=SOS1.0
+
+[global]
+# Paths to input ipynb file. Multiple pathes are allowed
+parameter: ipynb_paths = paths
+# Path to converted Rmd files, default to `analysis`
+parameter: rmd_path = path('analysis')
+# Workflowr project name
+parameter: project = str
+# Workflow publish message
+parameter: msg = str
+
+[wflow_start: provides = f'{path("./"):ab}.Rproj']
+output: f'{path("./"):ab}.Rproj'
+R: expand = '${ }'
+  workflowr::wflow_start("./", existing=TRUE, name="${project}")
+  
+[publish_1 (convert ipynb to Rmd file in given folders)]
+depends: R_library('rmarkdown')
+import glob
+input: sum([list(glob.iglob(f"{pathname:a}/**/*.ipynb", recursive=True)) for pathname in ipynb_paths], []), group_by = 1, concurrent = True
+output: f'{rmd_path:a}/{_input:bn}.Rmd'
+R: expand = "${ }"
+  rmarkdown:::convert_ipynb(${_input:r}, ${_output:r})
+bash: expand = "${ }"
+  # remove the title line, ie 2nd line generated
+  sed -i '2d'  ${_output}
+  
+[publish_2 (release workflowr website)]
+depends: R_library('workflowr'), f'{path("./"):ab}.Rproj'
+# Default does not push to github. Use `--push` to push the result to github
+parameter: push = False
+input: group_by = 'all'
+R: expand = "${ }"
+  # Publish the site, i.e. version the source code and HTML results
+  workflowr::wflow_publish("${rmd_path}/*", "${msg}")
+
+skip_if(push==False)
+R:
+  workflowr::wflow_git_push()
