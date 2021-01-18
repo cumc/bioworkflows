@@ -1,0 +1,11 @@
+# FastGWA summary statistics template
+# by default the first allele listed in the *.bim file (the 5th coloumn) or *.mlinfo.gz file (the 2nd conlumn) is assigned to be the reference allele
+# A1 is the effect allele 
+CHR: CHR
+POS: POS
+REF: A2
+ALT: A1
+SNP: SNP
+BETA: BETA
+SE: SE
+P: P
