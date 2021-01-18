@@ -1,0 +1,12 @@
+# BoltLMM summary statistics template
+#ALLELE1: first allele in bim file (usually the minor allele), used as the effect allele
+#ALLELE0: second allele in bim file, used as the reference allele
+#A1FREQ: frequency of first allele
+CHR: CHR
+POS: BP
+REF: ALLELE0
+ALT: ALLELE1
+SNP: SNP
+BETA: BETA
+SE: SE
+P: P_BOLT_LMM
