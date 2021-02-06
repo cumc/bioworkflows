@@ -4,9 +4,9 @@
 
 * Phenotype and covariates data (X and Y): `pheno` (data we collect???)
 
-* Summary statistics: `sumstats` (reference dataset???)
+* Summary statistics: `sumstats` (data we collect???)
 
-* genotype objects: `obj.bigSNP` (data we collect???)
+* genotype objects: `obj.bigSNP` (reference dataset???)
 
 genotype, fam, map (snp information)
 
@@ -63,4 +63,26 @@ infinitesimal/grid/auto model
 # Polygenic score using LDpred
 
 [github code and tutorial](https://github.com/bvilhjal/ldpred)
+
+# Reference Pannel
+
+https://www.biorxiv.org/content/10.1101/642546v1.full.pdf
+
+## Hapmap3 [20]
+
+## 1000G Project Phase 3
+
+identified more than 84.483 million single nucleotide polymorphisms (SNP) from 2,504 individuals which collected from 2684 worldwide populations, each population contains 61~113 individuals.  All of the 26 populations
+85 were divided into 5 groups (AFR, African; AMR, Ad Mixed American; EAS, East Asian; EUR,
+86 European; SAS, South Asian)
+
+## UK10K Project
+
+## Genome of the Netherlands
+
+## Haplotype Reference Consortium (HRC)
+
+## The China
+
+NARD
 
