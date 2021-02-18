@@ -1,0 +1,2 @@
+21 ukb23155_c21_b0_v1.plink.exome.filtered.bed
+22 ukb23155_c22_b0_v1.plink.exome.filtered.bed
