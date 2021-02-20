@@ -1,0 +1,10 @@
+[46m[30m[  INFO ][39m[49m Converting 1 markdown...
+Browserslist: caniuse-lite is outdated. Please run:
+npx browserslist@latest --update-db
+[46m[30m[  INFO ][39m[49m output/regenie_MWE/phenotypes_T2D.regenie.analysis_summary.md => output/regenie_MWE/phenotypes_T2D.regenie.analysis_summary.html
+[46m[30m[  INFO ][39m[49m Converting 1 markdown...
+Browserslist: caniuse-lite is outdated. Please run:
+npx browserslist@latest --update-db
+[43m[30m[  WARN ][39m[49m Insecure local file accessing is enabled for conversion from
+          output/regenie_MWE/phenotypes_T2D.regenie.analysis_summary.md.
+[46m[30m[  INFO ][39m[49m output/regenie_MWE/phenotypes_T2D.regenie.analysis_summary.md => output/regenie_MWE/phenotypes_T2D.regenie.analysis_summary.pptx

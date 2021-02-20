@@ -1,0 +1,2 @@
+/Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_MWE/cache/imputed_genotypes_chr21_T2D.regenie.gz: 20
+/Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_MWE/cache/imputed_genotypes_chr22_T2D.regenie.gz: 21

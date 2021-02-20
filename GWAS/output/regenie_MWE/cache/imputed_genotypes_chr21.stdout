@@ -1,0 +1,67 @@
+Start time: Sat Feb 20 03:07:54 2021
+
+              |==============================|
+              |        REGENIE v1.0.6.9      |
+              |==============================|
+
+Copyright (c) 2020 Joelle Mbatchou and Jonathan Marchini.
+Distributed under the MIT License.
+
+Log of output saved in file : /Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_MWE/cache/imputed_genotypes_chr21.log
+
+Options in effect:
+  --step 2 \
+  --bgen /Users/zhoujiayi/Documents/orientation/LMM_MWE/data/imputed_genotypes_chr21.bgen \
+  --sample /Users/zhoujiayi/Documents/orientation/LMM_MWE/data/imputed_genotypes.sample \
+  --phenoFile /Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_MWE/phenotypes.regenie_phenotype \
+  --covarFile /Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_MWE/phenotypes.regenie_covar \
+  --phenoColList ASTHMA,T2D \
+  --bt \
+  --firth \
+  --approx \
+  --pred /Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_MWE/phenotypes_ASTHMA_T2D.regenie_pred.list \
+  --bsize 1000 \
+  --minMAC 4 \
+  --minINFO 0.8 \
+  --split \
+  --threads 8 \
+  --out /Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_MWE/cache/imputed_genotypes_chr21
+
+Association testing mode with multithreading using OpenMP
+ * bgen             : [/Users/zhoujiayi/Documents/orientation/LMM_MWE/data/imputed_genotypes_chr21.bgen]
+   -summary : bgen file (v1.2 layout, compressed) with 100 named samples and 50 variants.
+   -index bgi file [/Users/zhoujiayi/Documents/orientation/LMM_MWE/data/imputed_genotypes_chr21.bgen.bgi]
+   -sample file: /Users/zhoujiayi/Documents/orientation/LMM_MWE/data/imputed_genotypes.sample
+ * phenotypes       : [/Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_MWE/phenotypes.regenie_phenotype] n_pheno = 2
+   -number of phenotyped individuals = 100
+ * covariates       : [/Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_MWE/phenotypes.regenie_covar] n_cov = 2
+   -number of individuals with covariate data = 100
+ * number of individuals used in analysis = 100
+ * LOCO predictions : [/Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_MWE/phenotypes_ASTHMA_T2D.regenie_pred.list] n_files = 2
+   -file [/Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_MWE/phenotypes_ASTHMA_T2D.regenie_1.loco] for phenotype 'ASTHMA'
+   -file [/Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_MWE/phenotypes_ASTHMA_T2D.regenie_2.loco] for phenotype 'T2D'
+ * # threads        : [8]
+ * block size       : [1000]
+ * # blocks         : [1]
+ * approximate memory usage : 2MB
+ * using minimum MAC of 4 (variants with lower MAC are ignored)
+ * using minimum imputation info score of 0.8 (variants with lower info score are ignored)
+ * using fast Firth correction for logistic regression p-values less than 0.05
+
+Chromosome 21 [1 blocks in total]
+   -reading loco predictions for the chromosome...done (6ms) 
+   -fitting null logistic regression on binary phenotypes...done (8ms) 
+   -fitting null Firth logistic regression on binary phenotypes...done (3ms) 
+ block [1] : done (15ms) 
+
+Association results stored separately for each trait in files : 
+* [/Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_MWE/cache/imputed_genotypes_chr21_ASTHMA.regenie]
+* [/Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_MWE/cache/imputed_genotypes_chr21_T2D.regenie]
+
+Number of tests with Firth correction : (2/38)
+Number of failed tests : (0/2)
+Number of ignored SNPs due to low MAC or info score : 31
+
+Elapsed time : 0.575874s
+End time: Sat Feb 20 03:07:55 2021
+

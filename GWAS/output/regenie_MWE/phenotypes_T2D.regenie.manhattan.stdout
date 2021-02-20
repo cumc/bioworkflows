@@ -1,0 +1,17 @@
+Warning message:
+In write.table(out, "/Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_MWE/phenotypes_T2D.regenie.analysis_summary.md",  :
+  appending column names to file
+
+For example usage please run: vignette('qqman')
+
+Citation appreciated but not required:
+Turner, S.D. qqman: an R package for visualizing GWAS results using Q-Q and manhattan plots. biorXiv DOI: 10.1101/005165 (2014).
+
+[1] 1
+Warning message:
+In manhattan(data, chr = "CHR", bp = "POS", snp = "SNP", p = "P",  :
+  You're trying to specify chromosome labels but the number of labels != number of chromosomes.
+null device 
+          1 
+null device 
+          1 

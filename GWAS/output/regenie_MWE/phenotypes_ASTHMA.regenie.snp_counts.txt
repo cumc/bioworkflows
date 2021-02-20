@@ -1,0 +1,2 @@
+/Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_MWE/cache/imputed_genotypes_chr21_ASTHMA.regenie.gz: 20
+/Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_MWE/cache/imputed_genotypes_chr22_ASTHMA.regenie.gz: 21

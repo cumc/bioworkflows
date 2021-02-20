@@ -1,0 +1,151 @@
+Start time: Sat Feb 20 03:06:32 2021
+
+              |==============================|
+              |        REGENIE v1.0.6.9      |
+              |==============================|
+
+Copyright (c) 2020 Joelle Mbatchou and Jonathan Marchini.
+Distributed under the MIT License.
+
+Log of output saved in file : /Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_MWE/phenotypes_ASTHMA_T2D.regenie.log
+
+Options in effect:
+  --step 1 \
+  --bed /Users/zhoujiayi/Documents/orientation/LMM_MWE/data/genotypes21_22 \
+  --phenoFile /Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_MWE/phenotypes.regenie_phenotype \
+  --covarFile /Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_MWE/phenotypes.regenie_covar \
+  --extract /Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_MWE/cache/genotypes21_22.qc_pass.snplist \
+  --keep /Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_MWE/cache/genotypes21_22.qc_pass.id \
+  --bt \
+  --bsize 1000 \
+  --lowmem \
+  --lowmem-prefix output \
+  --threads 8 \
+  --out /Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_MWE/phenotypes_ASTHMA_T2D.regenie
+
+Fitting null model
+ * bim              : [/Users/zhoujiayi/Documents/orientation/LMM_MWE/data/genotypes21_22.bim] n_snps = 16577
+   -keeping only variants specified in [/Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_MWE/cache/genotypes21_22.qc_pass.snplist]
+     +number of variants remaining in the analysis = 16455
+ * fam              : [/Users/zhoujiayi/Documents/orientation/LMM_MWE/data/genotypes21_22.fam] n_samples = 100
+   -keeping only individuals specified in [/Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_MWE/cache/genotypes21_22.qc_pass.id]
+     +number of genotyped individuals to keep in the analysis = 100
+ * bed              : [/Users/zhoujiayi/Documents/orientation/LMM_MWE/data/genotypes21_22.bed]
+ * phenotypes       : [/Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_MWE/phenotypes.regenie_phenotype] n_pheno = 2
+   -number of phenotyped individuals = 100
+ * covariates       : [/Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_MWE/phenotypes.regenie_covar] n_cov = 2
+   -number of individuals with covariate data = 100
+ * number of individuals used in analysis = 100
+   -fitting null logistic regression on binary phenotypes...done (1ms) 
+   -residualizing and scaling phenotypes...done (0ms) 
+   -WARNING: Sample size is less than 5,000 so using LOOCV instead of 5-fold CV.
+ * # threads        : [8]
+ * block size       : [1000]
+ * # blocks         : [17]
+ * # CV folds       : [100]
+ * ridge data_l0    : [5 : 0.01 0.25 0.5 0.75 0.99 ]
+ * ridge data_l1    : [5 : 0.01 0.25 0.5 0.75 0.99 ]
+ * approximate memory usage : 957MB
+ * writing level 0 predictions to disk
+   -temporary files will have prefix [output_l0_Y]
+   -approximate disk space needed : 1MB
+ * setting memory...done
+
+Chromosome 21
+ block [1] : 1000 snps  (29ms) 
+   -residualizing and scaling genotypes...done (20ms) 
+   -calc working matrices...done (4203ms) 
+   -calc level 0 ridge...done (138ms) 
+ block [2] : 1000 snps  (20ms) 
+   -residualizing and scaling genotypes...done (47ms) 
+   -calc working matrices...done (3942ms) 
+   -calc level 0 ridge...done (187ms) 
+ block [3] : 1000 snps  (18ms) 
+   -residualizing and scaling genotypes...done (14ms) 
+   -calc working matrices...done (4806ms) 
+   -calc level 0 ridge...done (207ms) 
+ block [4] : 1000 snps  (16ms) 
+   -residualizing and scaling genotypes...done (19ms) 
+   -calc working matrices...done (3463ms) 
+   -calc level 0 ridge...done (160ms) 
+ block [5] : 1000 snps  (12ms) 
+   -residualizing and scaling genotypes...done (36ms) 
+   -calc working matrices...done (3942ms) 
+   -calc level 0 ridge...done (114ms) 
+ block [6] : 1000 snps  (17ms) 
+   -residualizing and scaling genotypes...done (19ms) 
+   -calc working matrices...done (5229ms) 
+   -calc level 0 ridge...done (133ms) 
+ block [7] : 1000 snps  (7ms) 
+   -residualizing and scaling genotypes...done (21ms) 
+   -calc working matrices...done (4739ms) 
+   -calc level 0 ridge...done (507ms) 
+ block [8] : 948 snps  (14ms) 
+   -residualizing and scaling genotypes...done (29ms) 
+   -calc working matrices...done (3329ms) 
+   -calc level 0 ridge...done (120ms) 
+Chromosome 22
+ block [9] : 1000 snps  (31ms) 
+   -residualizing and scaling genotypes...done (12ms) 
+   -calc working matrices...done (3316ms) 
+   -calc level 0 ridge...done (132ms) 
+ block [10] : 1000 snps  (15ms) 
+   -residualizing and scaling genotypes...done (17ms) 
+   -calc working matrices...done (3810ms) 
+   -calc level 0 ridge...done (143ms) 
+ block [11] : 1000 snps  (9ms) 
+   -residualizing and scaling genotypes...done (19ms) 
+   -calc working matrices...done (3871ms) 
+   -calc level 0 ridge...done (134ms) 
+ block [12] : 1000 snps  (10ms) 
+   -residualizing and scaling genotypes...done (11ms) 
+   -calc working matrices...done (5760ms) 
+   -calc level 0 ridge...done (188ms) 
+ block [13] : 1000 snps  (11ms) 
+   -residualizing and scaling genotypes...done (36ms) 
+   -calc working matrices...done (4155ms) 
+   -calc level 0 ridge...done (134ms) 
+ block [14] : 1000 snps  (10ms) 
+   -residualizing and scaling genotypes...done (16ms) 
+   -calc working matrices...done (3838ms) 
+   -calc level 0 ridge...done (130ms) 
+ block [15] : 1000 snps  (9ms) 
+   -residualizing and scaling genotypes...done (24ms) 
+   -calc working matrices...done (4157ms) 
+   -calc level 0 ridge...done (230ms) 
+ block [16] : 1000 snps  (14ms) 
+   -residualizing and scaling genotypes...done (20ms) 
+   -calc working matrices...done (6147ms) 
+   -calc level 0 ridge...done (165ms) 
+ block [17] : 507 snps  (14ms) 
+   -residualizing and scaling genotypes...done (19ms) 
+   -calc working matrices...done (544ms) 
+   -calc level 0 ridge...done (88ms) 
+
+ Level 1 ridge with logistic regression...
+   -on phenotype 1 (ASTHMA)...done (343ms) 
+   -on phenotype 2 (T2D)...done (443ms) 
+
+Output
+------
+phenotype 1 (ASTHMA) : 
+  0.01  : Rsq = 0.0969457, MSE = 0.237273, -logLik/N = 0.667488
+  0.25  : Rsq = 0.421305, MSE = 0.157631, -logLik/N = 0.49057
+  0.5   : Rsq = 0.522704, MSE = 0.126329, -logLik/N = 0.406055
+  0.75  : Rsq = 0.662997, MSE = 0.0898076, -logLik/N = 0.305886
+  0.99  : Rsq = 0.841646, MSE = 0.0398203, -logLik/N = 0.137516<- min value
+  * making predictions...writing LOCO predictions...done (271ms) 
+
+phenotype 2 (T2D) : 
+  0.01  : Rsq = 0.175033, MSE = 0.0609047, -logLik/N = 0.19933
+  0.25  : Rsq = 0.628202, MSE = 0.0318657, -logLik/N = 0.119977
+  0.5   : Rsq = 0.752833, MSE = 0.0207258, -logLik/N = 0.0940233
+  0.75  : Rsq = 0.800503, MSE = 0.01663, -logLik/N = 0.081051<- min value
+  0.99  : Rsq = 0.745336, MSE = 0.0259758, -logLik/N = 0.0875002
+  * making predictions...writing LOCO predictions...done (140ms) 
+
+List of blup files written to: [/Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_MWE/phenotypes_ASTHMA_T2D.regenie_pred.list]
+
+Elapsed time : 75.5038s
+End time: Sat Feb 20 03:07:48 2021
+
