@@ -1,0 +1,116 @@
+Start time: Mon Feb 22 18:17:45 2021
+
+              |============================|
+              |        REGENIE v2.0.1      |
+              |============================|
+
+Copyright (c) 2020 Joelle Mbatchou and Jonathan Marchini.
+Distributed under the MIT License.
+
+Log of output saved in file : /Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_burden/phenotype_burden_ASTHMA.regenie.log
+
+Options in effect:
+  --step 1 \
+  --bed /Users/zhoujiayi/Documents/orientation/LMM_MWE/data/genotypes21_22 \
+  --phenoFile /Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_burden/phenotype_burden.regenie_phenotype \
+  --covarFile /Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_burden/phenotype_burden.regenie_covar \
+  --extract /Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_burden/cache/genotypes21_22.qc_pass.snplist \
+  --keep /Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_burden/cache/genotypes21_22.qc_pass.id \
+  --bt \
+  --bsize 10 \
+  --lowmem \
+  --lowmem-prefix /Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_burden \
+  --threads 8 \
+  --out /Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_burden/phenotype_burden_ASTHMA.regenie
+
+Fitting null model
+ * bim              : [/Users/zhoujiayi/Documents/orientation/LMM_MWE/data/genotypes21_22.bim] n_snps = 16577
+   -keeping only variants specified in [/Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_burden/cache/genotypes21_22.qc_pass.snplist]
+     +number of variants remaining in the analysis = 16577
+ * fam              : [/Users/zhoujiayi/Documents/orientation/LMM_MWE/data/genotypes21_22.fam] n_samples = 100
+   -keeping only individuals specified in [/Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_burden/cache/genotypes21_22.qc_pass.id]
+     +number of genotyped individuals to keep in the analysis = 100
+ * bed              : [/Users/zhoujiayi/Documents/orientation/LMM_MWE/data/genotypes21_22.bed]
+ * phenotypes       : [/Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_burden/phenotype_burden.regenie_phenotype] n_pheno = 1
+   -dropping observations with missing values at any of the phenotypes
+   -number of phenotyped individuals = 23
+   -number of individuals remaining with non-missing phenotypes = 23
+ * covariates       : [/Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_burden/phenotype_burden.regenie_covar] n_cov = 2
+   -number of individuals with covariate data = 23
+ * number of individuals used in analysis = 23
+   -fitting null logistic regression on binary phenotypes...done (11ms) 
+   -residualizing and scaling phenotypes...done (0ms) 
+   -WARNING: Sample size is less than 5,000 so using LOOCV instead of 5-fold CV.
+ * # threads        : [8]
+ * block size       : [10]
+ * # blocks         : [1659]
+ * # CV folds       : [23]
+ * ridge data_l0    : [5 : 0.01 0.25 0.5 0.75 0.99 ]
+ * ridge data_l1    : [5 : 0.01 0.25 0.5 0.75 0.99 ]
+ * approximate memory usage : 963MB
+ * writing level 0 predictions to disk
+   -temporary files will have prefix [/Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_burden_l0_Y]
+   -approximate disk space needed : 7MB
+ * setting memory...done
+
+Chromosome 21
+ block [1] : 10 snps  (3ms) 
+   -residualizing and scaling genotypes...!! Uh-oh, SNP rs2801270 has low variance (=0).
+Start time: Mon Feb 22 18:24:26 2021
+
+              |============================|
+              |        REGENIE v2.0.1      |
+              |============================|
+
+Copyright (c) 2020 Joelle Mbatchou and Jonathan Marchini.
+Distributed under the MIT License.
+
+Log of output saved in file : /Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_burden/phenotype_burden_ASTHMA.regenie.log
+
+Options in effect:
+  --step 1 \
+  --bed /Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/Rare_Variants_MWE/genotypes21_22 \
+  --phenoFile /Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_burden/phenotype_burden.regenie_phenotype \
+  --covarFile /Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_burden/phenotype_burden.regenie_covar \
+  --extract /Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_burden/cache/genotypes21_22.qc_pass.snplist \
+  --keep /Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_burden/cache/genotypes21_22.qc_pass.id \
+  --bt \
+  --bsize 10 \
+  --lowmem \
+  --lowmem-prefix /Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_burden \
+  --threads 8 \
+  --out /Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_burden/phenotype_burden_ASTHMA.regenie
+
+Fitting null model
+ * bim              : [/Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/Rare_Variants_MWE/genotypes21_22.bim] n_snps = 16577
+   -keeping only variants specified in [/Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_burden/cache/genotypes21_22.qc_pass.snplist]
+     +number of variants remaining in the analysis = 16577
+ * fam              : [/Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/Rare_Variants_MWE/genotypes21_22.fam] n_samples = 100
+   -keeping only individuals specified in [/Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_burden/cache/genotypes21_22.qc_pass.id]
+     +number of genotyped individuals to keep in the analysis = 100
+ * bed              : [/Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/Rare_Variants_MWE/genotypes21_22.bed]
+ * phenotypes       : [/Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_burden/phenotype_burden.regenie_phenotype] n_pheno = 1
+   -dropping observations with missing values at any of the phenotypes
+   -number of phenotyped individuals = 23
+   -number of individuals remaining with non-missing phenotypes = 23
+ * covariates       : [/Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_burden/phenotype_burden.regenie_covar] n_cov = 2
+   -number of individuals with covariate data = 23
+ * number of individuals used in analysis = 23
+   -fitting null logistic regression on binary phenotypes...done (0ms) 
+   -residualizing and scaling phenotypes...done (0ms) 
+   -WARNING: Sample size is less than 5,000 so using LOOCV instead of 5-fold CV.
+ * # threads        : [8]
+ * block size       : [10]
+ * # blocks         : [1659]
+ * # CV folds       : [23]
+ * ridge data_l0    : [5 : 0.01 0.25 0.5 0.75 0.99 ]
+ * ridge data_l1    : [5 : 0.01 0.25 0.5 0.75 0.99 ]
+ * approximate memory usage : 963MB
+ * writing level 0 predictions to disk
+   -temporary files will have prefix [/Users/zhoujiayi/Documents/GitHub/bioworkflows/GWAS/output/regenie_burden_l0_Y]
+   -approximate disk space needed : 7MB
+ * setting memory...done
+
+Chromosome 21
+ block [1] : 10 snps  (4ms) 
+   -residualizing and scaling genotypes...!! Uh-oh, SNP rs2801270 has low variance (=0).
