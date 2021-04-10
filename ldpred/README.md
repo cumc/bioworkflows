@@ -1,4 +1,4 @@
-# Polygenic risk score using LDpred2
+# [WIP] Polygenic risk score using LDpred2
 
 ## Data
 
