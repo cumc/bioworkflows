@@ -1,0 +1,12 @@
+# GAMMA summary statistics template
+#A1: first allele in bim file (usually the minor allele), used as the effect allele
+#A2: second allele in bim file, used as the reference allele
+#A1FREQ: frequency of first allele
+CHR: CHR
+POS: POS
+REF: A1
+ALT: A2
+SNP: SNP
+VAR: VAR
+P: PVAL
+SCORE: SCORE
