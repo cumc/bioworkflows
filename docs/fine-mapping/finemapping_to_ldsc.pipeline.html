@@ -1,0 +1,1057 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+      <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-dropdown/2.0.3/jquery.dropdown.css" />
+      <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.38.0/codemirror.css">
+      <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.38.0/theme/default.css">
+      <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+      <link href="https://use.fontawesome.com/releases/v5.0.6/css/all.css" rel="stylesheet" type="text/css">
+      <title></title>
+      <style type="text/css">
+         body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  line-height: 1.42857143;
+  color: #000;
+  background-color: #fff;
+
+  margin: 0 0 50px;
+  /* bottom = footer height */
+  padding: 25px;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+footer {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  padding-top: 1em;
+  padding-bottom: 1em;
+  padding-left: 25px;
+  padding-right: 25px;
+  background-color: #f5f5f5;
+  overflow: hidden;
+}
+
+textarea.sos-source {
+  line-height: 1.21429em;
+  font-size: 14px;
+  background: none;
+  width: 100%;
+  border: none;
+  font-family: monospace;
+  height: auto;
+  padding: 0.4em;
+  outline: none;
+  position: relative;
+  resize: none;
+  overflow: hidden;
+  vertical-align: text-top;
+}
+
+.code {
+  font-family: monotone;
+}
+
+.transcript-stepname {
+  font-size: 100%;
+  font-family: "SFMono-Regular",Consolas,"Liberation Mono",Menlo,Courier,monospace;
+  line-height: 22px;
+  padding-left: 1em;
+  padding-top: 10px;
+  background-color: #ddd;
+}
+
+
+h1, h2, h3, h4, h5 {
+ font-family: "Source Sans Pro", sans-serif;
+}
+.h1:first-child,
+.h2:first-child,
+.h3:first-child,
+.h4:first-child,
+.h5:first-child,
+.h6:first-child {
+ margin-top: 0.2em;
+}
+
+.transcript-list {
+  border: 1px solid #ddd;
+  border-radius: 3px;
+}
+.transcript {
+  padding-left: 1em;
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+  border-top: 1px solid #e1e4e8;
+}
+
+.transcript .transcript-time
+{
+  font-family: monospace;
+  color: #999;
+}
+.transcript .transcript-command
+{
+  font-family: monospace;
+  font-weight: bold;
+  margin-bottom: 0.5em;
+  color: #212529;
+}
+.transcript .transcript-script
+{
+  font-family: monospace;
+}
+
+.h1 {
+ color: #126dce;
+ font-size: 220%;
+ text-align: center;
+ font-weight: lighter;
+}
+.h2 {
+ text-align: left;
+ font-size: 170%;
+ color: #126dce;
+ font-style: normal;
+ font-weight: lighter;
+}
+.h3 {
+ font-size: 150%;
+ color: #126dce;
+ font-weight: lighter;
+ text-decoration: italic;
+ font-style: normal;
+}
+.h4 {
+ font-size: 120%;
+ color: #126dce;
+ font-weight: underline;
+ font-style: normal;
+}
+
+
+table {
+  /* margin-left: auto; */
+  margin-right: auto;
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+tr,
+th,
+td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+td,
+th {
+  text-align: left;
+  vertical-align: middle;
+  padding: 4px;
+  display: table-cell;
+}
+th {
+  font-weight: bold;
+}
+* + table {
+  margin-top: 1em;
+}
+
+tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+
+img.dag-image {
+  max-width: 80%;
+}
+
+.timeline-col {
+  width : 300px;
+  text-align: center;
+}
+
+.timeline-cell {
+  display: flex;
+  width: 100%;
+  height: 1em;
+  margin: 0px;
+	overflow: hidden;
+}
+.timeline-before {
+  float: left;
+	background-color: #FEF9E7;
+  height: 1em;
+  margin: 0px;
+}
+.timeline-during {
+  float: left;
+	background-color: green;
+	min-width: 1px;
+  height: 1em;
+  margin: 0px;
+}
+.timeline-after {
+  float: left;
+	background-color: #FEF9E7;
+  height: 1em;
+  margin: 0px;
+}
+
+.master_workflow th {
+  font-weight: bold;
+}
+
+.subworkflow th {
+  font-style: normal;
+}
+
+.dropdown-menu li
+{
+  padding-left: 5px;
+  padding-right: 100px;
+  white-space: nowrap;
+  font-size: small;
+  font-family: monospace;
+}
+
+.dropdown-menu > li > .filesize {
+  position: absolute;
+  right: 5px;
+}
+
+a {
+  text-decoration: none;
+}
+
+a:link, a:visited {
+  color: black;
+}
+
+a:hover {
+  color: red;
+}
+
+tr.subworkflow.step-row {
+  display: none;
+}
+
+.filelist {
+  cursor: pointer;
+}
+
+.code {
+  color: black!important;
+}
+
+#sourcecode {
+  display:none;
+}
+
+.sos-logo img  {
+  height: 2em;
+}
+
+.fa-external-link-alt {
+  color: gray;
+  font-size: 0.5em;
+}
+
+.cm-sos-interpolated {
+  background-color: #EDD5F3;
+}
+.cm-sos-sigil {
+  background-color: #EDD5F3;
+}
+
+.file {
+  position: relative;
+  margin-top: 16px;
+  margin-bottom: 16px;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+}
+
+.file .fileheader {
+  padding: 5px 10px;
+  background-color: #fafbfc;
+  border-bottom: 1px solid #e1e4e8;
+  border-top-left-radius: 2px;
+  border-top-right-radius: 2px;
+}
+
+.file .fileinfo {
+  font-family: "SFMono-Regular",Consolas,"Liberation Mono",Menlo,Courier,monospace;
+  font-size: 12px;
+  line-height: 32px;
+}
+
+.file .file-info-divider {
+  display: inline-block;
+  width: 1px;
+  height: 18px;
+  margin-right: 3px;
+  margin-left: 3px;
+  vertical-align: middle;
+  background-color: #ddd;
+}
+
+.file .filecontent {
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-bottom-right-radius: 3px;
+  border-bottom-left-radius: 3px;
+}
+
+.file .CodeMirror {
+  border: 1px solid #eee;
+  height: auto;
+}
+
+pre.section-header.CodeMirror-line {
+  background-color: #f7f7f7;
+  border-top: 1px solid #ddd;
+}
+      </style>
+      
+
+<style type="text/css">
+
+.sos_hover_doc:hover {
+  cursor: pointer;
+  background: lightgray;
+  opacity: 50%;
+}
+</style>
+
+
+   </head>
+   <body>
+      <h2 class='mt-0'>finemapping_to_ldsc.sos
+         
+      </h2>
+      <div class="file">
+         <div class="fileheader">
+            <div class="fileinfo">
+               54 lines
+               <span class="file-info-divider"></span>
+               2.7 kB
+            </div>
+         </div>
+         <div class="filecontent">
+            <textarea rows="54" id="source-code" class="sos-source" name="code">#!/usr/bin/env sos-runner
+# fileformat=SOS1.0
+# Author: Kushal Dey and Gao Wang
+
+# This is a pipeline to convert fine-mapping results to
+# LDSC input. The fine-mapping results are generated by
+# the `finemapping_results_wrangler.ipynb` pipeline
+# To see how it works, please run `./finemapping_to_ldsc.sos -h`
+
+[global]
+# Input data file, the `.gz` file from `finemapping_results_wrangler.ipynb` output
+parameter: data = path()
+# Chromosomes to work on
+parameter: chroms = [x+1 for x in range(22)]
+# Prefix for the BIM reference file
+parameter: reference_snp_prefix = path()
+# Output directory
+parameter: output_dir = path("somewhere/over_the_rainbow")
+
+fail_if(not data.is_file(), msg = "Please specify valid data file via --data")
+fail_if(len(glob.glob(f"{reference_snp_prefix:a}.*.bim")) == 0, msg = 'Please specify valid --reference-snp-prefix')
+
+[default]
+depends: R_library('data.table'), R_library('R.utils')
+input: data, for_each = 'chroms'
+output: f"{output_dir:a}/{output_dir:b}.{_chroms}.annot.gz"
+task: trunk_workers = 1, trunk_size = 1, walltime = '3m', mem = '2G', cores = 1, tags = f'{step_name}_{_output:bn}'
+R: expand = "${ }"
+    library(data.table)
+    postprocessed_dat = data.frame(fread("zcat ${_input}"))
+    numchr = ${_chroms}
+    chr_idx = which(postprocessed_dat$chr == numchr)
+    if(length(chr_idx) > 0){
+    postprocessed_dat_chr = postprocessed_dat[which(postprocessed_dat$chr == numchr),]
+    extract_ids_sub = postprocessed_dat_chr$variant_id
+    unique_ids = unique(extract_ids_sub)
+    max_pip = c()
+    for(uid in 1:length(unique_ids)){
+        max_pip = c(max_pip, max(postprocessed_dat_chr[which(extract_ids_sub == unique_ids[uid]),"pip"]))
+    }
+    pre_annot_maxpip = cbind.data.frame(rep(numchr, length(max_pip)), unique_ids, max_pip)
+    colnames(pre_annot_maxpip) = c("CHR", "SNP", "maxcpp")
+    bimfile = data.frame(fread(paste0("${reference_snp_prefix}.", numchr, ".bim")))
+    annot_new = cbind.data.frame(bimfile[,1], bimfile[,4], bimfile[,2], bimfile[,3], rep(0, dim(bimfile)[1]))
+    colnames(annot_new) = c("CHR", "BP", "SNP", "CM", "AN")
+    common_snps = intersect(pre_annot_maxpip$SNP, annot_new$SNP)
+    annot_new[match(common_snps, annot_new$SNP),5] = pre_annot_maxpip[match(common_snps, pre_annot_maxpip$SNP), "maxcpp"]
+    }else{
+    bimfile = data.frame(fread(paste0("${reference_snp_prefix}.", numchr, ".bim")))
+    annot_new = cbind.data.frame(bimfile[,1], bimfile[,4], bimfile[,2], bimfile[,3], rep(0, dim(bimfile)[1]))
+    colnames(annot_new) = c("CHR", "BP", "SNP", "CM", "AN")
+    }
+    fwrite(annot_new, file = "${_output:n}.tmp", sep = "\t", quote=FALSE, row.names=FALSE)
+    R.utils::gzip("${_output:n}.tmp", destname=${_output:r}, overwrite=TRUE, remove=TRUE)</textarea>
+         </div>
+      </div>
+      <footer>
+         <div class="float-left"><a class="sos-logo" href="https://vatlab.github.io/sos-docs">
+         <img src="http://vatlab.github.io/sos-docs/img/sos_icon.svg" alt="sos_icon">
+         </a> &nbsp;See the output of command <samp>sos run finemapping_to_ldsc.sos -h</samp> for usage information</div>
+         <div class="float-right"><a href="https://vatlab.github.io/sos-docs/">SoS</a> version <samp>0.21.8</samp></div>
+      </footer>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-dropdown/2.0.3/jquery.dropdown.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+      <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.38.0/codemirror.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.38.0/mode/python/python.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.38.0/mode/r/r.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.38.0/mode/octave/octave.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.38.0/mode/ruby/ruby.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.38.0/mode/sas/sas.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.38.0/mode/javascript/javascript.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.38.0/mode/shell/shell.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.38.0/mode/julia/julia.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.38.0/mode/markdown/markdown.js"></script>
+      <script>
+         /**
+ * Copyright (c) Bo Peng and UT MD Anderson Cancer Center
+ * Distributed under the terms of the Modified BSD License.
+ **/
+
+(function(mod) {
+  if (typeof exports == "object" && typeof module == "object") // CommonJS
+    mod(require("codemirror/lib/codemirror"),
+      require("codemirror/mode/python/python"),
+      require("codemirror/mode/r/r"),
+      require("codemirror/mode/octave/octave"),
+      require("codemirror/mode/ruby/ruby"),
+      require("codemirror/mode/sas/sas"),
+      require("codemirror/mode/javascript/javascript"),
+      require("codemirror/mode/shell/shell"),
+      require("codemirror/mode/julia/julia"),
+      require("codemirror/mode/markdown/markdown"));
+  else if (typeof define == "function" && define.amd) // AMD
+    define(["codemirror/lib/codemirror", "codemirror/mode/python/python",
+      "codemirror/mode/markdown/markdown", "codemirror/mode/r/r"
+    ], mod);
+  else // Plain browser env
+    mod(CodeMirror);
+})(function(CodeMirror) {
+  "use strict";
+
+  var sosKeywords = ["input", "output", "depends", "parameter"];
+  var sosActionWords = ["script", "download", "run", "bash", "sh", "csh",
+    "tcsh", "zsh", "python", "python2", "python3", "R", "node", "julia",
+    "matlab", "octave", "ruby", "perl", "report", "pandoc", "docker_build",
+    "Rmarkdown"
+  ];
+  var sosMagicWords = ['cd', 'capture', 'clear', 'debug', 'dict', 'expand', 'get',
+    'matplotlib', 'paste', 'preview', 'pull', 'push', 'put', 'render',
+    'rerun', 'run', 'save', 'sandbox', 'set', 'sessioninfo', 'sosrun',
+    'sossave', 'shutdown', 'taskinfo', 'tasks', 'toc', 'use', 'with'
+  ]
+  var sosFunctionWords = ["sos_run", "logger", "get_output"];
+
+  var hintWords = sosKeywords.concat(sosActionWords).concat(sosFunctionWords)
+    .concat(sosMagicWords);
+
+  var sosDirectives = sosKeywords.map(x => x + ":");
+  var sosActions = sosActionWords.map(x => new RegExp("^\\s*" + x + ":"));
+  var sosMagics = sosMagicWords.map(x => '%' + x);
+
+  // hint word for SoS mode
+  CodeMirror.registerHelper("hintWords", "sos", hintWords);
+
+  var modeMap = {
+    'sos': null,
+    'python': {
+      name: 'python',
+      version: 3
+    },
+    'python2': {
+      name: 'python',
+      version: 2
+    },
+    'python3': {
+      name: 'python',
+      version: 3
+    },
+    'r': 'r',
+    'report': 'markdown',
+    'pandoc': 'markdown',
+    'download': 'markdown',
+    'markdown': 'markdown',
+    'ruby': 'ruby',
+    'sas': 'sas',
+    'bash': 'shell',
+    'sh': 'shell',
+    'julia': 'julia',
+    'run': 'shell',
+    'javascript': 'javascript',
+    'typescript': {
+      name: "javascript",
+      typescript: true
+    },
+    'octave': 'octave',
+    'matlab': 'octave',
+  }
+
+  function findMode(mode) {
+    if (mode in modeMap) {
+      return modeMap[mode];
+    }
+    return null;
+  }
+
+  function markExpr(python_mode) {
+    return {
+      startState: function() {
+        return {
+          in_python: false,
+          sigil: null,
+          matched: true,
+          python_state: CodeMirror.startState(python_mode),
+        };
+      },
+
+      copyState: function(state) {
+        return {
+          in_python: state.in_python,
+          sigil: state.sigil,
+          matched: state.matched,
+          python_state: CodeMirror.copyState(python_mode, state.python_state)
+        };
+      },
+
+      token: function(stream, state) {
+        if (state.in_python) {
+          if (stream.match(state.sigil.right)) {
+            state.in_python = false;
+            state.python_state = CodeMirror.startState(python_mode);
+            return "sos-sigil";
+          }
+          let it = null;
+          try {
+            it = python_mode.token(stream, state.python_state);
+          } catch (error) {
+            return "sos-interpolated error" + (state.matched ? "" : " sos-unmatched");
+          }
+          if (it == 'variable' || it == 'builtin') {
+            let ct = stream.current();
+            // warn users in the use of input and output in {}
+            if (ct === 'input' || ct === 'output')
+              it += ' error';
+          }
+          return (it ? ("sos-interpolated " + it) : "sos-interpolated") + (state.matched ? "" : " sos-unmatched");
+        } else {
+          // remove the double brace case, the syntax highlighter
+          // does not have to worry (highlight) }}, although it would
+          // probably mark an error for single }
+          if (state.sigil.left === '{' && stream.match(/\{\{/))
+            return null;
+          if (stream.match(state.sigil.left)) {
+            state.in_python = true;
+            // let us see if there is any right sigil till the end of the editor.
+            try {
+              let rest = stream.string.slice(stream.pos);
+              if (!rest.includes(state.sigil.right)) {
+                state.matched = false;
+                for (let idx = 1; idx < 5; ++idx) {
+                  if (stream.lookAhead(idx).includes(state.sigil.right)) {
+                    state.matched = true;
+                    break;
+                  }
+                }
+              }
+            } catch (error) {
+              // only codemirror 5.27.0 supports this function
+            }
+            return "sos-sigil" + (state.matched ? "" : " sos-unmatched");
+          }
+          while (stream.next() && !stream.match(state.sigil.left, false)) {}
+          return null;
+        }
+      }
+    }
+  }
+
+  CodeMirror.defineMode("sos", function(conf, parserConf) {
+    let sosPythonConf = {};
+    for (let prop in parserConf) {
+      if (parserConf.hasOwnProperty(prop)) {
+        sosPythonConf[prop] = parserConf[prop];
+      }
+    }
+    sosPythonConf.name = 'python';
+    sosPythonConf.version = 3;
+    sosPythonConf.extra_keywords = sosActionWords.concat(sosFunctionWords);
+    // this is the SoS flavored python mode with more identifiers
+    var base_mode = null;
+    if ('base_mode' in parserConf && parserConf.base_mode && parserConf.base_mode !== 'sos' && parserConf.base_mode !== 'SoS') {
+      let mode = findMode(parserConf.base_mode.toLowerCase());
+      if (mode) {
+        base_mode = CodeMirror.getMode(conf, mode);
+      } else {
+        console.log(`No base mode is found for ${parserConf.base_mode}. Python mode used.`);
+      }
+    } else if ('base_mode' in conf && conf.base_mode && conf.base_mode !== 'sos' && conf.base_mode !== 'SoS') {
+      let mode = findMode(conf.base_mode.toLowerCase());
+      if (mode) {
+        base_mode = CodeMirror.getMode(conf, mode);
+      } else {
+        console.log(`No base mode is found for ${conf.base_mode}. Python mode used.`);
+      }
+    }
+    // if there is a user specified base mode, this is the single cell mode
+    if (base_mode) {
+      var python_mode = CodeMirror.getMode({}, {
+        name: 'python',
+        version: 3
+      });
+      var overlay_mode = markExpr(python_mode);
+      return {
+        startState: function() {
+          return {
+            sos_mode: true,
+            base_state: CodeMirror.startState(base_mode),
+            overlay_state: CodeMirror.startState(overlay_mode),
+            // for overlay
+            basePos: 0,
+            baseCur: null,
+            overlayPos: 0,
+            overlayCur: null,
+            streamSeen: null
+          };
+        },
+
+        copyState: function(state) {
+          return {
+            sos_mode: state.sos_mode,
+            base_state: CodeMirror.copyState(base_mode, state.base_state),
+            overlay_state: CodeMirror.copyState(overlay_mode, state.overlay_state),
+            // for overlay
+            basePos: state.basePos,
+            baseCur: null,
+            overlayPos: state.overlayPos,
+            overlayCur: null
+          };
+        },
+
+        token: function(stream, state) {
+          if (state.sos_mode) {
+            if (stream.sol()) {
+              let sl = stream.peek();
+              if (sl == '!') {
+                stream.skipToEnd();
+                return "meta";
+              } else if (sl == '#') {
+                stream.skipToEnd();
+                return 'comment'
+              }
+              for (var i = 0; i < sosMagics.length; i++) {
+                if (stream.match(sosMagics[i])) {
+                  if (sosMagics[i] === "%expand") {
+                    if (stream.eol() || stream.match(/\s*$/, false)) {
+                      state.overlay_state.sigil = {
+                        'left': '{',
+                        'right': '}'
+                      }
+                    } else {
+                      let found = stream.match(/\s+(\S+)\s+(\S+)$/, false);
+                      if (found) {
+                        state.overlay_state.sigil = {
+                          'left': found[1],
+                          'right': found[2]
+                        }
+                      } else {
+                        state.overlay_state.sigil = null;
+                      }
+                    }
+                  }
+                  // the rest of the lines will be processed as Python code
+                  return "meta";
+                }
+              }
+              state.sos_mode = false;
+            } else {
+              stream.skipToEnd();
+              return null;
+            }
+          }
+
+          if (state.overlay_state.sigil) {
+            if (stream != state.streamSeen ||
+              Math.min(state.basePos, state.overlayPos) < stream.start) {
+              state.streamSeen = stream;
+              state.basePos = state.overlayPos = stream.start;
+            }
+
+            if (stream.start == state.basePos) {
+              state.baseCur = base_mode.token(stream, state.base_state);
+              state.basePos = stream.pos;
+            }
+            if (stream.start == state.overlayPos) {
+              stream.pos = stream.start;
+              state.overlayCur = overlay_mode.token(stream, state.overlay_state);
+              state.overlayPos = stream.pos;
+            }
+            stream.pos = Math.min(state.basePos, state.overlayPos);
+
+            // state.overlay.combineTokens always takes precedence over combine,
+            // unless set to null
+            return state.overlayCur ? state.overlayCur : state.baseCur;
+          } else {
+            return base_mode.token(stream, state.base_state);
+          }
+        },
+
+        indent: function(state, textAfter) {
+          // inner indent
+          if (!state.sos_mode) {
+            if (!base_mode.indent) return CodeMirror.Pass;
+            return base_mode.indent(state.base_state, textAfter);
+          } else {
+            // sos mode has no indent
+            return 0;
+          }
+        },
+
+        innerMode: function(state) {
+          return state.sos_mode ? {
+            state: state.base_state,
+            mode: base_mode
+          } : null;
+        },
+
+        lineComment: "#",
+        fold: "indent"
+      };
+    } else {
+      // this is SoS mode
+      base_mode = CodeMirror.getMode(conf, sosPythonConf);
+      overlay_mode = markExpr(base_mode);
+      return {
+        startState: function() {
+          return {
+            sos_state: null,
+            base_state: CodeMirror.startState(base_mode),
+            overlay_state: CodeMirror.startState(overlay_mode),
+            inner_mode: null,
+            inner_state: null,
+            // for overlay
+            basePos: 0,
+            baseCur: null,
+            overlayPos: 0,
+            overlayCur: null,
+            streamSeen: null
+          };
+        },
+
+        copyState: function(state) {
+          return {
+            sos_state: state.sos_state,
+            base_state: CodeMirror.copyState(base_mode, state.base_state),
+            overlay_state: CodeMirror.copyState(overlay_mode, state.overlay_state),
+            inner_mode: state.inner_mode,
+            inner_state: state.inner_mode && CodeMirror.copyState(state.inner_mode, state.inner_state),
+            // for overlay
+            basePos: state.basePos,
+            baseCur: null,
+            overlayPos: state.overlayPos,
+            overlayCur: null
+          };
+        },
+
+        token: function(stream, state) {
+          if (stream.sol()) {
+            let sl = stream.peek();
+            if (sl == '[') {
+              if (stream.match(/^\[.*\]$/, false)) {
+                // if there is :
+                if (stream.match(/^\[[\s\w_,-]+:/)) {
+                  state.sos_state = 'header_option';
+                  return "header line-section-header";
+                } else if (stream.match(/^\[[\s\w,-]+\]$/)) {
+                  // reset state
+                  state.sos_state = null;
+                  state.inner_mode = null;
+                  return "header line-section-header";
+                }
+              }
+            } else if (sl == '!') {
+              stream.eatWhile(/\S/);
+              return "meta";
+            } else if (sl == '#') {
+              stream.skipToEnd();
+              return "comment";
+            } else if (sl == '%') {
+              stream.eatWhile(/\S/);
+              return "meta";
+            } else if (state.sos_state && state.sos_state.startsWith('entering')) {
+              // the second parameter is starting column
+              let mode = findMode(state.sos_state.slice(9).toLowerCase());
+              state.inner_mode = CodeMirror.getMode(conf, mode);
+              state.inner_state = CodeMirror.startState(state.inner_mode, stream.indentation());
+              state.sos_state = null;
+            }
+            for (var i = 0; i < sosDirectives.length; i++) {
+              if (stream.match(sosDirectives[i])) {
+                // the rest of the lines will be processed as Python code
+                state.sos_state = 'directive_option'
+                return "keyword strong";
+              }
+            }
+            for (var i = 0; i < sosActions.length; i++) {
+              if (stream.match(sosActions[i])) {
+                // switch to submode?
+                if (stream.eol()) {
+                  // really
+                  let mode = findMode(stream.current().slice(0, -1).toLowerCase());
+                  if (mode) {
+                    state.sos_state = "entering " + stream.current().slice(0, -1);
+                  } else {
+                    state.sos_state = 'unknown_language';
+                  }
+                } else {
+                  state.sos_state = 'start ' + stream.current().slice(0, -1);
+                }
+                state.overlay_state.sigil = null;
+                return "builtin strong";
+              }
+            }
+            // if unknown action
+            if (stream.match(/\w+:/)) {
+              state.overlay_state.sigil = null;
+              state.sos_state = 'start ' + stream.current().slice(0, -1);
+              return "builtin strong";
+            }
+          } else if (state.sos_state == 'header_option') {
+            // stuff after :
+            if (stream.peek() == ']') {
+              // move next
+              stream.next();
+              // ] is the last char
+              if (stream.eol()) {
+                state.sos_state = null;
+                state.inner_mode = null;
+                return "header line-section-header";
+              } else {
+                stream.backUp(1);
+                let it = base_mode.token(stream, state.base_state);
+                return it ? it + ' sos-option' : null;
+              }
+            } else {
+              let it = base_mode.token(stream, state.base_state);
+              return it ? it + ' sos-option' : null;
+            }
+          } else if (state.sos_state == 'directive_option') {
+            // stuff after input:, R: etc
+            if (stream.peek() == ',') {
+              // move next
+              stream.next();
+              // , is the last char, continue option line
+              if (stream.eol()) {
+                stream.backUp(1);
+                let it = base_mode.token(stream, state.base_state);
+                return it ? it + ' sos-option' : null;
+              }
+              stream.backUp(1);
+            } else if (stream.eol()) {
+              // end of line stops option mode
+              state.sos_state = null;
+              state.inner_mode = null;
+            }
+            let it = base_mode.token(stream, state.base_state);
+            return it ? it + ' sos-option' : null;
+          } else if (state.sos_state && state.sos_state.startsWith("start ")) {
+            // try to understand option expand=
+            if (stream.match(/expand\s*=\s*True/, false)) {
+              // highlight {}
+              state.overlay_state.sigil = {
+                'left': '{',
+                'right': '}'
+              }
+            } else {
+              let found = stream.match(/expand\s*=\s*"(\S+) (\S+)"/, false);
+              if (!found)
+                found = stream.match(/expand\s*=\s*'(\S+) (\S+)'/, false);
+              if (found) {
+                state.overlay_state.sigil = {
+                  'left': found[1],
+                  'right': found[2]
+                }
+              }
+            }
+            let token = base_mode.token(stream, state.base_state);
+            // if it is end of line, ending the starting switch mode
+            if (stream.eol() && stream.peek() !== ',') {
+              // really
+              let mode = findMode(state.sos_state.slice(6).toLowerCase());
+              if (mode) {
+                state.sos_state = "entering " + state.sos_state.slice(6);
+              } else {
+                state.sos_state = 'unknown_language';
+              }
+            }
+            return token + ' sos-option';
+          }
+          // can be start of line but not special
+          if (state.sos_state == 'unknown_language') {
+            // we still handle {} in no man unknown_language
+            if (state.overlay_state.sigil) {
+              return overlay_mode.token(stream, state.overlay_state);
+            } else {
+              stream.skipToEnd();
+              return null;
+            }
+          } else if (state.inner_mode) {
+            let it = 'sos_script ';
+            if (!state.overlay_state.sigil) {
+              let st = state.inner_mode.token(stream, state.inner_state);
+              return st ? it + st : null;
+            } else {
+              // overlay mode, more complicated
+              if (stream != state.streamSeen ||
+                Math.min(state.basePos, state.overlayPos) < stream.start) {
+                state.streamSeen = stream;
+                state.basePos = state.overlayPos = stream.start;
+              }
+
+              if (stream.start == state.basePos) {
+                state.baseCur = state.inner_mode.token(stream, state.inner_state);
+                state.basePos = stream.pos;
+              }
+              if (stream.start == state.overlayPos) {
+                stream.pos = stream.start;
+                state.overlayCur = overlay_mode.token(stream, state.overlay_state);
+                state.overlayPos = stream.pos;
+              }
+              stream.pos = Math.min(state.basePos, state.overlayPos);
+              // state.overlay.combineTokens always takes precedence over combine,
+              // unless set to null
+              return (state.overlayCur ? state.overlayCur : state.baseCur) + " sos-script";
+            }
+          } else {
+            return base_mode.token(stream, state.base_state);
+          }
+        },
+
+        indent: function(state, textAfter) {
+          // inner indent
+          if (state.inner_mode) {
+            if (!state.inner_mode.indent) return CodeMirror.Pass;
+            return state.inner_mode.indent(state.inner_mode, textAfter) + 2;
+          } else {
+            return base_mode.indent(state.base_state, textAfter);
+          }
+        },
+
+        innerMode: function(state) {
+          return state.inner_mode ? null : {
+            state: state.base_state,
+            mode: base_mode
+          };
+        },
+
+        lineComment: "#",
+        fold: "indent",
+        electricInput: /^\s*[\}\]\)]$/,
+      };
+    };
+  }, "python");
+
+  CodeMirror.defineMIME("text/x-sos", "sos");
+});
+      </script>
+      
+<script>
+
+let sos_keywords = new Set([
+  // keywords
+  'input:', 'output:', 'depends:', 'task:',
+  // options
+  'expand', 'provides',
+  // input options
+  'for_each', 'paired_with', 'group_with', 'pattern',
+  'named_output', 'output_from', 'concurrent',
+  // functions
+  'sos_run', 'fail_if', 'done_if', 'warn_if', 'skip_if',
+  'get_output', 'expand_pattern',
+  // task options
+  'walltime', 'cores', 'mem', 'queue', 'to_host', 'nodes',
+  'from_host', 'trunk_size', 'trunk_workers', 'workdir',
+  'shared', 'env', 'prepend_path', 'tags',
+  // targets
+  'file_target', 'executable', 'sos_variable', 'env_variable',
+  'sos_step', 'dynamic', 'remote', 'system_resource',
+  'Py_Module', 'R_Library',
+  // actions
+  'run:', 'script:', 'report:', 'bash:', 'sh:',
+  'csh:', 'tcsh', 'zsh:', 'perl:', 'ruby:', 'node:',
+  'pandoc:', 'docker_build:', 'download:', 'julia:',
+  'R:', 'matlab:', 'python:', 'python2:', 'python3:',
+  'singularity_build:',
+  // action options
+  'args', 'allow_error', 'container', 'engine', 'env',
+  'stdout', 'stderr', 'tracked',
+  // magics
+  '%capture', '%cd', '%env',
+  '%expand', '%get', '%matplotlib', '%preview',
+  '%put', '%render', '%run', '%runfile', '%revisions',
+  '%save', '%set', '%sessioninfo', '%shutdown', '%sosrun',
+  '%convert', '%task', '%use', '%with'
+  ]
+)
+
+function visit_sos_doc(evt) {
+  window.open(`https://vatlab.github.io/sos-docs/redirect_doc.html?${evt.target.innerText}`, '_blank');
+}
+
+function add_hoverdoc(){
+  let elems = ['cm-keyword cm-strong', 'cm-variable cm-sos-option', 'cm-builtin cm-strong', 'cm-meta'].map(
+    cls => Array.from(document.getElementsByClassName(cls))).reduce((r, a) => r.concat(a), [])
+  Array.from(elems).filter(elem => sos_keywords.has(elem.innerText)).forEach(x => {
+    x.classList.add('sos_hover_doc');
+    x.addEventListener('click', visit_sos_doc);
+  })
+
+}
+
+</script>
+
+      <script>
+         CodeMirror.fromTextArea(document.getElementById("source-code"), {
+           lineNumbers: true,
+           styleActiveLine: true,
+           matchBrackets: true,
+           readOnly: true,
+           theme: 'default',
+           mode: 'sos'
+         });
+         add_hoverdoc();
+      </script>
+   </body>
+</html>

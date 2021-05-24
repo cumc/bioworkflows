@@ -1,10 +1,9 @@
 name: 'Some computational genomics workflows'
 repo: 'http://github.com/cumc/bioworkflows'
 footer: "&copy 2020-current Gao Wang and others, Department of Neurology at Columbia University"
-# include_dir: []
-# exclude_file: []
-# hide_navbar: []
-# homepage: "Overview.ipynb"
+include_dir: ['variant-annotation', 'fine-mapping', 'variant-calling', 'multivariate-fine-mapping', 'GWAS', 'ldpred']
+hide_navbar: ['variant-annotation', 'fine-mapping', 'variant-calling', 'multivariate-fine-mapping', 'GWAS', 'ldpred']
+homepage: "Overview.ipynb"
 # skip_homepage: False
 # add_commit_info: True
 # disqus: NULL
