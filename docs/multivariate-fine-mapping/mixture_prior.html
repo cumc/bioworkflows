@@ -273,8 +273,8 @@ sos run mixture_prior.ipynb extract_effects \
 <h3 id="Perform-mixture-model-fitting">Perform mixture model fitting<a class="anchor-link" href="#Perform-mixture-model-fitting">&#182;</a></h3>
 <pre><code>sos run mixture_prior.ipynb ud \
     --datadir $m --name `basename $m` &amp;&gt; ed_$m.log
-sos run mixture_prior.ipynb ud --ud-method teem \
-    --datadir $m --name `basename $m` &amp;&gt; teem_$m.log
+sos run mixture_prior.ipynb ud --ud-method ted \
+    --datadir $m --name `basename $m` &amp;&gt; ted_$m.log
 sos run mixture_prior.ipynb ed \
     --datadir $m --name `basename $m` &amp;&gt; bovy_$m.log</code></pre>
 <p>Notice that for production use, each <code>sos run</code> command should be submitted to the cluster as a job.</p>
@@ -658,7 +658,7 @@ sos run mixture_prior.ipynb ed \
     <div class="input_area">
 <div class=" highlight hl-sos"><pre><span></span><span class="c1"># Installed commit d6d4c0e</span>
 <span class="p">[</span><span class="n">ud</span><span class="p">]</span>
-<span class="c1"># Method is `ed` or `teem`</span>
+<span class="c1"># Method is `ed` or `ted`</span>
 <span class="kn">parameter:</span> <span class="n">ud_method</span> <span class="o">=</span> <span class="s2">&quot;ed&quot;</span>
 <span class="c1"># A list of models where we only update the scales and not the matrices</span>
 <span class="c1"># A typical choice is to estimate scales only for canonical components</span>
@@ -691,7 +691,7 @@ sos run mixture_prior.ipynb ed \
     <span class="n">library</span><span class="p">(</span><span class="n">udr</span><span class="p">)</span>
     <span class="n">message</span><span class="p">(</span><span class="n">paste</span><span class="p">(</span><span class="s2">&quot;Running ${ud_method.upper()} via udr package for&quot;</span><span class="p">,</span> <span class="n">length</span><span class="p">(</span><span class="n">U</span><span class="p">),</span> <span class="s2">&quot;mixture components&quot;</span><span class="p">))</span>
     <span class="n">f0</span> <span class="o">=</span> <span class="n">ud_init</span><span class="p">(</span><span class="n">X</span> <span class="o">=</span> <span class="k">as</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">dat</span><span class="err">$</span><span class="n">strong</span><span class="o">.</span><span class="n">z</span><span class="p">),</span> <span class="n">V</span> <span class="o">=</span> <span class="n">V</span><span class="p">,</span> <span class="n">U_scaled</span> <span class="o">=</span> <span class="n">U_scaled</span><span class="p">,</span> <span class="n">U_unconstrained</span> <span class="o">=</span> <span class="n">U</span><span class="p">,</span> <span class="n">n_rank1</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-    <span class="n">res</span> <span class="o">=</span> <span class="n">ud_fit</span><span class="p">(</span><span class="n">f0</span><span class="p">,</span> <span class="n">X</span> <span class="o">=</span> <span class="n">na</span><span class="o">.</span><span class="n">omit</span><span class="p">(</span><span class="n">f0</span><span class="err">$</span><span class="n">X</span><span class="p">),</span> <span class="n">control</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">unconstrained</span><span class="o">.</span><span class="n">update</span> <span class="o">=</span> <span class="s2">&quot;${ud_method}&quot;</span><span class="p">,</span> <span class="n">resid</span><span class="o">.</span><span class="n">update</span> <span class="o">=</span> <span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="n">scaled</span><span class="o">.</span><span class="n">update</span> <span class="o">=</span> <span class="s2">&quot;em&quot;</span><span class="p">,</span> <span class="n">maxiter</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span> <span class="n">tol</span> <span class="o">=</span> <span class="mf">1e-06</span><span class="p">),</span> <span class="n">verbose</span><span class="o">=</span><span class="n">TRUE</span><span class="p">)</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">ud_fit</span><span class="p">(</span><span class="n">f0</span><span class="p">,</span> <span class="n">X</span> <span class="o">=</span> <span class="n">na</span><span class="o">.</span><span class="n">omit</span><span class="p">(</span><span class="n">f0</span><span class="err">$</span><span class="n">X</span><span class="p">),</span> <span class="n">control</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">unconstrained</span><span class="o">.</span><span class="n">update</span> <span class="o">=</span> <span class="s2">&quot;${ud_method}&quot;</span><span class="p">,</span> <span class="n">resid</span><span class="o">.</span><span class="n">update</span> <span class="o">=</span> <span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="n">scaled</span><span class="o">.</span><span class="n">update</span> <span class="o">=</span> <span class="s2">&quot;fa&quot;</span><span class="p">,</span> <span class="n">maxiter</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span> <span class="n">tol</span> <span class="o">=</span> <span class="mf">1e-06</span><span class="p">),</span> <span class="n">verbose</span><span class="o">=</span><span class="n">TRUE</span><span class="p">)</span>
     <span class="c1"># add back col and row names to U</span>
     <span class="c1"># https://github.com/stephenslab/udr/issues/9</span>
     <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="ow">in</span> <span class="mi">1</span><span class="p">:</span><span class="n">length</span><span class="p">(</span><span class="n">res</span><span class="err">$</span><span class="n">U</span><span class="p">))</span> <span class="p">{</span>
@@ -811,7 +811,7 @@ sos run mixture_prior.ipynb ed \
 </div>
 <hr>
 &copy 2020-current Gao Wang and others, Department of Neurology at Columbia University
-<p><small>Exported from <a href="http://github.com/cumc/bioworkflows/blob/bf6b48f58935db3f1ce31aad18dcf4d5a6724c35/multivariate-fine-mapping/mixture_prior.ipynb"><code>multivariate-fine-mapping/mixture_prior.ipynb</code></a> committed by Gao Wang on Fri May 14 01:43:07 2021 <a href="http://github.com/cumc/bioworkflows/commit/bf6b48f58935db3f1ce31aad18dcf4d5a6724c35">revision 35, bf6b48f</a> <a href="https://stephenslab.github.io/ipynb-website/notes.html#Note-about-commit-ids"><span class="fa fa-question-circle"></span></a></small></p>
+<p><small>Exported from <a href="http://github.com/cumc/bioworkflows/blob/3d1722461a98976cf9d6f9c1f3b428ab4672117f/multivariate-fine-mapping/mixture_prior.ipynb"><code>multivariate-fine-mapping/mixture_prior.ipynb</code></a> committed by Gao Wang on Mon May 24 14:27:25 2021 <a href="http://github.com/cumc/bioworkflows/commit/3d1722461a98976cf9d6f9c1f3b428ab4672117f">revision 36, 3d17224</a> <a href="https://stephenslab.github.io/ipynb-website/notes.html#Note-about-commit-ids"><span class="fa fa-question-circle"></span></a></small></p>
 </div>
 </div>
 </body>

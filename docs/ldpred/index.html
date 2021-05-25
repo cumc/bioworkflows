@@ -379,19 +379,19 @@ $$<p>To ensure the validity of the assumption, quality control on summary statis
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h2 id="Input">Input<a class="anchor-link" href="#Input">&#182;</a></h2><ol>
-<li><p>Reference panel for LD matrix (correlation) calculation <code>(.bed/.bim/.fam)</code></p>
-<p><code>--ref_bfile=path</code></p>
+<li><p>Reference panel</p>
+<p><code>--reference_geno</code></p>
 </li>
 <li><p>Target data: genotypes and phenotypes</p>
-<p><code>--test_bfile=path</code> <code>(.bed/.bim/.fam)</code></p>
+<p><code>--target_geno</code></p>
 <p>File contians only covariate predictors:</p>
-<p><code>--cov_file=path</code> <code>(text file)</code></p>
+<p><code>--covFile</code></p>
 <p>File contrians only traits one column (phenotype):</p>
-<p><code>--trait_file=path</code> <code>(text file)</code></p>
+<p><code>--phenoFile</code></p>
 </li>
-<li><p>Summary statistics of base data <code>(.rds)</code></p>
-<p><code>--summstats_file=path</code></p>
-<p>This table should have columns: "chr", "pos", "rsid", "a1", "a0", "beta", "beta_se", "p"</p>
+<li><p>Summary statistics of base data</p>
+<p><code>--ss</code></p>
+<p>Summary statistics should includes columns: "chr", "pos", "rsid", "a1", "a0", "beta", "beta_se"</p>
 </li>
 </ol>
 
@@ -404,13 +404,10 @@ $$<p>To ensure the validity of the assumption, quality control on summary statis
 <h2 id="Output">Output<a class="anchor-link" href="#Output">&#182;</a></h2><p>The pipeline saves the results from every steps. Main outputs are</p>
 <ul>
 <li><p>Posterior effect size and PRS (inf/grid/auto)</p>
-<p><code>--xxx_pred = '{outpath}/xxxPred.RData'</code></p>
 </li>
 <li><p>Regression model results for phenotype prediction</p>
-<p><code>--xxx_model = '{outpath}/model/xxxModel.Rdata'</code></p>
 </li>
 <li><p>Summary of models and evaluation of prediction performance</p>
-<p><code>--mod_summary = '{outpath}/summary/xxxSummary.pdf'</code></p>
 </li>
 <li><p>Plots</p>
 <ul>
@@ -426,58 +423,42 @@ $$<p>To ensure the validity of the assumption, quality control on summary statis
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="General-workflow">General workflow<a class="anchor-link" href="#General-workflow">&#182;</a></h2>
+<h1 id="General-workflow">General workflow<a class="anchor-link" href="#General-workflow">&#182;</a></h1>
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Step-1:-Preliminary-QC-and-selection-of-SNPs-shared-by-summary-statistics-and-target-data">Step 1: Preliminary QC and selection of SNPs shared by summary statistics and target data<a class="anchor-link" href="#Step-1:-Preliminary-QC-and-selection-of-SNPs-shared-by-summary-statistics-and-target-data">&#182;</a></h3><p>Filtered SNPs that had a missing rate less than 1% and a minor allele frequency (MAF) greater than 1% in the reference genotype data. Excludes individuals whoes genotype missingness rate higher than 1%.</p>
-<p><strong>FIXME: please update this command based on HDL_example.ipynb</strong></p>
-
-<pre><code>sos run ldpred.ipynb extract_snp -v1 \
-    --outpath &lt;output path&gt; \
-    --testpath &lt;target data path&gt; \
-    --ref_bed &lt;ref.bed&gt; \
-    --test_bed &lt;test.bed&gt; \
-    --ref_snp &lt;ref.QC.snplist&gt; \
-    --test_snp &lt;test.QC.snplist&gt; \
-    --summstats_file &lt;sumstats.rds&gt; \
-    --stat_snp &lt;sumstats.snplist&gt;</code></pre>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Find-common-SNPs-and-subsetting">Find common SNPs and subsetting<a class="anchor-link" href="#Find-common-SNPs-and-subsetting">&#182;</a></h2><p>This step returns a file <code>common.snplist</code> recording the common SNPs among reference panel, base data and target data, i.e., reference panel, summary statistics and genotypes that PRS will be derived from. Then filter variants in the reference panel and summary statistics. Common variants in target data should be filtered after SNP matching or quality control.</p>
+<h2 id="Preliminary-quality-control-on-reference-panel">Preliminary quality control on reference panel<a class="anchor-link" href="#Preliminary-quality-control-on-reference-panel">&#182;</a></h2><p>Filtered SNPs that had a missing rate less than 1% and a minor allele frequency (MAF) greater than 1% in the reference genotype data. Excludes individuals whoes genotype missingness rate higher than 2%.</p>
 <h4 id="Output">Output<a class="anchor-link" href="#Output">&#182;</a></h4><ul>
-<li>Summary statistics data after filtering common SNPs saved to <code>sumstats.SUB.rds</code></li>
-<li>Reference panel after filtering common SNPs saved to <code>ref.SUB.bed/bim/fam</code></li>
-<li>Common SNPs saved to three data folders saved to <code>outpath/common.snplist</code></li>
+<li>Reference panel after QC saved to <code>work_dir/ref.work_dir.bed/bim/fam</code></li>
 </ul>
 
-<pre><code>sos run ldpred.ipynb common_snp \
-    --outpath &lt;output path&gt; \
-    --testpath &lt;target data path&gt;
-    --stat_snp &lt;sumstats.snplist&gt; \
-    --ref_snp &lt;ref.snplist&gt; \
-    --test_snp &lt;test.snplist&gt; \
-    --summstats_file &lt;sumstats.rds&gt; \
-    --sub_stats &lt;sumstats.SUB.rds&gt; \
-    --stats_comsnp &lt;path1/common.snplist&gt; \
-    --test_comsnp &lt;path2/common.snplist&gt; \
-    --ref_comsnp &lt;path3/common.snplist&gt;</code></pre>
+<pre><code>sos run ldpred.ipynb preprocess:1 \
+    --cwd $work_dir \
+    --genoFiles &lt;path/to/ref.bed&gt;</code></pre>
 
-<pre><code>sos run ldpred.ipynb subsets \
-    --outpath &lt;output path&gt; \
-    --testpath &lt;target data path&gt;
-    --bed_file &lt;ref.bed&gt; \
-    --fam_file &lt;ref.fam&gt; \
-    --snp_file &lt;common.snplist&gt; \
-    --sub_bedfile &lt;ref.SUB.bed&gt;</code></pre>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Intersect-SNPs-among-summary-stats,-reference-panel-and-target-data">Intersect SNPs among summary stats, reference panel and target data<a class="anchor-link" href="#Intersect-SNPs-among-summary-stats,-reference-panel-and-target-data">&#182;</a></h2><p>This step returns a file <code>xxx.intersect.snplist</code> recording the common SNPs among reference panel, base data and target data. Then filter variants in the reference panel, summary statistics and target data. Common variants in target data should be filtered after SNP matching or quality control.</p>
+<h4 id="Output">Output<a class="anchor-link" href="#Output">&#182;</a></h4><ul>
+<li>Summary statistics data after filtering common SNPs saved to <code>work_dir/sumstats.intersect.rds</code></li>
+<li>Reference panel after filtering common SNPs saved to <code>work_dir/ref.work_dir.snp_intersect.extracted.bed/bim/fam</code></li>
+<li>Target data after filtering common SNPs saved to <code>work_dir/target.work_dir.snp_intersect.extracted.bed/bim/fam</code></li>
+<li>Common SNPs saved to three data folders saved to <code>work_dir/intersect.snplist</code></li>
+</ul>
+
+<pre><code>sos run ldpred.ipynb snp_intersect \
+    --cwd $work_dir \
+    --ss &lt;path/to/sumstats.rds&gt; \
+    --genoFiles &lt;path/to/ref.work_dir.bed&gt; &lt;path/to/target.bed&gt;
+
+cat $work_dir/gwas_hdl.intersect.stdout</code></pre>
 
 </div>
 </div>
@@ -487,18 +468,14 @@ $$<p>To ensure the validity of the assumption, quality control on summary statis
 <div class="text_cell_render border-box-sizing rendered_html">
 <h2 id="SNP-Matching">SNP Matching<a class="anchor-link" href="#SNP-Matching">&#182;</a></h2><p>Perform SNP matching using <code>snp_match(sumstats, map)</code>. Match alleles between summary statistics <code>sumstats</code> and SNP information in <code>map</code> from reference panel.</p>
 <h4 id="Output">Output<a class="anchor-link" href="#Output">&#182;</a></h4><ul>
-<li>Integrated data <code>info_snp</code> after matching saved to <code>MatchedSnp.Rdata</code>.</li>
-<li>The SNPs used to fit LDpred model, also the SNPs we need to predict PRS in target data saved to <code>test.SUB.snplist</code>.</li>
+<li>Summary statistics after snp matching saved to <code>work_dir/sumstats.snp_matched.rds</code>.</li>
+<li>The SNPs left after matching and also the SNPs used to fit LDpred model saved to <code>work_dir/snp_matched.snplist</code>.</li>
 </ul>
 
-<pre><code>sos run ldpred.ipynb data_load \
-    --ref_bfile &lt;ref.SUB.bed&gt; \
-    --summstats_file &lt;sumstats.SUB.rds&gt; \
-    --ref_file &lt;ref.SUB.rds&gt; \
-    --test_snplist &lt;test.SUB.snplist&gt; \
-    --outpath &lt;output path&gt; \ 
-    --testpath &lt;target data path&gt;\
-    --n_eff 200000 # sample size of summary statistics</code></pre>
+<pre><code>sos run ldpred.ipynb snp_match \
+    --cwd $work_dir \
+    --reference_geno &lt;work_dir/ref.work_dir.snp_intersect.extracted.rds&gt; \
+    --ss &lt;path/to/sumstats.rds&gt;</code></pre>
 
 </div>
 </div>
@@ -506,17 +483,18 @@ $$<p>To ensure the validity of the assumption, quality control on summary statis
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Quality-Control">Quality Control<a class="anchor-link" href="#Quality-Control">&#182;</a></h2><p>See section 3.2. This step would greatly drop the variants, so I do not recommand do the quality control. For example, in MVP.ipynb step 4, 30376 over 30432 variants are removed.</p>
+<h2 id="Quality-Control-on-Summary-Statistics">Quality Control on Summary Statistics<a class="anchor-link" href="#Quality-Control-on-Summary-Statistics">&#182;</a></h2><p>See section <code>Ldpred2</code>.</p>
 <h4 id="Output">Output<a class="anchor-link" href="#Output">&#182;</a></h4><ul>
-<li>Integrated data info_snp after quality control saved to <code>QcMatchedSnp.Rdata</code>.</li>
-<li>Plot showing the removed SNPs save to <code>plots/QcPlot.png</code>.</li>
-<li>The SNPs used to fit LDpred model, also the SNPs we need to predict PRS in target data saved to <code>test.SUB.snplist</code>.</li>
+<li>Summary statistics after quality control saved to <code>work_dir/sumstats.snp_matched.qc.rds</code>.</li>
+<li>Plot showing the removed SNPs saved to <code>work_dir/sumstats.snp_matched.qc.png</code>.</li>
+<li>The SNPs used to fit LDpred model, also the SNPs we need to predict PRS in target data saved to <code>work_dir/sumstats.snp_matched.qc.snplist</code>.</li>
 </ul>
 
-<pre><code>sos run ldpred.ipynb QControl \
-    --qc_in &lt;MatchedSnp.RData&gt; \
-    --outpath &lt;output path&gt; \
-    --testpath &lt;target data path&gt;</code></pre>
+<pre><code>sos run ldpred.ipynb sumstats_qc \
+    --cwd $work_dir \
+    --reference_geno &lt;work_dir/ref.work_dir.snp_intersect.extracted.rds&gt; \
+    --ss &lt;path/to/sumstats.snp_matched.rds&gt; \
+    --sdy 1</code></pre>
 
 </div>
 </div>
@@ -524,19 +502,20 @@ $$<p>To ensure the validity of the assumption, quality control on summary statis
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Calculate-LD-matrix-and-correlation-for-22-chromosomes">Calculate LD matrix and correlation for 22 chromosomes<a class="anchor-link" href="#Calculate-LD-matrix-and-correlation-for-22-chromosomes">&#182;</a></h2><p>Calculate LD correlation using <code>snp_cor(Gna, size, infos.pos)</code></p>
+<h2 id="Calculate-LD-matrix-and-Fit-LDSC-Model">Calculate LD matrix and Fit LDSC Model<a class="anchor-link" href="#Calculate-LD-matrix-and-Fit-LDSC-Model">&#182;</a></h2><p>Calculate LD correlation using <code>snp_cor(Gna, size, infos.pos)</code></p>
 <ul>
 <li>size: for one SNP, window size around this SNP to compute correlations. Window size of 3 cM is applied in this pipeline which is recommanded by the developer.</li>
 <li>infos.pos: specifying the physical position on a chromosome (in base pairs) of each SNP. </li>
 </ul>
+<p>Fit LDSC model using <code>snp_ldsc()</code></p>
 <h4 id="Output">Output<a class="anchor-link" href="#Output">&#182;</a></h4><ul>
-<li>LD matrix and correlation saved to <code>LdMatrix.Rdata</code>.</li>
+<li>LD matrix and LDSC model saved to <code>work_dir/sumstats.snp_matched.ld.rds</code> or <code>work_dir/sumstats.snp_matched.qc.ld.rds</code>.</li>
 </ul>
 
-<pre><code>sos run ldpred.ipynb LD \
-    --outpath &lt;output path&gt; \
-    --testpath &lt;target data path&gt; \
-    --ld_in &lt;MatchedSnp.Rdata/QcMatchedSnp.Rdata&gt;</code></pre>
+<pre><code>sos run ldpred.ipynb ldsc \
+    --cwd $work_dir \
+    --ss &lt;work_dir/sumstats.snp_matched.rds&gt; \
+    --reference-geno &lt;work_dir/ref.work_dir.snp_intersect.extracted.rds&gt;</code></pre>
 
 </div>
 </div>
@@ -558,33 +537,30 @@ $$<p>To ensure the validity of the assumption, quality control on summary statis
 </li>
 </ul>
 </li>
-<li><p>Predict PRS</p>
-<p>For grid and auto model, the best combination of p and $h^2$ was selected based on largest t score and 3 times of median absolute deviation of predicted PRS.</p>
+<li><p>Derive PRS</p>
+<p>For grid and auto model, the best combination of p and $h^2$ was selected based on largest t score and mean of 3 times of median absolute deviation of predicted PRS.</p>
 </li>
 </ul>
-<p>Note: xxx stands for inf/grid/auto.</p>
 <h4 id="Output">Output<a class="anchor-link" href="#Output">&#182;</a></h4><ul>
-<li>Estimated effect size <code>adj_beta</code> and PRS prediction <code>prs_pred</code> saved to <code>XxxPred.Rdata</code>.</li>
+<li>Estimated effect size <code>adj_beta</code> and PRS prediction <code>prs_pred</code> saved to <code>work_dir/sumstats.snp_matched.&lt;model&gt;_prs.rds</code>.</li>
 </ul>
 <p>For Inf and Auto model</p>
 
-<pre><code>sos run ldpred.ipynb load_testdata+&lt;model&gt;_prs \
-    --outpath &lt;output path&gt; \
-    --testpath &lt;target data path&gt; \
-    --test_bfile &lt;test.SUB.bed&gt; \
-    --&lt;model&gt;_in &lt;outpath/LdMatrix.Rdata&gt; \
-    --test_file &lt;test.SUB.rds&gt;</code></pre>
+<pre><code>sos run ldpred.ipynb &lt;model&gt;_prs \
+    --cwd $work_dir \
+    --ss &lt;work_dir/sumstats.snp_matched.qc.rds&gt; \
+    --target-geno &lt;work_dir/target.snp_intersect.extracted.rds&gt; \
+    --ldsc &lt;work_dir/sumstats.snp_matched.qc.ld.rds&gt;</code></pre>
 <p>For Grid model</p>
 
 <pre><code>sos run ldpred.ipynb grid_prs \
-    --outpath &lt;output path&gt; \
-    --testpath &lt;target data path&gt; \
-    --grid_in &lt;outpath/LdMatrix.Rdata&gt; \
-    --test_bfile &lt;test.SUB.bed&gt; \
-    --test_file &lt;test.SUB.rds&gt; \
-    --cov_file &lt;covariates file&gt; \
-    --trait_file &lt;traits file&gt; \
-    --response 1</code></pre>
+    --cwd $work_dir \
+    --ss &lt;work_dir/sumstats.snp_matched.qc.rds&gt; \
+    --target-geno &lt;work_dir/target.snp_intersect.extracted.rds&gt; \
+    --ldsc &lt;work_dir/sumstats.snp_matched.qc.ld.rds&gt; \
+    --phenoFile &lt;path/to/phenofile&gt; \
+    --covFile &lt;path/to/covariatefile&gt; \
+    --response &lt;continuous/binary&gt;</code></pre>
 
 </div>
 </div>
@@ -592,21 +568,26 @@ $$<p>To ensure the validity of the assumption, quality control on summary statis
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Predict-phenotype">Predict phenotype<a class="anchor-link" href="#Predict-phenotype">&#182;</a></h2><p>Predict phenotypes in target data and evaluate the performance of prediction using MSE and residual plots.</p>
+<h2 id="Predict-phenotype">Predict phenotype<a class="anchor-link" href="#Predict-phenotype">&#182;</a></h2><p>Predict phenotypes in target data and evaluate the performance of prediction using MSE and $R^2$.</p>
 <h4 id="Output">Output<a class="anchor-link" href="#Output">&#182;</a></h4><ul>
-<li>Linear/logistic model results saved to <code>model/XxxModel.Rdata</code>.</li>
-<li>Summary of model, goodness of fit $R^2$, MSE and residual plot saved to <code>summary/XxxSummary.pdf</code></li>
+<li>Linear/logistic model results saved to <code>work_dir/pheno.baseline.rds</code> or <code>work_dir/pheno.sumstats.snp_matched.&lt;model&gt;.rds</code>.</li>
+<li>Goodness of fit $R^2$, MSE and residual plot saved to <code>work_dir/pheno.baseline.pdf</code> or <code>work_dir/pheno.sumstats.snp_matched.&lt;model&gt;.pdf</code>.</li>
 </ul>
+<p>Baseline model: Traits ~ Sex + Age</p>
 
-<pre><code>sos run ldpred.ipynb null_phenopred+&lt;model&gt;_phenopred \
-    --outpath &lt;output path&gt; \
-    --testpath &lt;target data path&gt; \
-    --cov_file &lt;covariates file&gt; \
-    --trait_file &lt;traits file&gt; \
-    --prs_file &lt;XxxPred.Rdata&gt; \
-    --mod_summary &lt;Summary.pdf&gt; \
-    --model &lt;Model.Rdata&gt; \
-    --response 1</code></pre>
+<pre><code>sos run ldpred.ipynb pred_eval \
+    --cwd $work_dir \
+    --phenoFile &lt;path/to/phenofile&gt; \
+    --covFile &lt;path/to/covariatefile&gt; \
+    --response &lt;continuous/binary&gt;</code></pre>
+<p>Ldpred model: Traits ~ Sex + Age + PRS</p>
+
+<pre><code>sos run ldpred.ipynb pred_eval \
+    --cwd $work_dir \
+    --prs &lt;work_dir/sumstats.snp_matched.model_prs.rds&gt; \
+    --phenoFile &lt;path/to/phenofile&gt; \
+    --covFile &lt;path/to/covariatefile&gt; \
+    --response &lt;continuous/binary&gt;</code></pre>
 
 </div>
 </div>
@@ -1569,7 +1550,7 @@ Sections
 </div>
 <hr>
 &copy 2020-current Gao Wang and others, Department of Neurology at Columbia University
-<p><small>Exported from <a href="http://github.com/cumc/bioworkflows/blob/5776faf86f0c0aae4099dd6b5056056962789514/ldpred/ldpred.ipynb"><code>ldpred/ldpred.ipynb</code></a> committed by Gao Wang on Mon May 24 01:31:04 2021 <a href="http://github.com/cumc/bioworkflows/commit/5776faf86f0c0aae4099dd6b5056056962789514">revision 33, 5776faf</a> <a href="https://stephenslab.github.io/ipynb-website/notes.html#Note-about-commit-ids"><span class="fa fa-question-circle"></span></a></small></p>
+<p><small>Exported from <a href="http://github.com/cumc/bioworkflows/blob/47a2d5f463a2e814e7605a9bc70201a7d145f7c4/ldpred/ldpred.ipynb"><code>ldpred/ldpred.ipynb</code></a> committed by MengyuZhang1307 on Mon May 24 23:13:57 2021 <a href="http://github.com/cumc/bioworkflows/commit/47a2d5f463a2e814e7605a9bc70201a7d145f7c4">revision 35, 47a2d5f</a> <a href="https://stephenslab.github.io/ipynb-website/notes.html#Note-about-commit-ids"><span class="fa fa-question-circle"></span></a></small></p>
 </div>
 </div>
 </body>
