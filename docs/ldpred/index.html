@@ -423,14 +423,14 @@ $$<p>To ensure the validity of the assumption, quality control on summary statis
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="General-workflow">General workflow<a class="anchor-link" href="#General-workflow">&#182;</a></h1>
+<h2 id="General-workflow">General workflow<a class="anchor-link" href="#General-workflow">&#182;</a></h2>
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Preliminary-quality-control-on-reference-panel">Preliminary quality control on reference panel<a class="anchor-link" href="#Preliminary-quality-control-on-reference-panel">&#182;</a></h2><p>Filtered SNPs that had a missing rate less than 1% and a minor allele frequency (MAF) greater than 1% in the reference genotype data. Excludes individuals whoes genotype missingness rate higher than 2%.</p>
+<h3 id="Preliminary-quality-control-on-reference-panel">Preliminary quality control on reference panel<a class="anchor-link" href="#Preliminary-quality-control-on-reference-panel">&#182;</a></h3><p>Filtered SNPs that had a missing rate less than 1% and a minor allele frequency (MAF) greater than 1% in the reference genotype data. Excludes individuals whoes genotype missingness rate higher than 2%.</p>
 <h4 id="Output">Output<a class="anchor-link" href="#Output">&#182;</a></h4><ul>
 <li>Reference panel after QC saved to <code>work_dir/ref.work_dir.bed/bim/fam</code></li>
 </ul>
@@ -445,7 +445,7 @@ $$<p>To ensure the validity of the assumption, quality control on summary statis
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Intersect-SNPs-among-summary-stats,-reference-panel-and-target-data">Intersect SNPs among summary stats, reference panel and target data<a class="anchor-link" href="#Intersect-SNPs-among-summary-stats,-reference-panel-and-target-data">&#182;</a></h2><p>This step returns a file <code>xxx.intersect.snplist</code> recording the common SNPs among reference panel, base data and target data. Then filter variants in the reference panel, summary statistics and target data. Common variants in target data should be filtered after SNP matching or quality control.</p>
+<h3 id="Intersect-SNPs-among-summary-stats,-reference-panel-and-target-data">Intersect SNPs among summary stats, reference panel and target data<a class="anchor-link" href="#Intersect-SNPs-among-summary-stats,-reference-panel-and-target-data">&#182;</a></h3><p>This step returns a file <code>xxx.intersect.snplist</code> recording the common SNPs among reference panel, base data and target data. Then filter variants in the reference panel, summary statistics and target data. Common variants in target data should be filtered after SNP matching or quality control.</p>
 <h4 id="Output">Output<a class="anchor-link" href="#Output">&#182;</a></h4><ul>
 <li>Summary statistics data after filtering common SNPs saved to <code>work_dir/sumstats.intersect.rds</code></li>
 <li>Reference panel after filtering common SNPs saved to <code>work_dir/ref.work_dir.snp_intersect.extracted.bed/bim/fam</code></li>
@@ -466,7 +466,7 @@ cat $work_dir/gwas_hdl.intersect.stdout</code></pre>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="SNP-Matching">SNP Matching<a class="anchor-link" href="#SNP-Matching">&#182;</a></h2><p>Perform SNP matching using <code>snp_match(sumstats, map)</code>. Match alleles between summary statistics <code>sumstats</code> and SNP information in <code>map</code> from reference panel.</p>
+<h3 id="SNP-Matching">SNP Matching<a class="anchor-link" href="#SNP-Matching">&#182;</a></h3><p>Perform SNP matching using <code>snp_match(sumstats, map)</code>. Match alleles between summary statistics <code>sumstats</code> and SNP information in <code>map</code> from reference panel.</p>
 <h4 id="Output">Output<a class="anchor-link" href="#Output">&#182;</a></h4><ul>
 <li>Summary statistics after snp matching saved to <code>work_dir/sumstats.snp_matched.rds</code>.</li>
 <li>The SNPs left after matching and also the SNPs used to fit LDpred model saved to <code>work_dir/snp_matched.snplist</code>.</li>
@@ -483,7 +483,7 @@ cat $work_dir/gwas_hdl.intersect.stdout</code></pre>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Quality-Control-on-Summary-Statistics">Quality Control on Summary Statistics<a class="anchor-link" href="#Quality-Control-on-Summary-Statistics">&#182;</a></h2><p>See section <code>Ldpred2</code>.</p>
+<h3 id="Quality-Control-on-Summary-Statistics">Quality Control on Summary Statistics<a class="anchor-link" href="#Quality-Control-on-Summary-Statistics">&#182;</a></h3><p>See section <code>Ldpred2</code>.</p>
 <h4 id="Output">Output<a class="anchor-link" href="#Output">&#182;</a></h4><ul>
 <li>Summary statistics after quality control saved to <code>work_dir/sumstats.snp_matched.qc.rds</code>.</li>
 <li>Plot showing the removed SNPs saved to <code>work_dir/sumstats.snp_matched.qc.png</code>.</li>
@@ -502,7 +502,7 @@ cat $work_dir/gwas_hdl.intersect.stdout</code></pre>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Calculate-LD-matrix-and-Fit-LDSC-Model">Calculate LD matrix and Fit LDSC Model<a class="anchor-link" href="#Calculate-LD-matrix-and-Fit-LDSC-Model">&#182;</a></h2><p>Calculate LD correlation using <code>snp_cor(Gna, size, infos.pos)</code></p>
+<h3 id="Calculate-LD-matrix-and-Fit-LDSC-Model">Calculate LD matrix and Fit LDSC Model<a class="anchor-link" href="#Calculate-LD-matrix-and-Fit-LDSC-Model">&#182;</a></h3><p>Calculate LD correlation using <code>snp_cor(Gna, size, infos.pos)</code></p>
 <ul>
 <li>size: for one SNP, window size around this SNP to compute correlations. Window size of 3 cM is applied in this pipeline which is recommanded by the developer.</li>
 <li>infos.pos: specifying the physical position on a chromosome (in base pairs) of each SNP. </li>
@@ -523,7 +523,7 @@ cat $work_dir/gwas_hdl.intersect.stdout</code></pre>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Estimate-posterior-effect-sizes-and-PRS">Estimate posterior effect sizes and PRS<a class="anchor-link" href="#Estimate-posterior-effect-sizes-and-PRS">&#182;</a></h2><p>Three models can be applied to predict PRS which are infinitesimal, grid and auto models.</p>
+<h3 id="Estimate-posterior-effect-sizes-and-PRS">Estimate posterior effect sizes and PRS<a class="anchor-link" href="#Estimate-posterior-effect-sizes-and-PRS">&#182;</a></h3><p>Three models can be applied to predict PRS which are infinitesimal, grid and auto models.</p>
 <ul>
 <li><p>Estimate effect size</p>
 <ul>
@@ -568,7 +568,7 @@ cat $work_dir/gwas_hdl.intersect.stdout</code></pre>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Predict-phenotype">Predict phenotype<a class="anchor-link" href="#Predict-phenotype">&#182;</a></h2><p>Predict phenotypes in target data and evaluate the performance of prediction using MSE and $R^2$.</p>
+<h3 id="Predict-phenotype">Predict phenotype<a class="anchor-link" href="#Predict-phenotype">&#182;</a></h3><p>Predict phenotypes in target data and evaluate the performance of prediction using MSE and $R^2$.</p>
 <h4 id="Output">Output<a class="anchor-link" href="#Output">&#182;</a></h4><ul>
 <li>Linear/logistic model results saved to <code>work_dir/pheno.baseline.rds</code> or <code>work_dir/pheno.sumstats.snp_matched.&lt;model&gt;.rds</code>.</li>
 <li>Goodness of fit $R^2$, MSE and residual plot saved to <code>work_dir/pheno.baseline.pdf</code> or <code>work_dir/pheno.sumstats.snp_matched.&lt;model&gt;.pdf</code>.</li>
@@ -595,7 +595,7 @@ cat $work_dir/gwas_hdl.intersect.stdout</code></pre>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Example-command">Example command<a class="anchor-link" href="#Example-command">&#182;</a></h1><p>See <a href="https://github.com/cumc/bioworkflows/blob/master/ldpred/HDL_example.ipynb">HDL_example.ipynb</a>.</p>
+<h2 id="Example-analysis">Example analysis<a class="anchor-link" href="#Example-analysis">&#182;</a></h2><p>See notebook <a href="HDL_example.html">HDL_exmple.ipynb</a> for demonstration of results of traits HDL prediction using MVP summary statistics, 1000G as reference panel and UK biobank data as target data.</p>
 
 </div>
 </div>
@@ -603,7 +603,7 @@ cat $work_dir/gwas_hdl.intersect.stdout</code></pre>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Command-Interface">Command Interface<a class="anchor-link" href="#Command-Interface">&#182;</a></h1>
+<h2 id="Command-Interface">Command Interface<a class="anchor-link" href="#Command-Interface">&#182;</a></h2>
 </div>
 </div>
 </div>
@@ -1540,17 +1540,9 @@ Sections
 </div>
 
 </div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Illustration">Illustration<a class="anchor-link" href="#Illustration">&#182;</a></h2><p>See notebook <a href="HDL_example.html">HDL_exmple.ipynb</a> for demonstration of results of traits HDL prediction using MVP summary statistics, 1000G as reference panel and UK biobank data as target data.</p>
-
-</div>
-</div>
-</div>
 <hr>
 &copy 2020-current Gao Wang and others, Department of Neurology at Columbia University
-<p><small>Exported from <a href="http://github.com/cumc/bioworkflows/blob/47a2d5f463a2e814e7605a9bc70201a7d145f7c4/ldpred/ldpred.ipynb"><code>ldpred/ldpred.ipynb</code></a> committed by MengyuZhang1307 on Mon May 24 23:13:57 2021 <a href="http://github.com/cumc/bioworkflows/commit/47a2d5f463a2e814e7605a9bc70201a7d145f7c4">revision 35, 47a2d5f</a> <a href="https://stephenslab.github.io/ipynb-website/notes.html#Note-about-commit-ids"><span class="fa fa-question-circle"></span></a></small></p>
+<p><small>Exported from <a href="http://github.com/cumc/bioworkflows/blob/750cefc9caca23a2101d995281944f19188e20ea/ldpred/ldpred.ipynb"><code>ldpred/ldpred.ipynb</code></a> committed by Gao Wang on Tue May 25 00:26:50 2021 <a href="http://github.com/cumc/bioworkflows/commit/750cefc9caca23a2101d995281944f19188e20ea">revision 36, 750cefc</a> <a href="https://stephenslab.github.io/ipynb-website/notes.html#Note-about-commit-ids"><span class="fa fa-question-circle"></span></a></small></p>
 </div>
 </div>
 </body>
