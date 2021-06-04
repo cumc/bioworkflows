@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="ipynb_website:version" content="0.9.7" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="stylesheet" type="text/css" href="../css/jt.css">
+
+<link rel="stylesheet" type="text/css" href="../css/toc2.css">
+
+<link href="../site_libs/jqueryui-1.11.4/jquery-ui.css">
+<link rel="stylesheet" href="../site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="../site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.9.1/jquery-ui.min.js"></script>
+<script src="../site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="../site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="../site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+
+<link rel="stylesheet"
+      href="../site_libs/highlightjs/null.min.css"
+      type="text/css" />
+
+<script src="../site_libs/highlightjs/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+<script src="../js/doc_toc.js"></script>
+<script src="../js/docs.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX", "output/HTML-CSS"],
+        tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+        displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+        processEscapes: true
+        },
+        "HTML-CSS": {
+            preferredFont: "TeX",
+            availableFonts: ["TeX"],
+            styles: {
+                scale: 110,
+                ".MathJax_Display": {
+                    "font-size": "110%",
+                }
+            }
+        }
+    });
+</script>
+<script>
+function filterDataFrame(id) {
+    var input = document.getElementById("search_" + id);
+    var filter = input.value.toUpperCase();
+    var table = document.getElementById("dataframe_" + id);
+    var tr = table.getElementsByTagName("tr");
+    // Loop through all table rows, and hide those who don't match the search query
+    for (var i = 1; i < tr.length; i++) {
+        for (var j = 0; j < tr[i].cells.length; ++j) {
+            var matched = false;
+            if (tr[i].cells[j].innerHTML.toUpperCase().indexOf(filter) != -1) {
+                tr[i].style.display = "";
+                matched = true
+                break;
+            }
+            if (!matched)
+                tr[i].style.display = "none";
+        }
+    }
+}
+function sortDataFrame(id, n, dtype) {
+    var table = document.getElementById("dataframe_" + id);
+    var tb = table.tBodies[0]; // use `<tbody>` to ignore `<thead>` and `<tfoot>` rows
+    var tr = Array.prototype.slice.call(tb.rows, 0); // put rows into array
+    if (dtype === 'numeric') {
+        var fn = function(a, b) { 
+            return parseFloat(a.cells[n].textContent) <= parseFloat(b.cells[n].textContent) ? -1 : 1;
+        }
+    } else {
+        var fn = function(a, b) {
+            var c = a.cells[n].textContent.trim().localeCompare(b.cells[n].textContent.trim()); 
+            return c > 0 ? 1 : (c < 0 ? -1 : 0) }
+    }
+    var isSorted = function(array, fn) {
+        if (array.length < 2)
+            return 1;
+        var direction = fn(array[0], array[1]); 
+        for (var i = 1; i < array.length - 1; ++i) {
+            var d = fn(array[i], array[i+1]);
+            if (d == 0)
+                continue;
+            else if (direction == 0)
+                direction = d;
+            else if (direction != d)
+                return 0;
+            }
+        return direction;
+    }
+    var sorted = isSorted(tr, fn);
+    if (sorted == 1 || sorted == -1) {
+        // if sorted already, reverse it
+        for(var i = tr.length - 1; i >= 0; --i)
+            tb.appendChild(tr[i]); // append each row in order
+    } else {
+        tr = tr.sort(fn);
+        for(var i = 0; i < tr.length; ++i)
+            tb.appendChild(tr[i]); // append each row in order
+    }
+}
+</script>
+
+<script>
+$( document ).ready(function(){
+            var cfg={'threshold':3,     // depth of toc (number of levels)
+             'number_sections': false,
+             'toc_cell': false,          // useless here
+             'toc_window_display': true, // display the toc window
+             "toc_section_display": "block", // display toc contents in the window
+             'sideBar':true,       // sidebar or floating window
+             'navigate_menu':false       // navigation menu (only in liveNotebook -- do not change)
+            }
+            var st={};                  // some variables used in the script
+            st.rendering_toc_cell = false;
+            st.config_loaded = false;
+            st.extension_initialized=false;
+            st.nbcontainer_marginleft = $('#notebook-container').css('margin-left')
+            st.nbcontainer_marginright = $('#notebook-container').css('margin-right')
+            st.nbcontainer_width = $('#notebook-container').css('width')
+            st.oldTocHeight = undefined
+            st.cell_toc = undefined;
+            st.toc_index=0;
+            // fire the main function with these parameters
+            table_of_contents(cfg, st);
+            var file=GWASDict[$("h1:first").attr("id")];
+            $("#toc-level0 a").css("color","#126dce");
+            $('a[href="#'+$("h1:first").attr("id")+'"]').hide()
+            var docs=GWASArray;
+            var docs_map=GWASArrayMap;
+            var pos=GWASArray.indexOf(file);
+            for (var a=pos;a>=0;a--){
+                  $('<li><a href="'+docs[a]+'.html"><font color="#073642"><b>'+docs_map[docs[a]].replace(/_/g," ")+'</b></font></a></li>').insertBefore("#toc-level0 li:eq(0)");
+            }
+            $('a[href="'+file+'.html'+'"]').css("color","#126dce");
+            for (var a=pos+1;a<docs.length;a++){
+                  $(".toc #toc-level0").append('<li><a href="'+docs[a]+'.html"><font color="#073642"><b>'+docs_map[docs[a]].replace(/_/g," ")+'</b></font></a></li>');
+            }
+            // $("#toc-header").hide(); // comment out because it prevents search bar from displaying
+    });
+</script>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+  // mark it active
+  menuAnchor.parent().addClass('active');
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+<div class="container-fluid main-container">
+<!-- tabsets -->
+<script src="../site_libs/navigation-1.1/tabsets.js"></script>
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+
+
+<title>Some computational genomics workflows</title>
+
+<style type = "text/css">
+body {
+  font-family: "Droid Sans";
+  padding-top: 66px;
+  padding-bottom: 40px;
+}
+</style>
+</head>
+
+<body>
+<div tabindex="-1" id="notebook" class="border-box-sizing">
+<div class="container" id="notebook-container">
+
+<!-- code folding -->
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="../index.html">Some computational genomics workflows</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        
+<li>
+  <a href="../index.html">Overview</a>
+</li>
+        
+      </ul>
+        
+<ul class="nav navbar-nav navbar-right">
+<li>
+   <a href="http://github.com/cumc/bioworkflows"> <span class="fa fa-github"></span> </a>
+</li>
+</ul>
+        
+      </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Identifying-loci-of-interest-from-GWAS">Identifying loci of interest from GWAS<a class="anchor-link" href="#Identifying-loci-of-interest-from-GWAS">&#182;</a></h1><p>The aim is to select subsets of SNPs of possible interest (low p-value) from GWAS. We use LD clumping method to account for LD between SNPs. The output of LD clumping is a subset of independent SNPs for each locus of interest. We will use these SNPs to establish boundaries for these loci to be investigated further.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Input">Input<a class="anchor-link" href="#Input">&#182;</a></h2><ul>
+<li>Summary statistics</li>
+<li>LD reference panel</li>
+</ul>
+<p><strong>Settings for clumping analysis:</strong></p>
+<ol>
+<li><p>Which reference dataset to use? Options are 1000G_CEU, hapmap_CEU_r23a_filtered, UK10K, HRC reference panel</p>
+<ul>
+<li>FIXME: if the SNPs are not in the reference panel they won't be outputed as index SNPs</li>
+<li>FIX: use the bgen files with the genotype info for which we are going to extract 1000 individuals</li>
+</ul>
+</li>
+</ol>
+<ol>
+<li><p>What is the significance threshold for the index variant (p1) we should use for the analyses?</p>
+<p>p=5e-08</p>
+</li>
+<li><p>What significance threshold to use for the SNPs to be clumped?</p>
+<p>p=1 (this will include all the SNPs)</p>
+</li>
+<li><p>What LD r2 to use?</p>
+<p>r2=0.3 or even lower to capture bigger LD blocks</p>
+</li>
+<li><p>What window size in kb to use (research about the average LD in the human genome for CEU population)?</p>
+<p>I decided to use 1Mb (1000Kb), however conversations with the team decided that 2Mb will be better</p>
+</li>
+</ol>
+<p>Below are the default options used by PLINK</p>
+
+<pre><code>--clump-p1 0.0001: significance threshold for Index SNPs
+--clump-p2 0.01: Secondary significance threshold for clumped SNPs
+--clump-r2 0.50: LD threshold for clumping
+--clump-kb 250: Physical distance threshold for clumping
+--clump-field P_BOLT_LMM: To specify the name of the field for P-value
+--clump-verbose: to add a more detailed report of SNPs in each clump
+--clump-best: to select the single best proxy
+--clump-allow-overlap: allow for overlap between clumped regions</code></pre>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Output">Output<a class="anchor-link" href="#Output">&#182;</a></h2><p>A list of regions in the following format:</p>
+
+<pre><code>chr start end top_snp all_snps</code></pre>
+<p>where the last column <code>all_snps</code> are SNP IDs in the LD cluster.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Command-interface">Command interface<a class="anchor-link" href="#Command-interface">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[1]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="n">sos</span> <span class="n">run</span> <span class="n">LD_Clumping</span><span class="o">.</span><span class="n">ipynb</span> <span class="o">-</span><span class="n">h</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>usage: sos run LD_Clumping.ipynb [workflow_name | -t targets] [options] [workflow_options]
+  workflow_name:        Single or combined workflows defined in this script
+  targets:              One or more targets to generate
+  options:              Single-hyphen sos parameters (see &#34;sos run -h&#34; for details)
+  workflow_options:     Double-hyphen workflow-specific parameters
+
+Workflows:
+  filter_samples
+  filter_bgen
+  filter_plink
+  reference
+  default
+
+Global Workflow Options:
+  --cwd VAL (as path, required)
+                        Working directory: change accordingly
+  --bfile VAL (as path, required)
+                        Genotype file in plink binary format
+  --genoFile  paths(&#34;.&#34;)
+
+                        Path to bgen or plink files
+  --sampleFile . (as path)
+                        Path to sample files
+  --sumstatsFiles  paths
+
+                        Path to summary stats file
+  --unrelated-samples . (as path)
+                        Path to samples of unrelated individuals
+  --ld-sample-size 2000 (as int)
+                        Number of samples to use to compute LD
+  --bfile-ref  path(f&#39;{cwd}/{bfile:bn}.{ld_sample_size}.ref_geno.bed&#39;)
+
+                        Reference bfile
+  --clump-field VAL (as str, required)
+                        Clumping parameteres
+  --clump-annotate VAL (as str, required)
+  --clump-p1 5e-08 (as float)
+  --clump-p2 0.001 (as float)
+  --clump-r2 0.04 (as float)
+                        r2 = 0.04 =&gt; r = 0.2
+  --clump-kb 2000 (as int)
+  --job-size 1 (as int)
+                        For cluster jobs, number commands to run per job
+  --clumpFile  path(f&#39;{cwd}/&#39; + &#34;_&#34;.join([f&#39;{x:bn}&#39; for x in sumstatsFiles]) + &#39;.clumped&#39;)
+
+                        File names for clumping
+  --numThreads 5 (as int)
+                        Output the bgen file with 8bit formatting parameter:
+                        bgen_bits=16 Specific number of threads to use
+  --container-lmm &#39;statisticalgenetics/lmm:1.8&#39;
+                        Specify the container to use
+
+Sections
+  filter_samples:       Create a white-space delimited file with a list of
+                        unrelated samples in data.
+  filter_bgen_1:        Select a subset of samples from the bgen files
+  filter_bgen_2:        Make the binary files for bgen input using the selected
+                        samples and exclude repeated variant ids
+  filter_plink:         Select a subset of samples from the plink files
+  reference_1:
+  reference_2:          Merge all the .bed files into one reference file to use
+                        in clumping step
+  default:              Perform LD-clumping in PLINKv1.9
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Global-parameter-settings">Global parameter settings<a class="anchor-link" href="#Global-parameter-settings">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="p">[</span><span class="k">global</span><span class="p">]</span>
+<span class="c1"># Working directory: change accordingly</span>
+<span class="kn">parameter:</span> <span class="n">cwd</span> <span class="o">=</span> <span class="n">path</span>
+<span class="c1"># Genotype file in plink binary format</span>
+<span class="kn">parameter:</span> <span class="n">bfile</span> <span class="o">=</span> <span class="n">path</span>
+<span class="c1"># Path to bgen or plink files</span>
+<span class="kn">parameter:</span> <span class="n">genoFile</span> <span class="o">=</span> <span class="n">paths</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+<span class="c1"># Path to sample files</span>
+<span class="kn">parameter:</span> <span class="n">sampleFile</span> <span class="o">=</span> <span class="n">path</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+<span class="c1"># Path to summary stats file</span>
+<span class="kn">parameter:</span> <span class="n">sumstatsFiles</span> <span class="o">=</span> <span class="n">paths</span>
+<span class="c1"># Path to samples of unrelated individuals</span>
+<span class="kn">parameter:</span> <span class="n">unrelated_samples</span> <span class="o">=</span> <span class="n">path</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+<span class="c1"># Number of samples to use to compute LD</span>
+<span class="kn">parameter:</span> <span class="n">ld_sample_size</span> <span class="o">=</span> <span class="mi">2000</span>
+<span class="c1"># Reference bfile</span>
+<span class="kn">parameter:</span> <span class="n">bfile_ref</span> <span class="o">=</span> <span class="n">path</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{cwd}/{bfile:bn}.{ld_sample_size}.ref_geno.bed&#39;</span><span class="p">)</span>
+<span class="c1"># Clumping parameteres</span>
+<span class="kn">parameter:</span> <span class="n">clump_field</span> <span class="o">=</span> <span class="nb">str</span>
+<span class="kn">parameter:</span> <span class="n">clump_annotate</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+<span class="kn">parameter:</span> <span class="n">clump_p1</span> <span class="o">=</span> <span class="mf">5e-08</span>
+<span class="kn">parameter:</span> <span class="n">clump_p2</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="c1"># r2 = 0.04 =&gt; r = 0.2</span>
+<span class="kn">parameter:</span> <span class="n">clump_r2</span> <span class="o">=</span> <span class="mf">0.04</span>
+<span class="kn">parameter:</span> <span class="n">clump_kb</span> <span class="o">=</span> <span class="mi">2000</span>
+<span class="c1"># For cluster jobs, number commands to run per job</span>
+<span class="kn">parameter:</span> <span class="n">job_size</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="c1"># File names for clumping</span>
+<span class="kn">parameter:</span> <span class="n">clumpFile</span> <span class="o">=</span> <span class="n">path</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{cwd}/&#39;</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">f</span><span class="s1">&#39;{x:bn}&#39;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sumstatsFiles</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39;.clumped&#39;</span><span class="p">)</span>
+<span class="c1"># Output the bgen file with 8bit formatting</span>
+<span class="c1">#parameter: bgen_bits=16</span>
+<span class="c1"># Specific number of threads to use</span>
+<span class="kn">parameter:</span> <span class="n">numThreads</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="c1"># Specify the container to use</span>
+<span class="kn">parameter:</span> <span class="n">container_lmm</span> <span class="o">=</span> <span class="s1">&#39;statisticalgenetics/lmm:1.8&#39;</span>
+<span class="n">clumpregionFile</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{clumpFile:n}.clumped_region&#39;</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">bfile_ref</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+    <span class="n">bfile_ref</span> <span class="o">=</span> <span class="n">bfile</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Illustration-with-a-minimal-working-example">Illustration with a minimal working example<a class="anchor-link" href="#Illustration-with-a-minimal-working-example">&#182;</a></h2>
+<pre><code>JOB_OPT='-j 2'</code></pre>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>On a minimal working example (MWE) dataset generated by the <code>LMM.ipynb</code> workflow,</p>
+<p>Depending on wheter you are using bgen or plink binary files as input the reference_2 step will be skipped for the later.</p>
+<p>Available workflows are filter_samples, reference, default</p>
+
+<pre><code>sos run LD_Clumping.ipynb default\
+    --cwd output \
+    --bfile data/genotypes.bed \
+    --sampleFile data/genotypes.fam \
+    --genoFile data/genotypes*.bed \
+    --sumstatsFile output/phenotypes_BMI.fastGWA.snp_stats.gz \
+    --unrelated-samples data/unrelated_samples.txt \
+    --numThreads 5 \
+    --clump-p1 0.05 \
+    --clump-field P \
+    --clump-annotate BP
+    $JOB_OPT</code></pre>
+
+<pre><code>sos run LD_Clumping.ipynb default \
+    --cwd output \
+    --bfile data/genotypes.bed \
+    --sampleFile data/imputed_genotypes.sample \
+    --genoFile data/imputed_genotypes_chr*.bgen \
+    --sumstatsFile output/phenotypes_BMI.fastGWA.snp_stats.gz \
+    --unrelated-samples data/unrelated_samples.txt \
+    --numThreads 5 \
+    --clump-p1 0.05 \
+    --clump-field P \
+    --clump-annotate BP \
+    $JOB_OPT</code></pre>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Note">Note<a class="anchor-link" href="#Note">&#182;</a></h2><p>In step reference_2 as per PLINK conditions duplicated variants have to be removed and indels renamed to &lt;50 characters in length. PLINK1.9 is not capable of dealing with very long variant names and when merging different bed files it cannot handle multiallelic variants. The merge option is not available in PLINK2.0 as of this moment</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Select-a-random-subset-of-unrelated-samples">Select a random subset of unrelated samples<a class="anchor-link" href="#Select-a-random-subset-of-unrelated-samples">&#182;</a></h2><p>The unrelated sample file should be a text file containing white space separated columns. It should have a column named <code>IID</code> for sample IDs.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Create a white-space delimited file with a list of unrelated samples in data.</span>
+<span class="p">[</span><span class="n">filter_samples</span><span class="p">:</span> <span class="kp">provides</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{cwd}/{unrelated_samples:bn}.{ld_sample_size}.txt&#39;</span><span class="p">]</span>
+<span class="kn">input:</span> <span class="n">unrelated_samples</span><span class="p">,</span> <span class="n">sampleFile</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{cwd}/{unrelated_samples:bn}.{ld_sample_size}.txt&#39;</span>
+<span class="kn">R:</span> <span class="n">container</span> <span class="o">=</span> <span class="n">container_lmm</span><span class="p">,</span> <span class="n">expand</span> <span class="o">=</span> <span class="s2">&quot;${ }&quot;</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output:n}.stderr&#39;</span><span class="p">,</span> <span class="n">stdout</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output:n}.stdout&#39;</span>
+    <span class="nb">set</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">all_unrelated</span> <span class="o">=</span> <span class="n">read</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">r</span><span class="p">},</span> <span class="n">header</span><span class="o">=</span><span class="n">T</span><span class="p">)</span>
+    <span class="n">avail_samples</span> <span class="o">=</span> <span class="n">read</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span><span class="n">r</span><span class="p">},</span> <span class="n">header</span><span class="o">=</span><span class="n">F</span><span class="err">$</span><span class="p">{</span><span class="s2">&quot;&quot;</span> <span class="k">if</span> <span class="n">_input</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.fam&quot;</span> <span class="k">else</span> <span class="s2">&quot;, skip=2&quot;</span><span class="p">})</span>
+    <span class="n">unrelated_samples</span> <span class="o">=</span> <span class="n">which</span><span class="p">(</span><span class="n">avail_samples</span><span class="p">[,</span><span class="mi">1</span><span class="p">]</span> <span class="o">%</span><span class="ow">in</span><span class="o">%</span> <span class="n">all_unrelated</span><span class="err">$</span><span class="n">IID</span><span class="p">)</span>
+    <span class="n">dat</span> <span class="o">=</span> <span class="n">avail_samples</span><span class="p">[</span><span class="n">unrelated_samples</span><span class="p">,]</span>
+    <span class="k">if</span> <span class="p">(</span><span class="err">$</span><span class="p">{</span><span class="n">ld_sample_size</span><span class="p">}</span> <span class="o">&lt;</span> <span class="n">nrow</span><span class="p">(</span><span class="n">dat</span><span class="p">))</span> <span class="p">{</span>
+      <span class="n">dat</span> <span class="o">=</span> <span class="n">dat</span><span class="p">[</span><span class="n">sample</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">nrow</span><span class="p">(</span><span class="n">dat</span><span class="p">),</span> <span class="err">$</span><span class="p">{</span><span class="n">ld_sample_size</span><span class="p">}),</span> <span class="mi">1</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="n">F</span><span class="p">]</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="n">dat</span> <span class="o">=</span> <span class="n">dat</span><span class="p">[,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="n">F</span><span class="p">]</span>
+    <span class="p">}</span>
+    <span class="n">write</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">:</span><span class="n">r</span><span class="p">},</span> <span class="n">quote</span><span class="o">=</span><span class="n">F</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">names</span><span class="o">=</span><span class="n">F</span><span class="p">,</span> <span class="n">col</span><span class="o">.</span><span class="n">names</span><span class="o">=</span><span class="n">F</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Select-Filter-the-BGEN-files">Select Filter the BGEN files<a class="anchor-link" href="#Select-Filter-the-BGEN-files">&#182;</a></h2><p>This step is based on the samples selected in the previous step</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Select a subset of samples from the bgen files</span>
+<span class="p">[</span><span class="n">filter_bgen_1</span><span class="p">]</span>
+<span class="kn">parameter:</span> <span class="n">genoFile</span> <span class="o">=</span> <span class="nb">list</span>
+<span class="kn">depends:</span> <span class="n">f</span><span class="s1">&#39;{cwd}/{unrelated_samples:bn}.{ld_sample_size}.txt&#39;</span>
+<span class="kn">input:</span> <span class="n">genoFile</span><span class="p">,</span> <span class="n">group_by</span><span class="o">=</span><span class="mi">1</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{cwd}/cache/{_input:bn}.{ld_sample_size}.bgen&#39;</span>
+<span class="kn">task:</span> <span class="kp">trunk_workers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">trunk_size</span> <span class="o">=</span> <span class="n">job_size</span><span class="p">,</span> <span class="kp">walltime</span> <span class="o">=</span> <span class="s1">&#39;48h&#39;</span><span class="p">,</span>  <span class="kp">mem</span> <span class="o">=</span> <span class="s1">&#39;60G&#39;</span><span class="p">,</span> <span class="kp">tags</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{step_name}_{_output:bn}&#39;</span>
+<span class="kn">bash:</span> <span class="n">container</span> <span class="o">=</span> <span class="n">container_lmm</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span> <span class="bp">True</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output:n}.stderr&#39;</span><span class="p">,</span> <span class="n">stdout</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output:n}.stdout&#39;</span>
+   <span class="n">qctool</span> <span class="o">-</span><span class="n">g</span> <span class="p">{</span><span class="n">_input</span><span class="p">}</span> <span class="o">-</span><span class="n">s</span> <span class="p">{</span><span class="n">sampleFile</span><span class="p">}</span> <span class="o">-</span><span class="n">og</span> <span class="p">{</span><span class="n">_output</span><span class="p">}</span> <span class="o">-</span><span class="n">os</span> <span class="p">{</span><span class="n">_output</span><span class="p">:</span><span class="n">n</span><span class="p">}</span> <span class="o">-</span><span class="n">incl</span><span class="o">-</span><span class="n">samples</span> <span class="p">{</span><span class="n">_depends</span><span class="p">}</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Make-PLINK-files-with-the-selected-samples">Make PLINK files with the selected samples<a class="anchor-link" href="#Make-PLINK-files-with-the-selected-samples">&#182;</a></h2><p>The BGEN files extracted have to be converted to PLINK format because currently LD clumping in PLINK 1.9 does not work with BGEN format.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Make the binary files for bgen input using the selected samples and exclude repeated variant ids</span>
+<span class="p">[</span><span class="n">filter_bgen_2</span><span class="p">]</span>
+<span class="kn">depends:</span> <span class="n">Py_Module</span><span class="p">(</span><span class="s1">&#39;xxhash&#39;</span><span class="p">)</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{cwd}/cache/{_input:bn}.bed&#39;</span>
+<span class="kn">task:</span> <span class="kp">trunk_workers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">trunk_size</span> <span class="o">=</span> <span class="n">job_size</span><span class="p">,</span> <span class="kp">walltime</span> <span class="o">=</span> <span class="s1">&#39;48h&#39;</span><span class="p">,</span> <span class="kp">mem</span> <span class="o">=</span> <span class="s1">&#39;60G&#39;</span><span class="p">,</span> <span class="kp">cores</span> <span class="o">=</span> <span class="n">numThreads</span><span class="p">,</span> <span class="kp">tags</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{step_name}_{_output:bn}&#39;</span>
+<span class="kn">bash:</span> <span class="n">container</span> <span class="o">=</span> <span class="n">container_lmm</span><span class="p">,</span> <span class="n">expand</span> <span class="o">=</span> <span class="s2">&quot;${ }&quot;</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output:n}.stderr&#39;</span><span class="p">,</span> <span class="n">stdout</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output:n}.stdout&#39;</span>
+    <span class="c1"># try create index if not exist</span>
+    <span class="n">bgenix</span> <span class="o">-</span><span class="n">g</span> <span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">}</span> <span class="o">-</span><span class="n">index</span> <span class="o">||</span> <span class="n">true</span>
+    <span class="c1"># get a list of duplicated SNP IDs</span>
+    <span class="n">bgenix</span> <span class="o">-</span><span class="n">g</span> <span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">}</span> <span class="o">-</span><span class="nb">list</span> <span class="mi">2</span><span class="o">&gt;/</span><span class="n">dev</span><span class="o">/</span><span class="n">null</span> <span class="o">|</span> <span class="n">grep</span> <span class="o">-</span><span class="n">v</span> <span class="s2">&quot;#&quot;</span> <span class="o">|</span> <span class="n">tail</span> <span class="o">-</span><span class="n">n</span><span class="o">+</span><span class="mi">2</span> <span class="o">|</span> <span class="n">cut</span> <span class="o">-</span><span class="n">d</span><span class="err">$</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span> <span class="o">-</span><span class="n">f2</span> <span class="o">|</span> <span class="n">sort</span> <span class="o">|</span> <span class="n">uniq</span> <span class="o">-</span><span class="n">d</span> <span class="o">&gt;</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">:</span><span class="n">n</span><span class="p">}</span><span class="o">.</span><span class="n">exclude</span>
+    <span class="n">plink2</span> \
+    <span class="o">--</span><span class="n">bgen</span> <span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">}</span> <span class="n">ref</span><span class="o">-</span><span class="n">first</span> \
+    <span class="o">--</span><span class="n">sample</span> <span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">:</span><span class="n">n</span><span class="p">}</span><span class="o">.</span><span class="n">sample</span> \
+    <span class="o">--</span><span class="n">make</span><span class="o">-</span><span class="n">bed</span> \
+    <span class="o">--</span><span class="n">exclude</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">:</span><span class="n">n</span><span class="p">}</span><span class="o">.</span><span class="n">exclude</span> \
+    <span class="o">--</span><span class="n">out</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">:</span><span class="n">n</span><span class="p">}</span> \
+    <span class="o">--</span><span class="n">threads</span> <span class="err">$</span><span class="p">{</span><span class="n">numThreads</span><span class="p">}</span> \
+    <span class="o">--</span><span class="n">memory</span> <span class="mi">12000</span>
+    
+<span class="kn">python:</span> <span class="n">expand</span><span class="o">=</span> <span class="s2">&quot;${ }&quot;</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output:n}.stderr&#39;</span><span class="p">,</span> <span class="n">stdout</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output:n}.stdout&#39;</span>
+    <span class="c1"># Fix SNP names longer than 50 characters. </span>
+    <span class="c1"># This will result in a false insufficient memory alert and error in the next step, if not dealt with</span>
+    <span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+    <span class="kn">from</span> <span class="nn">xxhash</span> <span class="kn">import</span> <span class="n">xxh32</span> <span class="k">as</span> <span class="n">xxh</span>
+    <span class="k">def</span> <span class="nf">shorten_id</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">x</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">30</span> <span class="k">else</span> <span class="n">f</span><span class="s2">&quot;{x.split(&#39;_&#39;)[0]}_{xxh(x).hexdigest()}&quot;</span>
+
+    <span class="n">dat</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;${_output:n}.bim&#39;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">dat</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;chrom&#39;</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;gd&#39;</span><span class="p">,</span> <span class="s1">&#39;pos&#39;</span><span class="p">,</span> <span class="s1">&#39;a1&#39;</span><span class="p">,</span> <span class="s1">&#39;a2&#39;</span><span class="p">]</span>
+    <span class="n">dat</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dat</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">shorten_id</span><span class="p">)</span>
+    <span class="n">dat</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s1">&#39;${_output:n}.bim&#39;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Filter-PLINK-files">Filter PLINK files<a class="anchor-link" href="#Filter-PLINK-files">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Select a subset of samples from the plink files</span>
+<span class="p">[</span><span class="n">filter_plink</span><span class="p">]</span>
+<span class="kn">parameter:</span> <span class="n">genoFile</span> <span class="o">=</span> <span class="nb">list</span>
+<span class="kn">depends:</span> <span class="n">f</span><span class="s1">&#39;{cwd}/{unrelated_samples:bn}.{ld_sample_size}.txt&#39;</span>
+<span class="kn">input:</span> <span class="n">genoFile</span><span class="p">,</span> <span class="n">group_by</span><span class="o">=</span><span class="mi">1</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{cwd}/cache/{_input:bn}.{ld_sample_size}.bed&#39;</span>
+<span class="kn">task:</span> <span class="kp">trunk_workers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">trunk_size</span> <span class="o">=</span> <span class="n">job_size</span><span class="p">,</span> <span class="kp">walltime</span> <span class="o">=</span> <span class="s1">&#39;48h&#39;</span><span class="p">,</span>  <span class="kp">mem</span> <span class="o">=</span> <span class="s1">&#39;60G&#39;</span><span class="p">,</span> <span class="kp">tags</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{step_name}_{_output:bn}&#39;</span>
+<span class="kn">bash:</span> <span class="n">container</span> <span class="o">=</span> <span class="n">container_lmm</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span> <span class="bp">True</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output:n}.stderr&#39;</span><span class="p">,</span> <span class="n">stdout</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output:n}.stdout&#39;</span>
+    <span class="n">plink</span> <span class="o">--</span><span class="n">bfile</span> <span class="p">{</span><span class="n">_input</span><span class="p">:</span><span class="n">n</span><span class="p">}</span> <span class="o">--</span><span class="n">keep</span><span class="o">-</span><span class="n">fam</span> <span class="p">{</span><span class="n">_depends</span><span class="p">}</span> <span class="o">--</span><span class="n">make</span><span class="o">-</span><span class="n">bed</span> <span class="o">--</span><span class="n">out</span> <span class="p">{</span><span class="n">_output</span><span class="p">:</span><span class="n">n</span><span class="p">}</span> <span class="o">--</span><span class="n">threads</span> <span class="p">{</span><span class="n">numThreads</span><span class="p">}</span> <span class="o">--</span><span class="n">memory</span> <span class="mi">12000</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="p">[</span><span class="n">reference_1</span><span class="p">]</span>
+<span class="n">bgen</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">genoFile</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s1">&#39;.bgen&#39;</span><span class="p">]</span>
+<span class="n">plink</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">genoFile</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s1">&#39;.bed&#39;</span><span class="p">]</span>
+<span class="kn">input:</span> <span class="n">genoFile</span><span class="p">,</span> <span class="n">group_by</span><span class="o">=</span><span class="mi">1</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{cwd}/cache/{_input:bn}.{ld_sample_size}.bed&#39;</span>
+<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bgen</span><span class="p">):</span>
+    <span class="n">sos_run</span><span class="p">(</span><span class="s1">&#39;filter_bgen&#39;</span><span class="p">,</span> <span class="n">genoFile</span><span class="o">=</span><span class="n">bgen</span><span class="p">)</span>
+<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">plink</span><span class="p">):</span>
+    <span class="n">sos_run</span><span class="p">(</span><span class="s1">&#39;filter_plink&#39;</span><span class="p">,</span> <span class="n">genoFile</span><span class="o">=</span><span class="n">plink</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Merge-all-chroms-to-one-file">Merge all chroms to one file<a class="anchor-link" href="#Merge-all-chroms-to-one-file">&#182;</a></h2><p>This is necessary for LD clumping in PLINK to work properly. We cannot <code>--merge</code> and <code>--make-bed</code> starting from bgen files in PLINK 2 at this point.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[1]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Merge all the .bed files into one reference file to use in clumping step</span>
+<span class="p">[</span><span class="n">reference_2</span><span class="p">]</span>
+<span class="kn">input:</span> <span class="n">group_by</span><span class="o">=</span><span class="s1">&#39;all&#39;</span>
+<span class="kn">output:</span> <span class="n">bfile_ref</span>
+<span class="kn">task:</span> <span class="kp">trunk_workers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">trunk_size</span> <span class="o">=</span> <span class="n">job_size</span><span class="p">,</span> <span class="kp">walltime</span> <span class="o">=</span> <span class="s1">&#39;48h&#39;</span><span class="p">,</span> <span class="kp">mem</span> <span class="o">=</span> <span class="s1">&#39;60G&#39;</span><span class="p">,</span> <span class="kp">cores</span> <span class="o">=</span> <span class="n">numThreads</span><span class="p">,</span> <span class="kp">tags</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{step_name}_{_output:bn}&#39;</span>
+<span class="kn">bash:</span> <span class="n">container</span> <span class="o">=</span> <span class="n">container_lmm</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span> <span class="s2">&quot;${ }&quot;</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output:n}.stderr&#39;</span><span class="p">,</span> <span class="n">stdout</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output:n}.stdout&#39;</span>
+    <span class="n">echo</span> <span class="o">-</span><span class="n">e</span> <span class="err">$</span><span class="p">{</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">_input</span><span class="p">[</span><span class="mi">1</span><span class="p">:]])}</span> <span class="o">|</span> <span class="n">sed</span> <span class="s1">&#39;s/ /</span><span class="se">\n</span><span class="s1">/g&#39;</span> <span class="o">&gt;</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">:</span><span class="n">n</span><span class="p">}</span><span class="o">.</span><span class="n">merge_list</span>
+    <span class="n">plink</span> \
+    <span class="o">--</span><span class="n">bfile</span> <span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">n</span><span class="p">}</span> \
+    <span class="o">--</span><span class="n">merge</span><span class="o">-</span><span class="nb">list</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">:</span><span class="n">n</span><span class="p">}</span><span class="o">.</span><span class="n">merge_list</span> \
+    <span class="o">--</span><span class="n">make</span><span class="o">-</span><span class="n">bed</span> \
+    <span class="o">--</span><span class="n">out</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">:</span><span class="n">n</span><span class="p">}</span> \
+    <span class="o">--</span><span class="n">threads</span> <span class="err">$</span><span class="p">{</span><span class="n">numThreads</span><span class="p">}</span> \
+    <span class="o">--</span><span class="n">memory</span> <span class="mi">48000</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Perform-LD-clumping-per-chrom">Perform LD clumping per chrom<a class="anchor-link" href="#Perform-LD-clumping-per-chrom">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Note: The same fields are extracted from all results files (e.g. SNP and P) -- i.e. it is not possible to specify different fields from different files</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[2]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Perform LD-clumping in PLINKv1.9</span>
+<span class="p">[</span><span class="n">default</span><span class="p">]</span>
+<span class="kn">depends:</span> <span class="n">bfile_ref</span>
+<span class="kn">input:</span> <span class="n">bfile_ref</span>  
+<span class="kn">output:</span> <span class="n">clumpFile</span><span class="p">,</span> <span class="n">clumpregionFile</span> 
+<span class="kn">task:</span> <span class="kp">trunk_workers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">trunk_size</span> <span class="o">=</span> <span class="n">job_size</span><span class="p">,</span> <span class="kp">walltime</span> <span class="o">=</span> <span class="s1">&#39;48h&#39;</span><span class="p">,</span> <span class="kp">mem</span> <span class="o">=</span> <span class="s1">&#39;48G&#39;</span><span class="p">,</span><span class="kp">cores</span> <span class="o">=</span> <span class="n">numThreads</span><span class="p">,</span> <span class="kp">tags</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{step_name}_{_output[0]:bn}&#39;</span>
+<span class="kn">bash:</span> <span class="n">container</span> <span class="o">=</span> <span class="n">container_lmm</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span> <span class="s2">&quot;${ }&quot;</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output[0]:n}.stderr&#39;</span><span class="p">,</span> <span class="n">stdout</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output[0]:n}.stdout&#39;</span>   
+    <span class="n">plink</span> \
+    <span class="o">--</span><span class="n">bfile</span> <span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">:</span><span class="n">n</span><span class="p">}</span> \
+    <span class="o">--</span><span class="n">clump</span> <span class="err">$</span><span class="p">{</span><span class="n">sumstatsFiles</span><span class="p">:,}</span> \
+    <span class="o">--</span><span class="n">clump</span><span class="o">-</span><span class="n">field</span> <span class="err">$</span><span class="p">{</span><span class="n">clump_field</span><span class="p">}</span> \
+    <span class="o">--</span><span class="n">clump</span><span class="o">-</span><span class="n">p1</span> <span class="err">$</span><span class="p">{</span><span class="n">clump_p1</span><span class="p">}</span> \
+    <span class="o">--</span><span class="n">clump</span><span class="o">-</span><span class="n">p2</span> <span class="err">$</span><span class="p">{</span><span class="n">clump_p2</span><span class="p">}</span> \
+    <span class="o">--</span><span class="n">clump</span><span class="o">-</span><span class="n">r2</span> <span class="err">$</span><span class="p">{</span><span class="n">clump_r2</span><span class="p">}</span> \
+    <span class="o">--</span><span class="n">clump</span><span class="o">-</span><span class="n">kb</span> <span class="err">$</span><span class="p">{</span><span class="n">clump_kb</span><span class="p">}</span> \
+    <span class="o">--</span><span class="n">clump</span><span class="o">-</span><span class="n">verbose</span> \
+    <span class="err">$</span><span class="p">{(</span><span class="s2">&quot;--clump-annotate </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">clump_annotate</span><span class="p">)</span> <span class="k">if</span> <span class="n">clump_annotate</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">}</span> \
+    <span class="o">--</span><span class="n">clump</span><span class="o">-</span><span class="n">allow</span><span class="o">-</span><span class="n">overlap</span> \
+    <span class="o">--</span><span class="n">out</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">n</span><span class="p">}</span> \
+    <span class="o">--</span><span class="n">threads</span> <span class="err">$</span><span class="p">{</span><span class="n">numThreads</span><span class="p">}</span> \
+    <span class="o">&amp;&amp;</span> <span class="n">touch</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">[</span><span class="mi">0</span><span class="p">]}</span> <span class="c1"># need to touch and create empty file because some chroms may not have anything significant to clump.</span>
+    <span class="n">grep</span> <span class="s2">&quot;RANGE&quot;</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">[</span><span class="mi">0</span><span class="p">]}</span> <span class="o">|</span> <span class="n">awk</span> <span class="o">-</span><span class="n">F</span> <span class="s2">&quot;:&quot;</span> <span class="s1">&#39;{print $2, $3}&#39;</span> <span class="o">|</span> <span class="n">sort</span> <span class="o">-</span><span class="n">V</span> <span class="o">|</span> <span class="n">sed</span> <span class="s1">&#39;s/\../ /g; s/^[[:blank:]]*//g ; s/chr//g&#39;</span> <span class="o">&gt;</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">[</span><span class="mi">1</span><span class="p">]}</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<hr>
+&copy 2020-current Gao Wang and others, Department of Neurology at Columbia University
+<p><small>Exported from <a href="http://github.com/cumc/bioworkflows/blob/481a5b47ffd675b19259ea543b1bd204f1b2f75a/GWAS/LD_Clumping.ipynb"><code>GWAS/LD_Clumping.ipynb</code></a> committed by minqiao on Wed Mar 17 18:37:52 2021 <a href="http://github.com/cumc/bioworkflows/commit/481a5b47ffd675b19259ea543b1bd204f1b2f75a">revision 17, 481a5b4</a> <a href="https://stephenslab.github.io/ipynb-website/notes.html#Note-about-commit-ids"><span class="fa fa-question-circle"></span></a></small></p>
+</div>
+</div>
+</body>
+</html>
