@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="ipynb_website:version" content="0.9.7" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="stylesheet" type="text/css" href="../css/jt.css">
+
+<link rel="stylesheet" type="text/css" href="../css/toc2.css">
+
+<link href="../site_libs/jqueryui-1.11.4/jquery-ui.css">
+<link rel="stylesheet" href="../site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="../site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.9.1/jquery-ui.min.js"></script>
+<script src="../site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="../site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="../site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+
+<link rel="stylesheet"
+      href="../site_libs/highlightjs/null.min.css"
+      type="text/css" />
+
+<script src="../site_libs/highlightjs/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+<script src="../js/doc_toc.js"></script>
+<script src="../js/docs.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX", "output/HTML-CSS"],
+        tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+        displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+        processEscapes: true
+        },
+        "HTML-CSS": {
+            preferredFont: "TeX",
+            availableFonts: ["TeX"],
+            styles: {
+                scale: 110,
+                ".MathJax_Display": {
+                    "font-size": "110%",
+                }
+            }
+        }
+    });
+</script>
+<script>
+function filterDataFrame(id) {
+    var input = document.getElementById("search_" + id);
+    var filter = input.value.toUpperCase();
+    var table = document.getElementById("dataframe_" + id);
+    var tr = table.getElementsByTagName("tr");
+    // Loop through all table rows, and hide those who don't match the search query
+    for (var i = 1; i < tr.length; i++) {
+        for (var j = 0; j < tr[i].cells.length; ++j) {
+            var matched = false;
+            if (tr[i].cells[j].innerHTML.toUpperCase().indexOf(filter) != -1) {
+                tr[i].style.display = "";
+                matched = true
+                break;
+            }
+            if (!matched)
+                tr[i].style.display = "none";
+        }
+    }
+}
+function sortDataFrame(id, n, dtype) {
+    var table = document.getElementById("dataframe_" + id);
+    var tb = table.tBodies[0]; // use `<tbody>` to ignore `<thead>` and `<tfoot>` rows
+    var tr = Array.prototype.slice.call(tb.rows, 0); // put rows into array
+    if (dtype === 'numeric') {
+        var fn = function(a, b) { 
+            return parseFloat(a.cells[n].textContent) <= parseFloat(b.cells[n].textContent) ? -1 : 1;
+        }
+    } else {
+        var fn = function(a, b) {
+            var c = a.cells[n].textContent.trim().localeCompare(b.cells[n].textContent.trim()); 
+            return c > 0 ? 1 : (c < 0 ? -1 : 0) }
+    }
+    var isSorted = function(array, fn) {
+        if (array.length < 2)
+            return 1;
+        var direction = fn(array[0], array[1]); 
+        for (var i = 1; i < array.length - 1; ++i) {
+            var d = fn(array[i], array[i+1]);
+            if (d == 0)
+                continue;
+            else if (direction == 0)
+                direction = d;
+            else if (direction != d)
+                return 0;
+            }
+        return direction;
+    }
+    var sorted = isSorted(tr, fn);
+    if (sorted == 1 || sorted == -1) {
+        // if sorted already, reverse it
+        for(var i = tr.length - 1; i >= 0; --i)
+            tb.appendChild(tr[i]); // append each row in order
+    } else {
+        tr = tr.sort(fn);
+        for(var i = 0; i < tr.length; ++i)
+            tb.appendChild(tr[i]); // append each row in order
+    }
+}
+</script>
+
+<script>
+$( document ).ready(function(){
+            var cfg={'threshold':3,     // depth of toc (number of levels)
+             'number_sections': false,
+             'toc_cell': false,          // useless here
+             'toc_window_display': true, // display the toc window
+             "toc_section_display": "block", // display toc contents in the window
+             'sideBar':true,       // sidebar or floating window
+             'navigate_menu':false       // navigation menu (only in liveNotebook -- do not change)
+            }
+            var st={};                  // some variables used in the script
+            st.rendering_toc_cell = false;
+            st.config_loaded = false;
+            st.extension_initialized=false;
+            st.nbcontainer_marginleft = $('#notebook-container').css('margin-left')
+            st.nbcontainer_marginright = $('#notebook-container').css('margin-right')
+            st.nbcontainer_width = $('#notebook-container').css('width')
+            st.oldTocHeight = undefined
+            st.cell_toc = undefined;
+            st.toc_index=0;
+            // fire the main function with these parameters
+            table_of_contents(cfg, st);
+            var file=ldpredDict[$("h1:first").attr("id")];
+            $("#toc-level0 a").css("color","#126dce");
+            $('a[href="#'+$("h1:first").attr("id")+'"]').hide()
+            var docs=ldpredArray;
+            var docs_map=ldpredArrayMap;
+            var pos=ldpredArray.indexOf(file);
+            for (var a=pos;a>=0;a--){
+                  $('<li><a href="'+docs[a]+'.html"><font color="#073642"><b>'+docs_map[docs[a]].replace(/_/g," ")+'</b></font></a></li>').insertBefore("#toc-level0 li:eq(0)");
+            }
+            $('a[href="'+file+'.html'+'"]').css("color","#126dce");
+            for (var a=pos+1;a<docs.length;a++){
+                  $(".toc #toc-level0").append('<li><a href="'+docs[a]+'.html"><font color="#073642"><b>'+docs_map[docs[a]].replace(/_/g," ")+'</b></font></a></li>');
+            }
+            // $("#toc-header").hide(); // comment out because it prevents search bar from displaying
+    });
+</script>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+  // mark it active
+  menuAnchor.parent().addClass('active');
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+<div class="container-fluid main-container">
+<!-- tabsets -->
+<script src="../site_libs/navigation-1.1/tabsets.js"></script>
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+
+
+<title>Some computational genomics workflows</title>
+
+<style type = "text/css">
+body {
+  font-family: "Droid Sans";
+  padding-top: 66px;
+  padding-bottom: 40px;
+}
+</style>
+</head>
+
+<body>
+<div tabindex="-1" id="notebook" class="border-box-sizing">
+<div class="container" id="notebook-container">
+
+<!-- code folding -->
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="../index.html">Some computational genomics workflows</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        
+<li>
+  <a href="../index.html">Overview</a>
+</li>
+        
+      </ul>
+        
+<ul class="nav navbar-nav navbar-right">
+<li>
+   <a href="http://github.com/cumc/bioworkflows"> <span class="fa fa-github"></span> </a>
+</li>
+</ul>
+        
+      </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="LDpred2-Pipeline-for-Polygenic-Risk-Score-Prediction">LDpred2 Pipeline for Polygenic Risk Score Prediction<a class="anchor-link" href="#LDpred2-Pipeline-for-Polygenic-Risk-Score-Prediction">&#182;</a></h1><p>This notebook shows the pipepline for genome-wide PRS prediction using R package <a href="https://privefl.github.io/bigsnpr/">bigsnpr</a> and <a href="https://zzz.bwh.harvard.edu/plink/">PLINK v1.9</a> implementing the <a href="https://pubmed.ncbi.nlm.nih.gov/33326037/">LDpred2</a>  method referenced on the tutorials from <a href="https://privefl.github.io/bigsnpr/articles/LDpred2.html">Florian Privé</a> and <a href="https://choishingwan.github.io/PRS-Tutorial/ldpred/">Shing Wan Choi</a>.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><em>Author: Mengyu Zhang, mengyu1307@gmail.com with input from Gao Wang</em></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Aim">Aim<a class="anchor-link" href="#Aim">&#182;</a></h2><p>The pipeline is developed to derive PRS from posterior effect size estimated by LDpred model. Plus, this pipeline can perform phenotypes prediction using PRS and covariates, which enables users to explore the association between PRS, covariates and phenotypes.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Methods">Methods<a class="anchor-link" href="#Methods">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="PRS-model">PRS model<a class="anchor-link" href="#PRS-model">&#182;</a></h3><p>Typically, phenotype $Y$ for $N$ individuals is modeled as a linear combination of $M$ genetic effects, $P$ covaritates and an independent random noise shown as formula (1).</p>
+$$
+Y = \sum_{i=j}^{M} X_{j} \beta_{j} + \sum_{j=1}^{P} Z_{j} \alpha_{j} + \varepsilon \tag{1}
+$$<p>Assuming genotype $X$ is centered and scaled, the (marginal) least-squares estimate of an individual marker effect is $\hat\beta_j=X_j^\prime Y/N$.</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/26430803/">LDpred</a> is a Bayesian PRS that account for the effects of linkage disequilibrium (LD). It estimates posterior mean causaul effect sizes from GWAS summary statistics by assuming <strong>genetic <em>architecture</em> prior</strong> and <strong>LD information from a reference panel</strong>.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="LD-reference-panel">LD reference panel<a class="anchor-link" href="#LD-reference-panel">&#182;</a></h3><p>The choice of reference panel is crucial to the prediction performance of LDpred model. Population structure should ideally be the same (and in practice as similar as possible) between reference panel and training data that summary statistics are calculated from.</p>
+<p>Also, a <a href="https://www.nature.com/articles/s41596-020-0353-1">preliminary quality control</a> on genotype reference data should be conducted. This includes but not limited to</p>
+<ol>
+<li>Filter individuals with much (&gt;10%) genotype calls missing and filter SNPs that had a missing rate more than 1% and a minor allele frequency (MAF) greater than 1%</li>
+<li>Remove SNPs that have ambiguous nucleotides, i.e., A/T and G/C. </li>
+</ol>
+<p>In addition to SNP filtering, <a href="http://statgen.us/lab-wiki/compbio_tutorial/allele_qc">SNP flipping</a> may be necessary. It is of importance that GWAS summary stats has the same effect allele, and non-effect allele. Therefore, if the alleles of a SNP in the summary stats is the reverse of the alleles of the reference panel, the sign of z-scores (also effect size, log odds ratio, etc) is need to be flipped. At the end, summary statistics and reference panel will be matched on the basis of the SNP rsID.</p>
+<p>Independent validation cohort or dataset can be used as LD reference panel. Here is an example in the literature: <a href="https://pubmed.ncbi.nlm.nih.gov/26430803/">Bjarni J. Vilhja´lmsson (2015)</a> used 1000 Genome, Hapmap imputed cohort validation dataset as reference panel. He analyzed six large summary-statistics datasets in his study, including schizophrenia with European and non-European ancestry, multiple sclerosis (MS), breast cancer (BC), coronary crtery cisease (CAD), type II diabetes (T2D) and height. For schizophrenia with European ancestry, they used the Psychiatric Genomics Consortium 2 (PGC2) SCZ summary statistics excluding the ISC (International Schizophrenia Consortium) cohorts and the MGS (Molecular Genetics of Schizophrenia) cohorts. ISC and MGS datasets are used as validation datasets. For non-European ancestry, MGS validation datasets was used as an LD reference. To coordinate the summary statistics from Asian population, they used overlap among 1000 Genomes imputed MGS genotypes and the 1000 Genomes imputed validation genotypes for the three Asian validation datasets (JPN1, TCR1, and HOK2), respectively. For African-American (AFAM) population, they used overlap among the 1000 Genomes imputed MGS genotypes and the HapMap 3 imputed AFAM genotypes.</p>
+<p>The reference panel applied in this pipeline is 1000 genomes project (phase 3) data including 503 (mostly unrelated) European individuals and ~1.7M SNPs in common with either HapMap3 or the UK Biobank. EUR includes Utah Residents (CEPH) with Northern and Western European Ancestry, Toscani in Italia, Finnish in Finland, British in England and Scotland and Iberian Population in Spain.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="LDpred-prior-effect-size-model">LDpred prior effect size model<a class="anchor-link" href="#LDpred-prior-effect-size-model">&#182;</a></h3><p>The <strong>prior for effect sizes</strong> is a point-normal mixture distribution with 2 hyper-parameters:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Heritability-(parameter)-explained-by-the-genotypes">Heritability (parameter) explained by the genotypes<a class="anchor-link" href="#Heritability-(parameter)-explained-by-the-genotypes">&#182;</a></h4><p>The heritability $h_g^2$ is estimated from LD score regression and is used as initial parameter for LDpred2 algorithm.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="Fraction-of-causal-markers-(i.e.,-the-fraction-of-markers-with-non-zero-effects)">Fraction of causal markers (i.e., the fraction of markers with non-zero effects)<a class="anchor-link" href="#Fraction-of-causal-markers-(i.e.,-the-fraction-of-markers-with-non-zero-effects)">&#182;</a></h4><p>The distribution of effect size for variant $j$ is given as</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+$$
+\beta_{j}  \sim\left\{\begin{array}{ll}
+\mathcal{N}\left(0, \frac{h_g^{2}}{M p}\right) &amp; \text { with probability } \mathrm{p} \\
+0 &amp; \text { otherwise }
+\end{array}\right. \tag{2}
+$$
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h4 id="LDpred-inf-(infinitesimal-model)">LDpred-inf (infinitesimal model)<a class="anchor-link" href="#LDpred-inf-(infinitesimal-model)">&#182;</a></h4><p>In this case, all markers are <strong>causal</strong> ($p$=1), and effect drawn from a Gaussian distribution, i.e., $\beta_{ij} \sim_{i i d} N\left(0,\left(h_{g}^{2} / M\right)\right)$. The posterior mean can be derived analytically</p>
+$$
+E(\beta_j \mid \tilde{\beta}_j, D) \approx\left(\frac{M}{N h_{g}^{2}} I+D\right)^{-1} \tilde{\beta}_j \tag{3}
+$$<p>where $\tilde{\beta}_{j}$ denotes a vector of marginally estimated least-squares estimates obtained from the GWAS summary statistics. $D$ denotes the LD matrix between the markers in the training data.</p>
+<h4 id="LDpred-grid/auto-(non-infinitesimal-model)">LDpred-grid/auto (non-infinitesimal model)<a class="anchor-link" href="#LDpred-grid/auto-(non-infinitesimal-model)">&#182;</a></h4><p>Without considering LD, the posterior mean of effect size can be derived as</p>
+$$
+\mathrm{E}\left(\beta_{j} \mid \tilde{\beta}_{j}\right)=\left(\frac{ h_{g}^{2}}{h_{g}^{2}+\frac{M p}{N}}\right) \bar{p}_{j} \tilde{\beta}_{j} \tag{4}
+$$<p>where $\bar p_j$ is the posterior probability that the $j^{th}$ marker is causal.</p>
+<p>However, it is very difficult to derive a analytical expression for the posterior mean under a non-infinitesimal Gaussian mixture prior. Therefore, LDpred approximates it numerically by using an approximate MCMC Gibbs sampler. Once posterior mean effect sizes are estimated, they will be applied to genotype data to obtain <strong>PRSs</strong>.</p>
+<p>Grid model tries a grid of parameters that $p$ ranges from 0 to 1 and three $h^2$ which are 0.7/1/1.4 times of initial $h^2$ estimated by LD score regression. The best combination of $p$ and $h^2$ will be selected according to the t score associated with each variants and covariates in phenotype model. Auto model runs the algorithm for 30 different $p$ values ranging from 10e-4 to 0.9. $h^2$ estimated from LD score regression is the initial value of algorithm.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="LDpred2">LDpred2<a class="anchor-link" href="#LDpred2">&#182;</a></h3><p>LDpred2 is LDpred 2.0. It can estimate effect size without using validation data to tunning hyper-parameters. Plus, it provides better predictive performance when the causal varients in long-range LD regions and sparse.</p>
+<p>LDpred2 algorithm relies on an assumption that</p>
+$$
+\operatorname{sd}\left(G_{j}\right) \approx \frac{\operatorname{sd}(Y)}{\operatorname{se}\left(\hat{\gamma}_{j}\right) \sqrt{n}} \tag{5}
+$$<p>where $G_j$ the genotype vector for variant $j$, and $\hat{\gamma}_{j}$ is marginal effect of vairant $j$. For binary traits with logistic model, the approximation is</p>
+$$
+\operatorname{sd}\left(G_{j}\right) \approx \frac{2}{\operatorname{se}\left(\hat{\gamma}_{j}\right) \sqrt{n_{\mathrm{eff}}}} \tag{6}
+$$<p>where</p>
+$$
+n_{\mathrm{eff}}=\frac{4}{1 / n_{\text {case }}+1 / n_{\text {control }}} \tag{7}
+$$<p>To ensure the validity of the assumption, quality control on summary statistics is highly recommanded: remove variants with $SD_{ss} &lt; 0.5\times SD_{val}$ or $SD_{ss} &gt; 0.1 + SD_{val}$ or $SD_{ss} &lt; 0.1$ or $SD_{val} &lt; 0.05$. $SD_{ss}$ is the standard deviations derived from the summary statistics (right-hand side of equation). $SD_{val}$ is the standard deviations of genotypes of individuals in the validation set (training set) (left-hand side).</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Other-Methods-for-PRS-Prediction">Other Methods for PRS Prediction<a class="anchor-link" href="#Other-Methods-for-PRS-Prediction">&#182;</a></h3><p>An intuitive and simple method for prediction is <strong>unadjusted PRS</strong>. Given linear model (1), the standard unadjusted polygenic ris score for $i^{th}$ individual is $S_i=\sum_{j=1}^MX_{ij}\hat\beta_j$ under the assumption that $X_j$ are uncorrelated.</p>
+<p>Pruning/Clumping and thresholding (P $+$ T, C $+$ T) is a commonly used approach to preidct PRS. Variants are filterd based on an empirically determined P-value threshold. Then linked variants will be clumped into the same group. Within each group, calculate correlation among index variants and nearby variants within certain genetic distance and remove correlated nearby variants beyond a certain value. Finally, only SNPs with lowest P values in each group are selected into the prediction model.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Method-for-Phenotype-Prediction">Method for Phenotype Prediction<a class="anchor-link" href="#Method-for-Phenotype-Prediction">&#182;</a></h3><p>Target data is splited into train dataset (80%) and test dataset (20%). Fit linear/logistic model on train dataset and then predict the phenotype on testdata. MSE and $R^2$ are calculated to considered as potential metrics to evaluate model performance of prediction. Missing genotypes are imputed with the mean of the genotype dosage for that variant with <code>snp_fastImputeSimple()</code> according to <a href="https://github.com/privefl/bigsnpr/issues/124#issuecomment-668598849">Florian Privé</a>.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Input">Input<a class="anchor-link" href="#Input">&#182;</a></h2><ol>
+<li><p>Reference panel</p>
+<p><code>--reference_geno</code></p>
+</li>
+<li><p>Target data: genotypes and phenotypes</p>
+<p><code>--target_geno</code></p>
+<p>File contians only covariate predictors:</p>
+<p><code>--covFile</code></p>
+<p>File contrians only traits one column (phenotype):</p>
+<p><code>--phenoFile</code></p>
+</li>
+<li><p>Summary statistics of base data</p>
+<p><code>--ss</code></p>
+<p>Summary statistics should includes columns: "chr", "pos", "rsid", "a1", "a0", "beta", "beta_se"</p>
+</li>
+</ol>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Output">Output<a class="anchor-link" href="#Output">&#182;</a></h2><p>The pipeline saves the results from every steps. Main outputs are</p>
+<ul>
+<li><p>Posterior effect size and PRS (inf/grid/auto)</p>
+</li>
+<li><p>Regression model results for phenotype prediction</p>
+</li>
+<li><p>Summary of models and evaluation of prediction performance</p>
+</li>
+<li><p>Plots</p>
+<ul>
+<li>Quality control plot   </li>
+<li>Convergence plot from grid (z socre) and auto model (heritability and proportions of causal variants)</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="General-workflow">General workflow<a class="anchor-link" href="#General-workflow">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Preliminary-quality-control-on-reference-panel">Preliminary quality control on reference panel<a class="anchor-link" href="#Preliminary-quality-control-on-reference-panel">&#182;</a></h3><p>Filtered SNPs that had a missing rate less than 1% and a minor allele frequency (MAF) greater than 1% in the reference genotype data. Excludes individuals whoes genotype missingness rate higher than 2%.</p>
+<h4 id="Output">Output<a class="anchor-link" href="#Output">&#182;</a></h4><ul>
+<li>Reference panel after QC saved to <code>work_dir/ref.work_dir.bed/bim/fam</code></li>
+</ul>
+
+<pre><code>sos run ldpred.ipynb preprocess:1 \
+    --cwd $work_dir \
+    --genoFiles &lt;path/to/ref.bed&gt;</code></pre>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Intersect-SNPs-among-summary-stats,-reference-panel-and-target-data">Intersect SNPs among summary stats, reference panel and target data<a class="anchor-link" href="#Intersect-SNPs-among-summary-stats,-reference-panel-and-target-data">&#182;</a></h3><p>This step returns a file <code>xxx.intersect.snplist</code> recording the common SNPs among reference panel, base data and target data. Then filter variants in the reference panel, summary statistics and target data. Common variants in target data should be filtered after SNP matching or quality control.</p>
+<h4 id="Output">Output<a class="anchor-link" href="#Output">&#182;</a></h4><ul>
+<li>Summary statistics data after filtering common SNPs saved to <code>work_dir/sumstats.intersect.rds</code></li>
+<li>Reference panel after filtering common SNPs saved to <code>work_dir/ref.work_dir.snp_intersect.extracted.bed/bim/fam</code></li>
+<li>Target data after filtering common SNPs saved to <code>work_dir/target.work_dir.snp_intersect.extracted.bed/bim/fam</code></li>
+<li>Common SNPs saved to three data folders saved to <code>work_dir/intersect.snplist</code></li>
+</ul>
+
+<pre><code>sos run ldpred.ipynb snp_intersect \
+    --cwd $work_dir \
+    --ss &lt;path/to/sumstats.rds&gt; \
+    --genoFiles &lt;path/to/ref.work_dir.bed&gt; &lt;path/to/target.bed&gt;
+
+cat $work_dir/gwas_hdl.intersect.stdout</code></pre>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="SNP-Matching">SNP Matching<a class="anchor-link" href="#SNP-Matching">&#182;</a></h3><p>Perform SNP matching using <code>snp_match(sumstats, map)</code>. Match alleles between summary statistics <code>sumstats</code> and SNP information in <code>map</code> from reference panel.</p>
+<h4 id="Output">Output<a class="anchor-link" href="#Output">&#182;</a></h4><ul>
+<li>Summary statistics after snp matching saved to <code>work_dir/sumstats.snp_matched.rds</code>.</li>
+<li>The SNPs left after matching and also the SNPs used to fit LDpred model saved to <code>work_dir/snp_matched.snplist</code>.</li>
+</ul>
+
+<pre><code>sos run ldpred.ipynb snp_match \
+    --cwd $work_dir \
+    --reference_geno &lt;work_dir/ref.work_dir.snp_intersect.extracted.rds&gt; \
+    --ss &lt;path/to/sumstats.rds&gt;</code></pre>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Quality-Control-on-Summary-Statistics">Quality Control on Summary Statistics<a class="anchor-link" href="#Quality-Control-on-Summary-Statistics">&#182;</a></h3><p>See section <code>Ldpred2</code>.</p>
+<h4 id="Output">Output<a class="anchor-link" href="#Output">&#182;</a></h4><ul>
+<li>Summary statistics after quality control saved to <code>work_dir/sumstats.snp_matched.qc.rds</code>.</li>
+<li>Plot showing the removed SNPs saved to <code>work_dir/sumstats.snp_matched.qc.png</code>.</li>
+<li>The SNPs used to fit LDpred model, also the SNPs we need to predict PRS in target data saved to <code>work_dir/sumstats.snp_matched.qc.snplist</code>.</li>
+</ul>
+
+<pre><code>sos run ldpred.ipynb sumstats_qc \
+    --cwd $work_dir \
+    --reference_geno &lt;work_dir/ref.work_dir.snp_intersect.extracted.rds&gt; \
+    --ss &lt;path/to/sumstats.snp_matched.rds&gt; \
+    --sdy 1</code></pre>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Calculate-LD-matrix-and-Fit-LDSC-Model">Calculate LD matrix and Fit LDSC Model<a class="anchor-link" href="#Calculate-LD-matrix-and-Fit-LDSC-Model">&#182;</a></h3><p>Calculate LD correlation using <code>snp_cor(Gna, size, infos.pos)</code></p>
+<ul>
+<li>size: for one SNP, window size around this SNP to compute correlations. Window size of 3 cM is applied in this pipeline which is recommanded by the developer.</li>
+<li>infos.pos: specifying the physical position on a chromosome (in base pairs) of each SNP. </li>
+</ul>
+<p>Fit LDSC model using <code>snp_ldsc()</code></p>
+<h4 id="Output">Output<a class="anchor-link" href="#Output">&#182;</a></h4><ul>
+<li>LD matrix and LDSC model saved to <code>work_dir/sumstats.snp_matched.ld.rds</code> or <code>work_dir/sumstats.snp_matched.qc.ld.rds</code>.</li>
+</ul>
+
+<pre><code>sos run ldpred.ipynb ldsc \
+    --cwd $work_dir \
+    --ss &lt;work_dir/sumstats.snp_matched.rds&gt; \
+    --reference-geno &lt;work_dir/ref.work_dir.snp_intersect.extracted.rds&gt;</code></pre>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Estimate-posterior-effect-sizes-and-PRS">Estimate posterior effect sizes and PRS<a class="anchor-link" href="#Estimate-posterior-effect-sizes-and-PRS">&#182;</a></h3><p>Three models can be applied to predict PRS which are infinitesimal, grid and auto models.</p>
+<ul>
+<li><p>Estimate effect size</p>
+<ul>
+<li>Infinitesimal model: <code>snp_ldpred2_inf(corr, df_beta, h2)</code></li>
+<li><p>Grid model: <code>snp_ldpred2_grid(corr, df_beta, grid_param)</code></p>
+<p>gird_param: grid of hyper parameters $p$ and $h^2$</p>
+</li>
+<li><p>Auto model: <code>snp_ldpred2_auto(corr, df_beta, h2_init, vec_p_init)</code></p>
+<p>h2_init: estiamted from LD score regression</p>
+<p>vec_p_init: with 30 different initial values for p. Ranges from 0 to 0.9.</p>
+</li>
+</ul>
+</li>
+<li><p>Derive PRS</p>
+<p>For grid and auto model, the best combination of p and $h^2$ was selected based on largest t score and mean of 3 times of median absolute deviation of predicted PRS.</p>
+</li>
+</ul>
+<h4 id="Output">Output<a class="anchor-link" href="#Output">&#182;</a></h4><ul>
+<li>Estimated effect size <code>adj_beta</code> and PRS prediction <code>prs_pred</code> saved to <code>work_dir/sumstats.snp_matched.&lt;model&gt;_prs.rds</code>.</li>
+</ul>
+<p>For Inf and Auto model</p>
+
+<pre><code>sos run ldpred.ipynb &lt;model&gt;_prs \
+    --cwd $work_dir \
+    --ss &lt;work_dir/sumstats.snp_matched.qc.rds&gt; \
+    --target-geno &lt;work_dir/target.snp_intersect.extracted.rds&gt; \
+    --ldsc &lt;work_dir/sumstats.snp_matched.qc.ld.rds&gt;</code></pre>
+<p>For Grid model</p>
+
+<pre><code>sos run ldpred.ipynb grid_prs \
+    --cwd $work_dir \
+    --ss &lt;work_dir/sumstats.snp_matched.qc.rds&gt; \
+    --target-geno &lt;work_dir/target.snp_intersect.extracted.rds&gt; \
+    --ldsc &lt;work_dir/sumstats.snp_matched.qc.ld.rds&gt; \
+    --phenoFile &lt;path/to/phenofile&gt; \
+    --covFile &lt;path/to/covariatefile&gt; \
+    --response &lt;continuous/binary&gt;</code></pre>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Predict-phenotype">Predict phenotype<a class="anchor-link" href="#Predict-phenotype">&#182;</a></h3><p>Predict phenotypes in target data and evaluate the performance of prediction using MSE and $R^2$.</p>
+<h4 id="Output">Output<a class="anchor-link" href="#Output">&#182;</a></h4><ul>
+<li>Linear/logistic model results saved to <code>work_dir/pheno.baseline.rds</code> or <code>work_dir/pheno.sumstats.snp_matched.&lt;model&gt;.rds</code>.</li>
+<li>Goodness of fit $R^2$, MSE and residual plot saved to <code>work_dir/pheno.baseline.pdf</code> or <code>work_dir/pheno.sumstats.snp_matched.&lt;model&gt;.pdf</code>.</li>
+</ul>
+<p>Baseline model: Traits ~ Sex + Age</p>
+
+<pre><code>sos run ldpred.ipynb pred_eval \
+    --cwd $work_dir \
+    --phenoFile &lt;path/to/phenofile&gt; \
+    --covFile &lt;path/to/covariatefile&gt; \
+    --response &lt;continuous/binary&gt;</code></pre>
+<p>Ldpred model: Traits ~ Sex + Age + PRS</p>
+
+<pre><code>sos run ldpred.ipynb pred_eval \
+    --cwd $work_dir \
+    --prs &lt;work_dir/sumstats.snp_matched.model_prs.rds&gt; \
+    --phenoFile &lt;path/to/phenofile&gt; \
+    --covFile &lt;path/to/covariatefile&gt; \
+    --response &lt;continuous/binary&gt;</code></pre>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Example-analysis">Example analysis<a class="anchor-link" href="#Example-analysis">&#182;</a></h2><p>See notebook <a href="HDL_example.html">HDL_exmple.ipynb</a> for demonstration of results of traits HDL prediction using MVP summary statistics, 1000G as reference panel and UK biobank data as target data.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Command-Interface">Command Interface<a class="anchor-link" href="#Command-Interface">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[1]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="n">sos</span> <span class="n">run</span> <span class="n">ldpred</span><span class="o">.</span><span class="n">ipynb</span> <span class="o">-</span><span class="n">h</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>usage: sos run ldpred.ipynb [workflow_name | -t targets] [options] [workflow_options]
+  workflow_name:        Single or combined workflows defined in this script
+  targets:              One or more targets to generate
+  options:              Single-hyphen sos parameters (see &#34;sos run -h&#34; for details)
+  workflow_options:     Double-hyphen workflow-specific parameters
+
+Workflows:
+  preprocess
+  snp_intersect
+  snp_subset
+  snp_match
+  sumstats_qc
+  ldsc
+  prs_core
+  inf_prs
+  grid_prs
+  auto_prs
+  pred_eval
+
+Global Workflow Options:
+  --cwd VAL (as path, required)
+                        the output directory for generated files
+  --name  f&#34;{cwd:b}&#34;
+
+                        A string to identify your analysis run
+  --job-size 1 (as int)
+                        For cluster jobs, number commands to run per job
+  --walltime 5h
+                        Wall clock time expected
+  --mem 16G
+                        Memory expected
+  --numThreads 20 (as int)
+                        Number of threads
+
+Sections
+  preprocess_1:         Filter SNPs and select individuals
+    Workflow Options:
+      --genoFiles  paths
+
+                        PLINK binary files
+      --remove-samples . (as path)
+                        The path to the file that contains the list of samples
+                        to remove (format FID, IID)
+      --keep-samples . (as path)
+                        The path to the file that contains the list of samples
+                        to keep (format FID, IID)
+      --keep-variants . (as path)
+                        The path to the file that contains the list of variants
+                        to keep
+      --maf-filter 0.01 (as float)
+                        minimum MAF filter to use. Notice that PLINK default is
+                        0.01
+      --maf-max-filter 0.0 (as float)
+                        maximum MAF filter to use
+      --geno-filter 0.01 (as float)
+                        Maximum missingess per-variant
+      --mind-filter 0.02 (as float)
+                        Maximum missingness per-sample
+      --hwe-filter 5e-08 (as float)
+                        HWE filter
+  preprocess_2:
+  snp_intersect_1:      SNP intersect of summary stats and genotype data
+    Workflow Options:
+      --genoFiles  paths
+
+                        PLNIK binary files
+      --ss VAL (as path, required)
+                        summary stats file
+  snp_intersect_2:
+    Workflow Options:
+      --genoFiles  paths
+
+                        PLNIK binary files
+  snp_subset:
+    Workflow Options:
+      --genoObj VAL (as path, required)
+      --keep-variants VAL (as path, required)
+  snp_match:
+    Workflow Options:
+      --ss VAL (as path, required)
+                        summary stats file
+      --reference-geno VAL (as path, required)
+  sumstats_qc:
+    Workflow Options:
+      --sdy VAL (as float, required)
+                        standard deviation of y; set it to 2 for binary traits
+      --ss VAL (as path, required)
+                        summary stats file, snp matched
+      --reference-geno VAL (as path, required)
+                        reference data geno object previously generated
+  ldsc:
+    Workflow Options:
+      --ss VAL (as path, required)
+                        summary stats file
+      --reference-geno VAL (as path, required)
+  prs_core:
+    Workflow Options:
+      --ss VAL (as path, required)
+                        rds file for summary stats
+      --target-geno VAL (as path, required)
+                        rds file of target data generated from bed file
+      --ldsc VAL (as path, required)
+                        ldsc file
+      --method VAL (as str, required)
+                        method: choose from inf, grid, and auto
+      --phenoFile VAL (as path, required)
+                        phenotype file, must have a header
+      --covFile VAL (as path, required)
+                        covariates file, must have a header
+      --response VAL (as str, required)
+                        either continuous or binary
+      --suffix prs
+  inf_prs:
+    Workflow Options:
+      --ss VAL (as path, required)
+                        rds file for summary stats
+      --target-geno VAL (as path, required)
+                        rds file of target data generated from bed file
+      --ldsc VAL (as path, required)
+                        ldsc file
+  grid_prs:
+    Workflow Options:
+      --ss VAL (as path, required)
+                        rds file for summary stats
+      --target-geno VAL (as path, required)
+                        rds file of target data generated from bed file
+      --ldsc VAL (as path, required)
+                        ldsc file
+      --phenoFile VAL (as path, required)
+                        phenotype file, must have a header
+      --covFile VAL (as path, required)
+                        covariates file, must have a header
+      --response VAL (as str, required)
+                        either continuous or binary
+  auto_prs:
+    Workflow Options:
+      --ss VAL (as path, required)
+                        rds file for summary stats
+      --target-geno VAL (as path, required)
+                        rds file of target data generated from bed file
+      --ldsc VAL (as path, required)
+                        ldsc file
+  pred_eval:
+    Workflow Options:
+      --prs . (as path)
+                        rds file for PRS
+      --phenoFile VAL (as path, required)
+                        phenotype file, must have a header
+      --covFile . (as path)
+                        covariates file, must have a header
+      --response VAL (as str, required)
+                        either continuous or binary
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Global-Parameter-Setting">Global Parameter Setting<a class="anchor-link" href="#Global-Parameter-Setting">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="p">[</span><span class="k">global</span><span class="p">]</span>
+<span class="c1"># the output directory for generated files</span>
+<span class="kn">parameter:</span> <span class="n">cwd</span> <span class="o">=</span> <span class="n">path</span>
+<span class="c1"># A string to identify your analysis run</span>
+<span class="kn">parameter:</span> <span class="kp">name</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;{cwd:b}&quot;</span>
+<span class="c1"># For cluster jobs, number commands to run per job</span>
+<span class="kn">parameter:</span> <span class="n">job_size</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="c1"># Wall clock time expected</span>
+<span class="kn">parameter:</span> <span class="kp">walltime</span> <span class="o">=</span> <span class="s2">&quot;5h&quot;</span>
+<span class="c1"># Memory expected</span>
+<span class="kn">parameter:</span> <span class="kp">mem</span> <span class="o">=</span> <span class="s2">&quot;16G&quot;</span>
+<span class="c1"># Number of threads</span>
+<span class="kn">parameter:</span> <span class="n">numThreads</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="c1"># use this function to edit memory string for PLINK input</span>
+<span class="kn">from</span> <span class="nn">sos.utils</span> <span class="kn">import</span> <span class="n">expand_size</span>
+<span class="n">cwd</span> <span class="o">=</span> <span class="n">path</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;{cwd:a}&quot;</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Workflow">Workflow<a class="anchor-link" href="#Workflow">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Preliminary-quality-control-and-preprocessing-for-genotype-data">Preliminary quality control and preprocessing for genotype data<a class="anchor-link" href="#Preliminary-quality-control-and-preprocessing-for-genotype-data">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Filter SNPs and select individuals </span>
+<span class="p">[</span><span class="n">preprocess_1</span> <span class="p">(</span><span class="n">basic</span> <span class="n">QC</span> <span class="n">filters</span><span class="p">)]</span>
+<span class="c1"># PLINK binary files</span>
+<span class="kn">parameter:</span> <span class="n">genoFiles</span> <span class="o">=</span> <span class="n">paths</span>
+<span class="c1"># The path to the file that contains the list of samples to remove (format FID, IID)</span>
+<span class="kn">parameter:</span> <span class="n">remove_samples</span> <span class="o">=</span> <span class="n">path</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+<span class="c1"># The path to the file that contains the list of samples to keep (format FID, IID)</span>
+<span class="kn">parameter:</span> <span class="n">keep_samples</span> <span class="o">=</span> <span class="n">path</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+<span class="c1"># The path to the file that contains the list of variants to keep</span>
+<span class="kn">parameter:</span> <span class="n">keep_variants</span> <span class="o">=</span> <span class="n">path</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+<span class="c1"># minimum MAF filter to use. Notice that PLINK default is 0.01</span>
+<span class="kn">parameter:</span> <span class="n">maf_filter</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="c1"># maximum MAF filter to use</span>
+<span class="kn">parameter:</span> <span class="n">maf_max_filter</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="c1"># Maximum missingess per-variant</span>
+<span class="kn">parameter:</span> <span class="n">geno_filter</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="c1"># Maximum missingness per-sample</span>
+<span class="kn">parameter:</span> <span class="n">mind_filter</span> <span class="o">=</span> <span class="mf">0.02</span>
+<span class="c1"># HWE filter </span>
+<span class="kn">parameter:</span> <span class="n">hwe_filter</span> <span class="o">=</span> <span class="mf">5e-08</span>
+
+<span class="n">fail_if</span><span class="p">(</span><span class="ow">not</span> <span class="p">(</span><span class="n">keep_samples</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="ow">or</span> <span class="n">keep_samples</span> <span class="o">==</span> <span class="n">path</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)),</span> <span class="n">msg</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;Cannot find ``{keep_samples}``&#39;</span><span class="p">)</span>
+<span class="n">fail_if</span><span class="p">(</span><span class="ow">not</span> <span class="p">(</span><span class="n">keep_variants</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="ow">or</span> <span class="n">keep_variants</span> <span class="o">==</span> <span class="n">path</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)),</span> <span class="n">msg</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;Cannot find ``{keep_variants}``&#39;</span><span class="p">)</span>
+<span class="n">fail_if</span><span class="p">(</span><span class="ow">not</span> <span class="p">(</span><span class="n">remove_samples</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="ow">or</span> <span class="n">remove_samples</span> <span class="o">==</span> <span class="n">path</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)),</span> <span class="n">msg</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;Cannot find ``{remove_samples}``&#39;</span><span class="p">)</span>
+
+<span class="kn">input:</span> <span class="n">genoFiles</span><span class="p">,</span> <span class="n">group_by</span><span class="o">=</span><span class="mi">1</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{cwd}/{_input:bn}.{name}{&quot;.extracted&quot; if keep_variants.is_file() else &quot;&quot;}.bed&#39;</span>
+<span class="kn">task:</span> <span class="kp">trunk_workers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">walltime</span> <span class="o">=</span> <span class="kp">walltime</span><span class="p">,</span> <span class="kp">mem</span> <span class="o">=</span> <span class="kp">mem</span><span class="p">,</span> <span class="kp">cores</span> <span class="o">=</span> <span class="n">numThreads</span><span class="p">,</span> <span class="kp">tags</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{step_name}_{_output:bn}&#39;</span>
+<span class="kn">bash:</span> <span class="n">expand</span><span class="o">=</span> <span class="s2">&quot;${ }&quot;</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output:n}.stderr&#39;</span><span class="p">,</span> <span class="n">stdout</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output:n}.stdout&#39;</span>
+    <span class="n">plink</span> \
+      <span class="o">--</span><span class="n">bfile</span> <span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">:</span><span class="n">n</span><span class="p">}</span> \
+      <span class="err">$</span><span class="p">{(</span><span class="s1">&#39;--maf </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">maf_filter</span><span class="p">)</span> <span class="k">if</span> <span class="n">maf_filter</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="p">}</span> \
+      <span class="err">$</span><span class="p">{(</span><span class="s1">&#39;--max-maf </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">maf_max_filter</span><span class="p">)</span> <span class="k">if</span> <span class="n">maf_max_filter</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="p">}</span> \
+      <span class="err">$</span><span class="p">{(</span><span class="s1">&#39;--geno </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">geno_filter</span><span class="p">)</span> <span class="k">if</span> <span class="n">geno_filter</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="p">}</span> \
+      <span class="err">$</span><span class="p">{(</span><span class="s1">&#39;--hwe </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">hwe_filter</span><span class="p">)</span> <span class="k">if</span> <span class="n">hwe_filter</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="p">}</span> \
+      <span class="err">$</span><span class="p">{(</span><span class="s1">&#39;--mind </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">mind_filter</span><span class="p">)</span> <span class="k">if</span> <span class="n">mind_filter</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="p">}</span> \
+      <span class="err">$</span><span class="p">{(</span><span class="s1">&#39;--keep </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">keep_samples</span><span class="p">)</span> <span class="k">if</span> <span class="n">keep_samples</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">}</span> \
+      <span class="err">$</span><span class="p">{(</span><span class="s1">&#39;--remove </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">remove_samples</span><span class="p">)</span> <span class="k">if</span> <span class="n">remove_samples</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">}</span> \
+      <span class="err">$</span><span class="p">{(</span><span class="s1">&#39;--extract </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">keep_variants</span><span class="p">)</span> <span class="k">if</span> <span class="n">keep_variants</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">}</span> \
+      <span class="o">--</span><span class="n">make</span><span class="o">-</span><span class="n">bed</span> \
+      <span class="o">--</span><span class="n">out</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">:</span><span class="n">n</span><span class="p">}</span> \
+      <span class="o">--</span><span class="n">threads</span> <span class="err">$</span><span class="p">{</span><span class="n">numThreads</span><span class="p">}</span> \
+      <span class="o">--</span><span class="n">memory</span> <span class="err">$</span><span class="p">{</span><span class="nb">int</span><span class="p">(</span><span class="n">expand_size</span><span class="p">(</span><span class="kp">mem</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.9</span><span class="p">)}</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="p">[</span><span class="n">preprocess_2</span> <span class="p">(</span><span class="n">convert</span> <span class="n">PLNIK</span> <span class="n">to</span> <span class="n">bigsnpr</span> <span class="n">format</span> <span class="k">with</span> <span class="n">missing</span> <span class="n">data</span> <span class="n">mean</span> <span class="n">imputed</span><span class="p">)]</span>
+<span class="kn">input:</span> <span class="n">group_by</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">concurrent</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s2">&quot;{cwd:a}/{_input:bn}.bk&quot;</span><span class="p">,</span> <span class="n">f</span><span class="s2">&quot;{cwd:a}/{_input:bn}.rds&quot;</span>
+<span class="kn">task:</span> <span class="kp">trunk_workers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">walltime</span> <span class="o">=</span> <span class="kp">walltime</span><span class="p">,</span> <span class="kp">mem</span> <span class="o">=</span> <span class="kp">mem</span><span class="p">,</span> <span class="kp">cores</span> <span class="o">=</span> <span class="n">numThreads</span><span class="p">,</span> <span class="kp">tags</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{step_name}_{_output[0]:bn}&#39;</span>
+<span class="kn">bash:</span> <span class="n">expand</span> <span class="o">=</span> <span class="s2">&quot;${ }&quot;</span>
+    <span class="n">rm</span> <span class="o">-</span><span class="n">f</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">}</span>
+<span class="kn">R:</span> <span class="n">expand</span><span class="o">=</span> <span class="s2">&quot;${ }&quot;</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output[0]:n}.stderr&#39;</span><span class="p">,</span> <span class="n">stdout</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output[0]:n}.stdout&#39;</span>
+    <span class="n">library</span><span class="p">(</span><span class="n">bigsnpr</span><span class="p">)</span>
+    <span class="c1"># generate .bk and .rds file for R code</span>
+    <span class="n">dat</span> <span class="o">=</span> <span class="n">snp_readBed</span><span class="p">(</span><span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">:</span><span class="n">r</span><span class="p">},</span> <span class="n">backingfile</span><span class="o">=</span><span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">nr</span><span class="p">})</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">bigSNP</span> <span class="o">&lt;-</span> <span class="n">snp_attach</span><span class="p">(</span><span class="n">dat</span><span class="p">)</span> 
+    <span class="c1"># get the CM information from 1000 Genome</span>
+    <span class="c1"># will download the 1000G file to the current directory (&quot;.&quot;)</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">bigSNP</span><span class="err">$</span><span class="nb">map</span><span class="err">$</span><span class="n">genetic</span><span class="o">.</span><span class="n">dist</span> <span class="o">&lt;-</span> <span class="n">snp_asGeneticPos</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">bigSNP</span><span class="err">$</span><span class="nb">map</span><span class="err">$</span><span class="n">chromosome</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">bigSNP</span><span class="err">$</span><span class="nb">map</span><span class="err">$</span><span class="n">physical</span><span class="o">.</span><span class="n">pos</span><span class="p">,</span> <span class="nb">dir</span> <span class="o">=</span> <span class="err">$</span><span class="p">{</span><span class="n">cwd</span><span class="p">:</span><span class="n">r</span><span class="p">})</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">bigSNP</span><span class="err">$</span><span class="n">genotypes</span> <span class="o">=</span> <span class="n">snp_fastImputeSimple</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">bigSNP</span><span class="err">$</span><span class="n">genotypes</span><span class="p">,</span> <span class="n">method</span> <span class="o">=</span> <span class="s2">&quot;mean0&quot;</span><span class="p">)</span>
+    <span class="n">saveRDS</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">bigSNP</span><span class="p">,</span> <span class="nb">file</span> <span class="o">=</span> <span class="s2">&quot;${_output[1]}&quot;</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Find-common-SNPs-among-summary-statistics,-reference-panel-and-test-genotypes.">Find common SNPs among summary statistics, reference panel and test genotypes.<a class="anchor-link" href="#Find-common-SNPs-among-summary-statistics,-reference-panel-and-test-genotypes.">&#182;</a></h2><ol>
+<li>Find common SNPs</li>
+<li>Get subsets.</li>
+</ol>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># SNP intersect of summary stats and genotype data</span>
+<span class="p">[</span><span class="n">snp_intersect_1</span><span class="p">]</span>
+<span class="c1"># PLNIK binary files</span>
+<span class="kn">parameter:</span> <span class="n">genoFiles</span> <span class="o">=</span> <span class="n">paths</span>
+<span class="c1"># summary stats file</span>
+<span class="kn">parameter:</span> <span class="n">ss</span> <span class="o">=</span> <span class="n">path</span>
+<span class="kn">input:</span> <span class="n">ss</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.bim&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">genoFiles</span><span class="p">]</span>
+<span class="kn">output:</span> <span class="n">substats</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;{cwd:a}/{_input[0]:bn}.intersect.rds&quot;</span><span class="p">,</span>
+        <span class="n">snp</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;{cwd:a}/{_input[0]:bn}.intersect.snplist&quot;</span>
+<span class="kn">task:</span> <span class="kp">trunk_workers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">walltime</span> <span class="o">=</span> <span class="kp">walltime</span><span class="p">,</span> <span class="kp">mem</span> <span class="o">=</span> <span class="kp">mem</span><span class="p">,</span> <span class="kp">cores</span> <span class="o">=</span> <span class="n">numThreads</span><span class="p">,</span> <span class="kp">tags</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{step_name}_{_output[0]:bn}&#39;</span>
+<span class="kn">R:</span> <span class="n">expand</span><span class="o">=</span> <span class="s2">&quot;${ }&quot;</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output[0]:n}.stderr&#39;</span><span class="p">,</span> <span class="n">stdout</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output[0]:n}.stdout&#39;</span>
+    <span class="n">suppressMessages</span><span class="p">(</span><span class="n">library</span><span class="p">(</span><span class="n">tidyverse</span><span class="p">))</span>
+    <span class="n">sumstats</span> <span class="o">&lt;-</span> <span class="n">readRDS</span><span class="p">(</span><span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">r</span><span class="p">})</span>
+    <span class="n">geno_snps</span> <span class="o">=</span> <span class="n">lapply</span><span class="p">(</span><span class="n">c</span><span class="p">(</span><span class="err">$</span><span class="p">{</span><span class="n">paths</span><span class="p">(</span><span class="n">_input</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span><span class="n">r</span><span class="p">,}),</span> <span class="n">function</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="n">read</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">stringsAsFactors</span><span class="o">=</span><span class="n">F</span><span class="p">)[,</span><span class="mi">2</span><span class="p">])</span>
+    <span class="n">common_snp</span> <span class="o">&lt;-</span> <span class="n">Reduce</span><span class="p">(</span><span class="n">intersect</span><span class="p">,</span> <span class="n">c</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">sumstats</span><span class="err">$</span><span class="n">rsid</span><span class="p">),</span> <span class="n">geno_snps</span><span class="p">))</span>
+    <span class="c1"># filter snps in sumstat</span>
+    <span class="n">new_sumstats</span> <span class="o">&lt;-</span> <span class="n">sumstats</span> <span class="o">%&gt;%</span>
+        <span class="nb">filter</span><span class="p">(</span><span class="n">rsid</span> <span class="o">%</span><span class="ow">in</span><span class="o">%</span> <span class="n">common_snp</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">paste</span><span class="p">(</span><span class="s2">&quot;There are&quot;</span><span class="p">,</span> <span class="n">length</span><span class="p">(</span><span class="n">common_snp</span><span class="p">),</span> <span class="s2">&quot;shared SNPs.&quot;</span><span class="p">))</span>
+    <span class="n">saveRDS</span><span class="p">(</span><span class="n">new_sumstats</span><span class="p">,</span> <span class="nb">file</span> <span class="o">=</span> <span class="s2">&quot;${_output[&quot;</span><span class="n">substats</span><span class="s2">&quot;]}&quot;</span><span class="p">)</span>
+    <span class="n">write</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">common_snp</span><span class="p">,</span> <span class="nb">file</span> <span class="o">=</span> <span class="s2">&quot;${_output[&quot;</span><span class="n">snp</span><span class="s2">&quot;]}&quot;</span><span class="p">,</span> <span class="n">sep</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="p">,</span> 
+                <span class="n">row</span><span class="o">.</span><span class="n">names</span> <span class="o">=</span> <span class="n">FALSE</span><span class="p">,</span> <span class="n">col</span><span class="o">.</span><span class="n">names</span> <span class="o">=</span> <span class="n">FALSE</span><span class="p">,</span> <span class="n">quote</span><span class="o">=</span><span class="n">FALSE</span><span class="p">)</span>
+  
+<span class="p">[</span><span class="n">snp_intersect_2</span><span class="p">]</span>
+<span class="c1"># PLNIK binary files</span>
+<span class="kn">parameter:</span> <span class="n">genoFiles</span> <span class="o">=</span> <span class="n">paths</span>
+<span class="kn">output:</span> <span class="p">[(</span><span class="n">f</span><span class="s2">&quot;{cwd}/{x:bn}.snp_intersect.extracted.bed&quot;</span><span class="p">,</span> <span class="n">f</span><span class="s2">&quot;{cwd}/{x:bn}.snp_intersect.extracted.rds&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">genoFiles</span><span class="p">]</span>
+<span class="n">sos_run</span><span class="p">(</span><span class="s2">&quot;preprocess&quot;</span><span class="p">,</span> <span class="n">genoFiles</span><span class="o">=</span><span class="n">genoFiles</span><span class="p">,</span> <span class="n">keep_variants</span><span class="o">=</span><span class="n">_input</span><span class="p">[</span><span class="s1">&#39;snp&#39;</span><span class="p">],</span> 
+                    <span class="n">maf_filter</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">geno_filter</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">mind_filter</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">hwe_filter</span><span class="o">=-</span><span class="mi">9</span><span class="p">,</span> 
+                    <span class="n">cwd</span><span class="o">=</span><span class="n">cwd</span><span class="p">,</span> <span class="kp">name</span><span class="o">=</span><span class="s2">&quot;snp_intersect&quot;</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="p">[</span><span class="n">snp_subset</span><span class="p">]</span>
+<span class="kn">parameter:</span> <span class="n">genoObj</span> <span class="o">=</span> <span class="n">path</span>
+<span class="kn">parameter:</span> <span class="n">keep_variants</span> <span class="o">=</span> <span class="n">path</span>
+<span class="kn">input:</span> <span class="n">genoObj</span><span class="p">,</span> <span class="n">keep_variants</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s2">&quot;{cwd}/{_input[0]:bn}.{name}.subset.rds&quot;</span>
+<span class="kn">R:</span> <span class="n">expand</span><span class="o">=</span> <span class="s2">&quot;${ }&quot;</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output:n}.stderr&#39;</span><span class="p">,</span> <span class="n">stdout</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output:n}.stdout&#39;</span>   
+    <span class="n">library</span><span class="p">(</span><span class="n">bigsnpr</span><span class="p">)</span>
+    <span class="n">dat</span> <span class="o">&lt;-</span> <span class="n">readRDS</span><span class="p">(</span><span class="s2">&quot;${_input[0]}&quot;</span><span class="p">)</span>
+    <span class="n">snps</span> <span class="o">&lt;-</span> <span class="k">as</span><span class="o">.</span><span class="n">vector</span><span class="p">(</span><span class="n">unlist</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">table</span><span class="p">::</span><span class="n">fread</span><span class="p">(</span><span class="s2">&quot;${_input[1]}&quot;</span><span class="p">,</span><span class="n">header</span><span class="o">=</span><span class="n">F</span><span class="p">)))</span>
+    <span class="n">snp_subset</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span>  <span class="n">ind</span><span class="o">.</span><span class="n">col</span> <span class="o">=</span> <span class="n">match</span><span class="p">(</span><span class="n">snps</span><span class="p">,</span> <span class="n">dat</span><span class="err">$</span><span class="nb">map</span><span class="err">$</span><span class="n">marker</span><span class="o">.</span><span class="n">ID</span><span class="p">),</span> <span class="n">backingfile</span> <span class="o">=</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">:</span><span class="n">nr</span><span class="p">})</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Convert-reference-genotype-to-bigsnpr-format-and-get-the-genetic-distance-cM-information">Convert reference genotype to bigsnpr format and get the genetic distance cM information<a class="anchor-link" href="#Convert-reference-genotype-to-bigsnpr-format-and-get-the-genetic-distance-cM-information">&#182;</a></h2><p>Will take a while to download the genetic distance database.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Allele-harmonizing">Allele harmonizing<a class="anchor-link" href="#Allele-harmonizing">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="p">[</span><span class="n">snp_match</span><span class="p">]</span>
+<span class="c1"># summary stats file</span>
+<span class="kn">parameter:</span> <span class="n">ss</span> <span class="o">=</span> <span class="n">path</span>
+<span class="kn">parameter:</span> <span class="n">reference_geno</span> <span class="o">=</span> <span class="n">path</span>
+<span class="kn">input:</span> <span class="n">ss</span><span class="p">,</span> <span class="n">reference_geno</span>
+<span class="kn">output:</span> <span class="n">match</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{cwd:a}/{_input[0]:bn}.snp_matched.rds&#39;</span><span class="p">,</span>
+        <span class="n">snplist</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{cwd:a}/{_input[0]:bn}.snp_matched.snplist&#39;</span>
+<span class="kn">task:</span> <span class="kp">trunk_workers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">walltime</span> <span class="o">=</span> <span class="kp">walltime</span><span class="p">,</span> <span class="kp">mem</span> <span class="o">=</span> <span class="kp">mem</span><span class="p">,</span> <span class="kp">cores</span> <span class="o">=</span> <span class="n">numThreads</span><span class="p">,</span> <span class="kp">tags</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{step_name}_{_output[0]:bn}&#39;</span>
+<span class="kn">R:</span> <span class="n">expand</span><span class="o">=</span> <span class="s2">&quot;${ }&quot;</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output[0]:n}.stderr&#39;</span><span class="p">,</span> <span class="n">stdout</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output[0]:n}.stdout&#39;</span>   
+    <span class="n">library</span><span class="p">(</span><span class="n">bigsnpr</span><span class="p">)</span>
+    <span class="n">sumstats</span> <span class="o">&lt;-</span> <span class="n">readRDS</span><span class="p">(</span><span class="s2">&quot;${_input[0]}&quot;</span><span class="p">)</span>
+    <span class="c1"># now attach the genotype object</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">bigSNP</span> <span class="o">&lt;-</span> <span class="n">snp_attach</span><span class="p">(</span><span class="s2">&quot;${_input[1]}&quot;</span><span class="p">)</span>
+    <span class="c1"># extract the SNP information from the genotype</span>
+    <span class="nb">map</span> <span class="o">&lt;-</span> <span class="n">obj</span><span class="o">.</span><span class="n">bigSNP</span><span class="err">$</span><span class="nb">map</span><span class="p">[</span><span class="o">-</span><span class="p">(</span><span class="mi">2</span><span class="p">:</span><span class="mi">3</span><span class="p">)]</span>
+    <span class="n">names</span><span class="p">(</span><span class="nb">map</span><span class="p">)</span> <span class="o">&lt;-</span> <span class="n">c</span><span class="p">(</span><span class="s2">&quot;chr&quot;</span><span class="p">,</span> <span class="s2">&quot;pos&quot;</span><span class="p">,</span> <span class="s2">&quot;a1&quot;</span><span class="p">,</span> <span class="s2">&quot;a0&quot;</span><span class="p">)</span>  
+    <span class="c1"># perform SNP matching</span>
+    <span class="n">updated_ss</span> <span class="o">&lt;-</span> <span class="n">snp_match</span><span class="p">(</span><span class="n">sumstats</span><span class="p">,</span> <span class="nb">map</span><span class="p">)</span>
+    <span class="n">write</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">updated_ss</span><span class="err">$</span><span class="n">rsid</span><span class="p">,</span> <span class="nb">file</span> <span class="o">=</span> <span class="s2">&quot;${_output[&quot;</span><span class="n">snplist</span><span class="s2">&quot;]}&quot;</span><span class="p">,</span> <span class="n">sep</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="p">,</span> 
+            <span class="n">row</span><span class="o">.</span><span class="n">names</span> <span class="o">=</span> <span class="n">FALSE</span><span class="p">,</span> <span class="n">col</span><span class="o">.</span><span class="n">names</span> <span class="o">=</span> <span class="n">FALSE</span><span class="p">,</span><span class="n">quote</span><span class="o">=</span><span class="n">FALSE</span><span class="p">)</span>
+    <span class="n">saveRDS</span><span class="p">(</span><span class="n">updated_ss</span><span class="p">,</span> <span class="nb">file</span> <span class="o">=</span> <span class="s2">&quot;${_output[&quot;</span><span class="n">match</span><span class="s2">&quot;]}&quot;</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Summary-statistics-quality-Control">Summary statistics quality Control<a class="anchor-link" href="#Summary-statistics-quality-Control">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="p">[</span><span class="n">sumstats_qc</span><span class="p">]</span>
+<span class="c1"># standard deviation of y; set it to 2 for binary traits</span>
+<span class="kn">parameter:</span> <span class="n">sdy</span> <span class="o">=</span> <span class="nb">float</span>
+<span class="c1"># summary stats file, snp matched</span>
+<span class="kn">parameter:</span> <span class="n">ss</span> <span class="o">=</span> <span class="n">path</span>
+<span class="c1"># reference data geno object previously generated</span>
+<span class="kn">parameter:</span> <span class="n">reference_geno</span> <span class="o">=</span> <span class="n">path</span>
+<span class="kn">input:</span> <span class="n">ss</span><span class="p">,</span> <span class="n">reference_geno</span>
+
+<span class="kn">output:</span> <span class="n">qc_plot</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{cwd}/{_input[0]:bn}.qc.png&#39;</span><span class="p">,</span> 
+        <span class="n">snplist</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{cwd}/{_input[0]:bn}.qc.snplist&#39;</span><span class="p">,</span>
+        <span class="n">qc_res</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{cwd}/{_input[0]:bn}.qc.rds&#39;</span>
+
+<span class="kn">task:</span> <span class="kp">trunk_workers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">walltime</span> <span class="o">=</span> <span class="kp">walltime</span><span class="p">,</span> <span class="kp">mem</span> <span class="o">=</span> <span class="kp">mem</span><span class="p">,</span> <span class="kp">cores</span> <span class="o">=</span> <span class="n">numThreads</span><span class="p">,</span> <span class="kp">tags</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{step_name}_{_output[0]:bn}&#39;</span>
+<span class="kn">R:</span> <span class="n">expand</span><span class="o">=</span> <span class="s2">&quot;${ }&quot;</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output[0]:n}.stderr&#39;</span><span class="p">,</span> <span class="n">stdout</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output[0]:n}.stdout&#39;</span>
+    <span class="n">library</span><span class="p">(</span><span class="n">bigsnpr</span><span class="p">)</span>
+    <span class="n">suppressMessages</span><span class="p">(</span><span class="n">library</span><span class="p">(</span><span class="n">tidyverse</span><span class="p">))</span>
+    <span class="n">attach</span><span class="p">(</span><span class="n">readRDS</span><span class="p">(</span><span class="s2">&quot;${_input[1]}&quot;</span><span class="p">))</span>
+    <span class="n">info_snp</span> <span class="o">=</span> <span class="n">readRDS</span><span class="p">(</span><span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">r</span><span class="p">})</span>
+    <span class="n">NCORES</span> <span class="o">=</span> <span class="n">bigparallelr</span><span class="p">::</span><span class="n">nb_cores</span><span class="p">()</span>
+    <span class="n">NCORES</span> <span class="o">=</span> <span class="n">tryCatch</span><span class="p">({</span><span class="n">bigparallelr</span><span class="p">::</span><span class="n">assert_cores</span><span class="p">(</span><span class="n">NCORES</span><span class="p">);</span> <span class="n">NCORES</span> <span class="p">},</span> <span class="n">error</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">ind</span><span class="o">.</span><span class="n">val</span> <span class="o">=</span> <span class="mi">1</span><span class="p">:</span><span class="n">nrow</span><span class="p">(</span><span class="n">genotypes</span><span class="p">)</span>
+    <span class="n">sd</span> <span class="o">&lt;-</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">big_colstats</span><span class="p">(</span><span class="n">genotypes</span><span class="p">,</span> <span class="n">ind</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">ncores</span> <span class="o">=</span> <span class="n">NCORES</span><span class="p">)</span><span class="err">$</span><span class="n">var</span><span class="p">)</span>  
+    <span class="n">sd_val</span> <span class="o">&lt;-</span> <span class="n">sd</span><span class="p">[</span><span class="n">info_snp</span><span class="err">$</span><span class="sb">`_NUM_ID_`</span><span class="p">]</span>
+
+    <span class="n">sdy</span> <span class="o">=</span> <span class="err">$</span><span class="p">{</span><span class="n">sdy</span><span class="p">}</span>
+    <span class="n">sd_ss</span> <span class="o">&lt;-</span> <span class="k">with</span><span class="p">(</span><span class="n">info_snp</span><span class="p">,</span> <span class="n">sdy</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">n_eff</span> <span class="o">*</span> <span class="n">beta_se</span><span class="o">^</span><span class="mi">2</span><span class="p">))</span>
+
+    <span class="n">is_bad</span> <span class="o">&lt;-</span> <span class="n">sd_ss</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">sd_val</span><span class="p">)</span> <span class="o">|</span> 
+            <span class="n">sd_ss</span> <span class="o">&gt;</span> <span class="p">(</span><span class="n">sd_val</span> <span class="o">+</span> <span class="mf">0.1</span><span class="p">)</span> <span class="o">|</span>
+            <span class="n">sd_ss</span> <span class="o">&lt;</span> <span class="mf">0.1</span> <span class="o">|</span> 
+            <span class="n">sd_val</span> <span class="o">&lt;</span> <span class="mf">0.05</span>
+      
+    <span class="n">p</span> <span class="o">=</span> <span class="n">qplot</span><span class="p">(</span><span class="n">sd_val</span><span class="p">,</span> <span class="n">sd_ss</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="n">is_bad</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="n">I</span><span class="p">(</span><span class="mf">0.5</span><span class="p">))</span> <span class="o">+</span>
+      <span class="n">theme_bigstatsr</span><span class="p">()</span> <span class="o">+</span>
+      <span class="n">coord_equal</span><span class="p">()</span> <span class="o">+</span>
+      <span class="n">scale_color_viridis_d</span><span class="p">(</span><span class="n">direction</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span>
+      <span class="n">geom_abline</span><span class="p">(</span><span class="n">linetype</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="s2">&quot;red&quot;</span><span class="p">)</span> <span class="o">+</span>
+      <span class="n">labs</span><span class="p">(</span><span class="n">x</span> <span class="o">=</span> <span class="s2">&quot;Standard deviations in the validation set&quot;</span><span class="p">,</span>
+           <span class="n">y</span> <span class="o">=</span> <span class="s2">&quot;Standard deviations derived from the summary statistics&quot;</span><span class="p">,</span>
+           <span class="n">color</span> <span class="o">=</span> <span class="s2">&quot;Removed?&quot;</span><span class="p">)</span>
+    <span class="n">png</span><span class="p">(</span><span class="s2">&quot;${_output[&quot;</span><span class="n">qc_plot</span><span class="s2">&quot;]}&quot;</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="n">dev</span><span class="o">.</span><span class="n">off</span><span class="p">()</span>
+      
+    <span class="n">n</span> <span class="o">=</span> <span class="n">nrow</span><span class="p">(</span><span class="n">info_snp</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">paste</span><span class="p">(</span><span class="n">length</span><span class="p">(</span><span class="n">which</span><span class="p">(</span><span class="n">is_bad</span><span class="o">==</span><span class="s2">&quot;TRUE&quot;</span><span class="p">)),</span> <span class="s2">&quot;over&quot;</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="s2">&quot;were removed in summary statistics QC.&quot;</span><span class="p">))</span>
+           
+    <span class="n">info_snp</span> <span class="o">=</span> <span class="n">info_snp</span><span class="p">[</span><span class="err">!</span><span class="n">is_bad</span><span class="p">,</span> <span class="p">]</span>
+    
+    <span class="n">write</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">info_snp</span><span class="err">$</span><span class="n">rsid</span><span class="p">,</span> <span class="nb">file</span> <span class="o">=</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">[</span><span class="s2">&quot;snplist&quot;</span><span class="p">]:</span><span class="n">r</span><span class="p">},</span> <span class="n">sep</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="p">,</span> 
+            <span class="n">row</span><span class="o">.</span><span class="n">names</span> <span class="o">=</span> <span class="n">FALSE</span><span class="p">,</span> <span class="n">col</span><span class="o">.</span><span class="n">names</span> <span class="o">=</span> <span class="n">FALSE</span><span class="p">,</span><span class="n">quote</span><span class="o">=</span><span class="n">FALSE</span><span class="p">)</span>
+    <span class="n">saveRDS</span><span class="p">(</span><span class="n">info_snp</span><span class="p">,</span> <span class="nb">file</span><span class="o">=</span><span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">[</span><span class="s2">&quot;qc_res&quot;</span><span class="p">]:</span><span class="n">r</span><span class="p">})</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Calculate-LD-matrix-and-perform-LD-score-regression">Calculate LD matrix and perform LD score regression<a class="anchor-link" href="#Calculate-LD-matrix-and-perform-LD-score-regression">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="p">[</span><span class="n">ldsc</span><span class="p">]</span>
+<span class="c1"># summary stats file</span>
+<span class="kn">parameter:</span> <span class="n">ss</span> <span class="o">=</span> <span class="n">path</span>
+<span class="kn">parameter:</span> <span class="n">reference_geno</span> <span class="o">=</span> <span class="n">path</span>
+<span class="kn">input:</span> <span class="n">ss</span><span class="p">,</span> <span class="n">reference_geno</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{cwd}/{_input[0]:bn}.ld.rds&#39;</span>
+<span class="kn">task:</span> <span class="kp">trunk_workers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">walltime</span> <span class="o">=</span> <span class="kp">walltime</span><span class="p">,</span> <span class="kp">mem</span> <span class="o">=</span> <span class="kp">mem</span><span class="p">,</span> <span class="kp">cores</span> <span class="o">=</span> <span class="n">numThreads</span><span class="p">,</span> <span class="kp">tags</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{step_name}_{_output[0]:bn}&#39;</span>
+<span class="kn">R:</span> <span class="n">expand</span><span class="o">=</span> <span class="s2">&quot;${ }&quot;</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output[0]:n}.stderr&#39;</span><span class="p">,</span> <span class="n">stdout</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output[0]:n}.stdout&#39;</span>
+    <span class="n">library</span><span class="p">(</span><span class="n">bigsnpr</span><span class="p">)</span>
+    <span class="n">library</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">table</span><span class="p">)</span>
+    <span class="n">library</span><span class="p">(</span><span class="n">bigsparser</span><span class="p">)</span>
+    <span class="n">suppressMessages</span><span class="p">(</span><span class="n">library</span><span class="p">(</span><span class="n">tidyverse</span><span class="p">))</span>
+    <span class="n">info_snp</span> <span class="o">=</span> <span class="n">readRDS</span><span class="p">(</span><span class="s2">&quot;${_input[0]}&quot;</span><span class="p">)</span>
+    <span class="n">attach</span><span class="p">(</span><span class="n">readRDS</span><span class="p">(</span><span class="s2">&quot;${_input[1]}&quot;</span><span class="p">))</span>
+    <span class="n">NCORES</span> <span class="o">=</span> <span class="n">bigparallelr</span><span class="p">::</span><span class="n">nb_cores</span><span class="p">()</span>
+    <span class="n">NCORES</span> <span class="o">=</span> <span class="n">tryCatch</span><span class="p">({</span><span class="n">bigparallelr</span><span class="p">::</span><span class="n">assert_cores</span><span class="p">(</span><span class="n">NCORES</span><span class="p">);</span> <span class="n">NCORES</span> <span class="p">},</span> <span class="n">error</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># Initialize variables for storing the LD score and LD matrix</span>
+    <span class="n">corr</span> <span class="o">=</span> <span class="n">NULL</span>
+    <span class="n">ld</span> <span class="o">=</span> <span class="n">NULL</span>
+    <span class="c1"># Open a temporary file</span>
+    <span class="n">tmp</span> <span class="o">=</span> <span class="n">tempfile</span><span class="p">(</span><span class="n">tmpdir</span> <span class="o">=</span> <span class="s2">&quot;${cwd}/ld-cache&quot;</span><span class="p">)</span>
+    <span class="n">on</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="nb">file</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">paste0</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="s2">&quot;.sbk&quot;</span><span class="p">)),</span> <span class="n">add</span> <span class="o">=</span> <span class="n">TRUE</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="p">(</span><span class="nb">chr</span> <span class="ow">in</span> <span class="mi">1</span><span class="p">:</span><span class="mi">22</span><span class="p">)</span> <span class="p">{</span>
+      <span class="c1"># Extract SNPs that are included in the chromosome</span>
+      <span class="n">ind</span><span class="o">.</span><span class="n">chr</span> <span class="o">&lt;-</span> <span class="n">which</span><span class="p">(</span><span class="n">info_snp</span><span class="err">$</span><span class="nb">chr</span> <span class="o">==</span> <span class="nb">chr</span><span class="p">)</span>
+      <span class="n">ind</span><span class="o">.</span><span class="n">chr2</span> <span class="o">&lt;-</span> <span class="n">info_snp</span><span class="err">$</span><span class="sb">`_NUM_ID_`</span><span class="p">[</span><span class="n">ind</span><span class="o">.</span><span class="n">chr</span><span class="p">]</span>
+      <span class="c1"># Calculate the LD</span>
+      <span class="n">corr0</span> <span class="o">&lt;-</span> <span class="n">snp_cor</span><span class="p">(</span>
+        <span class="n">genotypes</span><span class="p">,</span>
+        <span class="n">ind</span><span class="o">.</span><span class="n">col</span> <span class="o">=</span> <span class="n">ind</span><span class="o">.</span><span class="n">chr2</span><span class="p">,</span>
+        <span class="n">ncores</span> <span class="o">=</span> <span class="n">NCORES</span><span class="p">,</span>
+        <span class="n">infos</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="nb">map</span><span class="err">$</span><span class="n">genetic</span><span class="o">.</span><span class="n">dist</span><span class="p">[</span><span class="n">ind</span><span class="o">.</span><span class="n">chr2</span><span class="p">],</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">/</span> <span class="mi">1000</span>
+      <span class="p">)</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nb">chr</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">ld</span> <span class="o">&lt;-</span> <span class="n">Matrix</span><span class="p">::</span><span class="n">colSums</span><span class="p">(</span><span class="n">corr0</span><span class="o">^</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">corr</span> <span class="o">&lt;-</span> <span class="n">as_SFBM</span><span class="p">(</span><span class="n">corr0</span><span class="p">,</span> <span class="n">tmp</span><span class="p">)</span>
+      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="n">ld</span> <span class="o">&lt;-</span> <span class="n">c</span><span class="p">(</span><span class="n">ld</span><span class="p">,</span> <span class="n">Matrix</span><span class="p">::</span><span class="n">colSums</span><span class="p">(</span><span class="n">corr0</span><span class="o">^</span><span class="mi">2</span><span class="p">))</span>
+        <span class="n">corr</span><span class="err">$</span><span class="n">add_columns</span><span class="p">(</span><span class="n">corr0</span><span class="p">,</span> <span class="n">nrow</span><span class="p">(</span><span class="n">corr</span><span class="p">))</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+       
+    <span class="n">ldsc</span> <span class="o">&lt;-</span> <span class="n">snp_ldsc</span><span class="p">(</span><span class="n">ld</span><span class="p">,</span> 
+                    <span class="n">length</span><span class="p">(</span><span class="n">ld</span><span class="p">),</span> 
+                    <span class="n">chi2</span> <span class="o">=</span> <span class="p">(</span><span class="n">info_snp</span><span class="err">$</span><span class="n">beta</span> <span class="o">/</span> <span class="n">info_snp</span><span class="err">$</span><span class="n">beta_se</span><span class="p">)</span><span class="o">^</span><span class="mi">2</span><span class="p">,</span>
+                    <span class="n">sample_size</span> <span class="o">=</span> <span class="n">info_snp</span><span class="err">$</span><span class="n">n_eff</span><span class="p">,</span>
+                    <span class="n">blocks</span> <span class="o">=</span> <span class="n">NULL</span><span class="p">)</span>
+    <span class="n">saveRDS</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">ld</span><span class="o">=</span><span class="n">ld</span><span class="p">,</span><span class="n">corr</span><span class="o">=</span><span class="n">corr</span><span class="p">,</span><span class="n">ldsc</span><span class="o">=</span><span class="n">ldsc</span><span class="p">),</span> <span class="nb">file</span> <span class="o">=</span> <span class="s2">&quot;${_output}&quot;</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Get-adjusted-betas-and-PRS">Get adjusted betas and PRS<a class="anchor-link" href="#Get-adjusted-betas-and-PRS">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="p">[</span><span class="n">prs_core</span><span class="p">]</span>
+<span class="c1"># rds file for summary stats</span>
+<span class="kn">parameter:</span> <span class="n">ss</span> <span class="o">=</span> <span class="n">path</span>
+<span class="c1"># rds file of target data generated from bed file</span>
+<span class="kn">parameter:</span> <span class="n">target_geno</span> <span class="o">=</span> <span class="n">path</span>
+<span class="c1"># ldsc file</span>
+<span class="kn">parameter:</span> <span class="n">ldsc</span> <span class="o">=</span> <span class="n">path</span>
+<span class="c1"># method: choose from inf, grid, and auto</span>
+<span class="kn">parameter:</span> <span class="n">method</span> <span class="o">=</span> <span class="nb">str</span>
+<span class="c1"># phenotype file, must have a header</span>
+<span class="kn">parameter:</span> <span class="n">phenoFile</span> <span class="o">=</span> <span class="n">path</span>
+<span class="c1"># covariates file, must have a header</span>
+<span class="kn">parameter:</span> <span class="n">covFile</span> <span class="o">=</span> <span class="n">path</span>
+<span class="c1"># either continuous or binary</span>
+<span class="kn">parameter:</span> <span class="n">response</span> <span class="o">=</span> <span class="nb">str</span>
+<span class="kn">parameter:</span> <span class="n">suffix</span> <span class="o">=</span> <span class="s2">&quot;prs&quot;</span>
+<span class="kn">input:</span> <span class="n">ss</span><span class="p">,</span> <span class="n">ldsc</span><span class="p">,</span> <span class="n">target_geno</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{cwd}/{_input[0]:bn}.{suffix}.rds&#39;</span>
+<span class="kn">task:</span> <span class="kp">trunk_workers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">walltime</span> <span class="o">=</span> <span class="kp">walltime</span><span class="p">,</span> <span class="kp">mem</span> <span class="o">=</span> <span class="kp">mem</span><span class="p">,</span> <span class="kp">cores</span> <span class="o">=</span> <span class="n">numThreads</span><span class="p">,</span> <span class="kp">tags</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{step_name}_{_output:bn}&#39;</span>
+<span class="kn">R:</span> <span class="n">expand</span><span class="o">=</span> <span class="s2">&quot;${ }&quot;</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output:n}.stderr&#39;</span><span class="p">,</span> <span class="n">stdout</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output:n}.stdout&#39;</span>
+    <span class="n">library</span><span class="p">(</span><span class="n">bigsnpr</span><span class="p">)</span>
+    <span class="n">library</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">table</span><span class="p">)</span>
+    <span class="n">suppressMessages</span><span class="p">(</span><span class="n">library</span><span class="p">(</span><span class="n">tidyverse</span><span class="p">))</span>
+
+    <span class="c1">## load correlation data ##</span>
+    <span class="n">ldsc</span> <span class="o">=</span> <span class="n">readRDS</span><span class="p">(</span><span class="s2">&quot;${_input[1]}&quot;</span><span class="p">)</span>
+    <span class="c1">## load summary stats ##</span>
+    <span class="n">info_snp</span> <span class="o">=</span> <span class="n">readRDS</span><span class="p">(</span><span class="s2">&quot;${_input[0]}&quot;</span><span class="p">)</span>
+    <span class="c1">## load test data ##</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">test</span> <span class="o">&lt;-</span> <span class="n">snp_attach</span><span class="p">(</span><span class="s2">&quot;${_input[2]}&quot;</span><span class="p">)</span>
+    <span class="n">ind</span><span class="o">.</span><span class="n">test</span> <span class="o">=</span> <span class="mi">1</span><span class="p">:</span><span class="n">nrow</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">test</span><span class="err">$</span><span class="n">genotypes</span><span class="p">)</span>
+    <span class="n">map2</span> <span class="o">&lt;-</span> <span class="n">obj</span><span class="o">.</span><span class="n">test</span><span class="err">$</span><span class="nb">map</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span>
+    <span class="n">names</span><span class="p">(</span><span class="n">map2</span><span class="p">)</span> <span class="o">&lt;-</span> <span class="n">c</span><span class="p">(</span><span class="s2">&quot;chr&quot;</span><span class="p">,</span> <span class="s2">&quot;rsid&quot;</span><span class="p">,</span> <span class="s2">&quot;pos&quot;</span><span class="p">,</span> <span class="s2">&quot;a0&quot;</span><span class="p">,</span> <span class="s2">&quot;a1&quot;</span><span class="p">)</span>
+    <span class="n">info_snp_test</span> <span class="o">=</span> <span class="n">snp_match</span><span class="p">(</span><span class="n">info_snp</span><span class="p">[,</span> <span class="o">-</span><span class="n">which</span><span class="p">(</span><span class="n">names</span><span class="p">(</span><span class="n">info_snp</span><span class="p">)</span> <span class="o">%</span><span class="ow">in</span><span class="o">%</span> <span class="n">c</span><span class="p">(</span><span class="s2">&quot;_NUM_ID_.ss&quot;</span><span class="p">,</span><span class="s2">&quot;_NUM_ID_&quot;</span><span class="p">))],</span> <span class="n">map2</span><span class="p">,</span> 
+                          <span class="n">join_by_pos</span> <span class="o">=</span> <span class="n">FALSE</span><span class="p">)</span>
+    <span class="n">rsid</span> <span class="o">=</span> <span class="n">intersect</span><span class="p">(</span><span class="n">info_snp_test</span><span class="err">$</span><span class="n">rsid</span><span class="p">,</span><span class="n">info_snp</span><span class="err">$</span><span class="n">rsid</span><span class="p">)</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="n">which</span><span class="p">(</span><span class="n">info_snp</span><span class="err">$</span><span class="n">rsid</span> <span class="o">%</span><span class="ow">in</span><span class="o">%</span> <span class="n">rsid</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">paste</span><span class="p">(</span><span class="n">length</span><span class="p">(</span><span class="n">index</span><span class="p">),</span> <span class="s2">&quot;SNPs are used for PRS calculations&quot;</span><span class="p">))</span>
+    <span class="n">NCORES</span> <span class="o">=</span> <span class="n">bigparallelr</span><span class="p">::</span><span class="n">nb_cores</span><span class="p">()</span>
+    <span class="n">NCORES</span> <span class="o">=</span> <span class="n">tryCatch</span><span class="p">({</span><span class="n">bigparallelr</span><span class="p">::</span><span class="n">assert_cores</span><span class="p">(</span><span class="n">NCORES</span><span class="p">);</span> <span class="n">NCORES</span> <span class="p">},</span> <span class="n">error</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">df_beta</span> <span class="o">&lt;-</span> <span class="n">info_snp</span><span class="p">[,</span><span class="n">c</span><span class="p">(</span><span class="s2">&quot;beta&quot;</span><span class="p">,</span> <span class="s2">&quot;beta_se&quot;</span><span class="p">,</span> <span class="s2">&quot;n_eff&quot;</span><span class="p">,</span> <span class="s2">&quot;_NUM_ID_&quot;</span><span class="p">)]</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="s2">&quot;${method}&quot;</span> <span class="o">==</span> <span class="s1">&#39;inf&#39;</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">## adjusted beta ##</span>
+        <span class="n">adj_beta</span> <span class="o">&lt;-</span> <span class="n">snp_ldpred2_inf</span><span class="p">(</span><span class="n">ldsc</span><span class="err">$</span><span class="n">corr</span><span class="p">,</span> <span class="n">df_beta</span><span class="p">,</span> <span class="n">h2</span> <span class="o">=</span> <span class="n">ldsc</span><span class="err">$</span><span class="n">ldsc</span><span class="p">[</span><span class="s1">&#39;h2&#39;</span><span class="p">])</span>
+        <span class="c1">## Predict PRS ##</span>
+        <span class="n">prs_pred</span> <span class="o">&lt;-</span> <span class="n">big_prodVec</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">test</span><span class="err">$</span><span class="n">genotypes</span><span class="p">,</span> <span class="n">adj_beta</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> 
+        <span class="n">ind</span><span class="o">.</span><span class="n">row</span> <span class="o">=</span> <span class="n">ind</span><span class="o">.</span><span class="n">test</span><span class="p">,</span> <span class="n">ind</span><span class="o">.</span><span class="n">col</span> <span class="o">=</span> <span class="n">info_snp_test</span><span class="err">$</span><span class="sb">`_NUM_ID_`</span><span class="p">)</span>
+        <span class="n">saveRDS</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">beta</span> <span class="o">=</span> <span class="n">adj_beta</span><span class="p">,</span> <span class="n">prs</span> <span class="o">=</span> <span class="n">prs_pred</span><span class="p">),</span> <span class="nb">file</span> <span class="o">=</span> <span class="s2">&quot;${_output}&quot;</span><span class="p">)</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="s2">&quot;${method}&quot;</span> <span class="o">==</span> <span class="s1">&#39;grid&#39;</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="s2">&quot;${response}&quot;</span>
+        <span class="sb">`%notin%`</span> <span class="o">&lt;-</span> <span class="n">Negate</span><span class="p">(</span><span class="sb">`%in%`</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">response</span> <span class="o">%</span><span class="n">notin</span><span class="o">%</span> <span class="n">c</span><span class="p">(</span><span class="s2">&quot;continuous&quot;</span><span class="p">,</span> <span class="s2">&quot;binary&quot;</span><span class="p">))</span> <span class="n">stop</span><span class="p">(</span><span class="s2">&quot;--response variable should be either &#39;continous&#39; or &#39;binary&#39;&quot;</span><span class="p">)</span>
+        <span class="c1"># Prepare data for grid model</span>
+        <span class="n">p_seq</span> <span class="o">&lt;-</span> <span class="n">signif</span><span class="p">(</span><span class="n">seq_log</span><span class="p">(</span><span class="mf">1e-4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">length</span><span class="o">.</span><span class="n">out</span> <span class="o">=</span> <span class="mi">10</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">h2_seq</span> <span class="o">&lt;-</span> <span class="nb">round</span><span class="p">(</span><span class="n">ldsc</span><span class="err">$</span><span class="n">ldsc</span><span class="p">[</span><span class="s1">&#39;h2&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">c</span><span class="p">(</span><span class="mf">0.7</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">1.4</span><span class="p">),</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="n">grid</span><span class="o">.</span><span class="n">param</span> <span class="o">&lt;-</span>
+            <span class="n">expand</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">p</span> <span class="o">=</span> <span class="n">p_seq</span><span class="p">,</span>
+                    <span class="n">h2</span> <span class="o">=</span> <span class="n">h2_seq</span><span class="p">,</span>
+                    <span class="n">sparse</span> <span class="o">=</span> <span class="n">c</span><span class="p">(</span><span class="n">FALSE</span><span class="p">,</span> <span class="n">TRUE</span><span class="p">))</span>
+
+        <span class="c1"># Get adjusted beta from grid model</span>
+        <span class="n">gird_beta</span> <span class="o">&lt;-</span> <span class="n">snp_ldpred2_grid</span><span class="p">(</span><span class="n">ldsc</span><span class="err">$</span><span class="n">corr</span><span class="p">,</span> <span class="n">df_beta</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">param</span><span class="p">,</span> <span class="n">ncores</span> <span class="o">=</span> <span class="n">NCORES</span><span class="p">)</span>
+
+        <span class="c1"># Prediction</span>
+        <span class="n">grid_pred</span> <span class="o">&lt;-</span> <span class="n">big_prodMat</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">test</span><span class="err">$</span><span class="n">genotypes</span><span class="p">,</span> <span class="n">gird_beta</span><span class="p">[</span><span class="n">index</span><span class="p">,],</span> 
+        <span class="n">ind</span><span class="o">.</span><span class="n">row</span> <span class="o">=</span> <span class="n">ind</span><span class="o">.</span><span class="n">test</span><span class="p">,</span> <span class="n">ind</span><span class="o">.</span><span class="n">col</span> <span class="o">=</span> <span class="n">info_snp_test</span><span class="err">$</span><span class="sb">`_NUM_ID_`</span><span class="p">)</span>
+
+        <span class="c1">## find best betas</span>
+        <span class="c1"># load covariates data</span>
+        <span class="n">covariates</span> <span class="o">=</span> <span class="n">read</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">&quot;${covFile}&quot;</span><span class="p">,</span> <span class="n">header</span> <span class="o">=</span> <span class="n">T</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">read</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">&quot;${phenoFile}&quot;</span><span class="p">,</span> <span class="n">header</span> <span class="o">=</span> <span class="n">T</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">cbind</span><span class="p">(</span><span class="n">covariates</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+        <span class="c1"># split train (80%) and test data (20%)</span>
+        <span class="nb">set</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">2021</span><span class="p">)</span>
+        <span class="n">train</span><span class="o">.</span><span class="n">ind</span> <span class="o">=</span> <span class="n">sample</span><span class="p">(</span><span class="n">nrow</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="mf">0.8</span><span class="o">*</span><span class="n">nrow</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+        <span class="n">test</span><span class="o">.</span><span class="n">ind</span> <span class="o">=</span> <span class="n">setdiff</span><span class="p">(</span><span class="n">rows_along</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="n">train</span><span class="o">.</span><span class="n">ind</span><span class="p">)</span> 
+
+        <span class="c1"># find best p and h2 </span>
+        <span class="n">response</span> <span class="o">=</span> <span class="s2">&quot;${response}&quot;</span>
+        <span class="n">reg</span><span class="o">.</span><span class="n">formula</span> <span class="o">&lt;-</span> <span class="n">paste</span><span class="p">(</span><span class="n">colnames</span><span class="p">(</span><span class="n">covariates</span><span class="p">),</span> <span class="n">collapse</span> <span class="o">=</span> <span class="s1">&#39;+&#39;</span><span class="p">)</span> <span class="o">%&gt;%</span>
+            <span class="n">paste0</span><span class="p">(</span><span class="n">colnames</span><span class="p">(</span><span class="n">y</span><span class="p">),</span><span class="s2">&quot;~PRS+&quot;</span><span class="p">,</span> <span class="o">.</span><span class="p">)</span> <span class="o">%&gt;%</span>
+            <span class="k">as</span><span class="o">.</span><span class="n">formula</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">response</span> <span class="o">==</span> <span class="s2">&quot;continuous&quot;</span><span class="p">){</span>
+            <span class="n">grid</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">big_univLinReg</span><span class="p">(</span><span class="n">as_FBM</span><span class="p">(</span><span class="n">grid_pred</span><span class="p">[</span><span class="n">train</span><span class="o">.</span><span class="n">ind</span><span class="p">,]),</span> 
+                        <span class="n">y</span><span class="p">[</span><span class="n">train</span><span class="o">.</span><span class="n">ind</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">covar</span> <span class="o">=</span> <span class="k">as</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">covariates</span><span class="p">[</span><span class="n">train</span><span class="o">.</span><span class="n">ind</span><span class="p">,]))</span>
+        <span class="p">}</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">response</span> <span class="o">==</span> <span class="s2">&quot;binary&quot;</span><span class="p">){</span>
+            <span class="n">grid</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">big_univLogReg</span><span class="p">(</span><span class="n">as_FBM</span><span class="p">(</span><span class="n">grid_pred</span><span class="p">[</span><span class="n">train</span><span class="o">.</span><span class="n">ind</span><span class="p">,]),</span> 
+                        <span class="n">y</span><span class="p">[</span><span class="n">train</span><span class="o">.</span><span class="n">ind</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">covar</span> <span class="o">=</span> <span class="k">as</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">covariates</span><span class="p">[</span><span class="n">train</span><span class="o">.</span><span class="n">ind</span><span class="p">,]))</span>
+        <span class="p">}</span>
+
+        <span class="c1"># find best betas according to z score</span>
+        <span class="n">grid</span><span class="o">.</span><span class="n">param</span><span class="err">$</span><span class="n">score</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">model</span><span class="err">$</span><span class="n">score</span>
+        <span class="n">adj_beta</span> <span class="o">&lt;-</span> <span class="n">grid</span><span class="o">.</span><span class="n">param</span> <span class="o">%&gt;%</span>
+          <span class="n">mutate</span><span class="p">(</span><span class="nb">id</span> <span class="o">=</span> <span class="n">row_number</span><span class="p">())</span> <span class="o">%&gt;%</span>
+          <span class="n">arrange</span><span class="p">(</span><span class="n">desc</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">score</span><span class="p">)))</span> <span class="o">%&gt;%</span>
+          <span class="nb">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">%&gt;%</span>
+          <span class="n">pull</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span> <span class="o">%&gt;%</span>
+          <span class="n">gird_beta</span><span class="p">[,</span> <span class="o">.</span><span class="p">]</span>
+        <span class="n">prs_pred</span> <span class="o">&lt;-</span> <span class="n">big_prodVec</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">test</span><span class="err">$</span><span class="n">genotypes</span><span class="p">,</span> <span class="n">adj_beta</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> 
+            <span class="n">ind</span><span class="o">.</span><span class="n">row</span> <span class="o">=</span> <span class="n">ind</span><span class="o">.</span><span class="n">test</span><span class="p">,</span> <span class="n">ind</span><span class="o">.</span><span class="n">col</span> <span class="o">=</span> <span class="n">info_snp_test</span><span class="err">$</span><span class="sb">`_NUM_ID_`</span><span class="p">)</span>
+
+        <span class="n">library</span><span class="p">(</span><span class="n">ggplot2</span><span class="p">)</span>
+        <span class="n">ggplot</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">param</span><span class="p">,</span> <span class="n">aes</span><span class="p">(</span><span class="n">x</span> <span class="o">=</span> <span class="n">p</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">score</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="k">as</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="n">h2</span><span class="p">)))</span> <span class="o">+</span>
+          <span class="n">theme_bigstatsr</span><span class="p">()</span> <span class="o">+</span>
+          <span class="n">geom_point</span><span class="p">()</span> <span class="o">+</span>
+          <span class="n">geom_line</span><span class="p">()</span> <span class="o">+</span>
+          <span class="n">scale_x_log10</span><span class="p">(</span><span class="n">breaks</span> <span class="o">=</span> <span class="mi">10</span><span class="o">^</span><span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">:</span><span class="mi">0</span><span class="p">),</span> <span class="n">minor_breaks</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">param</span><span class="err">$</span><span class="n">p</span><span class="p">)</span> <span class="o">+</span>
+          <span class="n">facet_wrap</span><span class="p">(</span><span class="o">~</span> <span class="n">sparse</span><span class="p">,</span> <span class="n">labeller</span> <span class="o">=</span> <span class="n">label_both</span><span class="p">)</span> <span class="o">+</span>
+          <span class="n">labs</span><span class="p">(</span><span class="n">y</span> <span class="o">=</span> <span class="s2">&quot;Z-Score&quot;</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="s2">&quot;h2&quot;</span><span class="p">)</span> <span class="o">+</span>
+          <span class="n">theme</span><span class="p">(</span><span class="n">legend</span><span class="o">.</span><span class="n">position</span> <span class="o">=</span> <span class="s2">&quot;top&quot;</span><span class="p">,</span> <span class="n">panel</span><span class="o">.</span><span class="n">spacing</span> <span class="o">=</span> <span class="n">unit</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;lines&quot;</span><span class="p">))</span>
+        <span class="n">ggsave</span><span class="p">(</span><span class="s2">&quot;${_output:n}.png&quot;</span><span class="p">)</span>
+      <span class="n">saveRDS</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">beta</span> <span class="o">=</span> <span class="n">adj_beta</span><span class="p">,</span> <span class="n">prs</span> <span class="o">=</span> <span class="n">prs_pred</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">param</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">param</span><span class="p">),</span> <span class="nb">file</span> <span class="o">=</span> <span class="s2">&quot;${_output}&quot;</span><span class="p">)</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="s2">&quot;${method}&quot;</span> <span class="o">==</span> <span class="s1">&#39;auto&#39;</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1"># Get adjusted beta from the auto model</span>
+        <span class="n">multi_auto</span> <span class="o">&lt;-</span> <span class="n">snp_ldpred2_auto</span><span class="p">(</span>
+            <span class="n">ldsc</span><span class="err">$</span><span class="n">corr</span><span class="p">,</span>
+            <span class="n">df_beta</span><span class="p">,</span>
+            <span class="n">h2_init</span> <span class="o">=</span> <span class="n">ldsc</span><span class="err">$</span><span class="n">ldsc</span><span class="p">[</span><span class="s1">&#39;h2&#39;</span><span class="p">],</span>
+            <span class="n">vec_p_init</span> <span class="o">=</span> <span class="n">seq_log</span><span class="p">(</span><span class="mf">1e-4</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="n">length</span><span class="o">.</span><span class="n">out</span> <span class="o">=</span> <span class="mi">30</span><span class="p">),</span>
+            <span class="n">ncores</span> <span class="o">=</span> <span class="n">NCORES</span>
+        <span class="p">)</span>
+        <span class="n">beta_auto</span> <span class="o">&lt;-</span> <span class="n">sapply</span><span class="p">(</span><span class="n">multi_auto</span><span class="p">,</span> <span class="n">function</span><span class="p">(</span><span class="n">auto</span><span class="p">)</span>
+            <span class="n">auto</span><span class="err">$</span><span class="n">beta_est</span><span class="p">)</span>
+        <span class="n">pred_auto</span> <span class="o">&lt;-</span> <span class="n">big_prodMat</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">test</span><span class="err">$</span><span class="n">genotypes</span><span class="p">,</span> <span class="n">beta_auto</span><span class="p">[</span><span class="n">index</span><span class="p">,],</span> 
+        <span class="n">ind</span><span class="o">.</span><span class="n">row</span> <span class="o">=</span> <span class="n">ind</span><span class="o">.</span><span class="n">test</span><span class="p">,</span> <span class="n">ind</span><span class="o">.</span><span class="n">col</span> <span class="o">=</span> <span class="n">info_snp_test</span><span class="err">$</span><span class="sb">`_NUM_ID_`</span><span class="p">)</span> 
+
+        <span class="c1">## Find best beta (take average)</span>
+        <span class="n">sc</span> <span class="o">&lt;-</span> <span class="nb">apply</span><span class="p">(</span><span class="n">pred_auto</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">sd</span><span class="p">)</span>
+        <span class="n">keep</span> <span class="o">&lt;-</span> <span class="nb">abs</span><span class="p">(</span><span class="n">sc</span> <span class="o">-</span> <span class="n">median</span><span class="p">(</span><span class="n">sc</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">mad</span><span class="p">(</span><span class="n">sc</span><span class="p">)</span>
+        <span class="n">adj_beta</span> <span class="o">&lt;-</span> <span class="n">rowMeans</span><span class="p">(</span><span class="n">beta_auto</span><span class="p">[,</span> <span class="n">keep</span><span class="p">])</span>
+        <span class="n">prs_pred</span> <span class="o">&lt;-</span> <span class="n">rowMeans</span><span class="p">(</span><span class="n">pred_auto</span><span class="p">[,</span> <span class="n">keep</span><span class="p">])</span>
+
+        <span class="n">auto</span> <span class="o">&lt;-</span> <span class="n">multi_auto</span><span class="p">[[</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="n">plot_grid</span><span class="p">(</span>
+          <span class="n">qplot</span><span class="p">(</span><span class="n">y</span> <span class="o">=</span> <span class="n">auto</span><span class="err">$</span><span class="n">path_p_est</span><span class="p">)</span> <span class="o">+</span>
+            <span class="n">theme_bigstatsr</span><span class="p">()</span> <span class="o">+</span>
+            <span class="n">geom_hline</span><span class="p">(</span><span class="n">yintercept</span> <span class="o">=</span> <span class="n">auto</span><span class="err">$</span><span class="n">p_est</span><span class="p">,</span> <span class="n">col</span> <span class="o">=</span> <span class="s2">&quot;blue&quot;</span><span class="p">)</span> <span class="o">+</span>
+            <span class="n">scale_y_log10</span><span class="p">()</span> <span class="o">+</span>
+            <span class="n">labs</span><span class="p">(</span><span class="n">y</span> <span class="o">=</span> <span class="s2">&quot;p&quot;</span><span class="p">),</span>
+          <span class="n">qplot</span><span class="p">(</span><span class="n">y</span> <span class="o">=</span> <span class="n">auto</span><span class="err">$</span><span class="n">path_h2_est</span><span class="p">)</span> <span class="o">+</span>
+            <span class="n">theme_bigstatsr</span><span class="p">()</span> <span class="o">+</span>
+            <span class="n">geom_hline</span><span class="p">(</span><span class="n">yintercept</span> <span class="o">=</span> <span class="n">auto</span><span class="err">$</span><span class="n">h2_est</span><span class="p">,</span> <span class="n">col</span> <span class="o">=</span> <span class="s2">&quot;blue&quot;</span><span class="p">)</span> <span class="o">+</span>
+            <span class="n">labs</span><span class="p">(</span><span class="n">y</span> <span class="o">=</span> <span class="s2">&quot;h2&quot;</span><span class="p">),</span>
+          <span class="n">ncol</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">align</span> <span class="o">=</span> <span class="s2">&quot;hv&quot;</span>
+        <span class="p">)</span>
+        <span class="n">ggsave</span><span class="p">(</span><span class="s2">&quot;${_output:n}.png&quot;</span><span class="p">)</span>
+        <span class="n">saveRDS</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">beta</span> <span class="o">=</span> <span class="n">adj_beta</span><span class="p">,</span> <span class="n">prs</span> <span class="o">=</span> <span class="n">prs_pred</span><span class="p">),</span> <span class="nb">file</span> <span class="o">=</span> <span class="s2">&quot;${_output}&quot;</span><span class="p">)</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="n">stop</span><span class="p">(</span><span class="s2">&quot;Wrong --method specified&quot;</span><span class="p">)</span>
+    <span class="p">}</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Infinitesimal-model">Infinitesimal model<a class="anchor-link" href="#Infinitesimal-model">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[1]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="p">[</span><span class="n">inf_prs</span><span class="p">]</span>
+<span class="c1"># rds file for summary stats</span>
+<span class="kn">parameter:</span> <span class="n">ss</span> <span class="o">=</span> <span class="n">path</span>
+<span class="c1"># rds file of target data generated from bed file</span>
+<span class="kn">parameter:</span> <span class="n">target_geno</span> <span class="o">=</span> <span class="n">path</span>
+<span class="c1"># ldsc file</span>
+<span class="kn">parameter:</span> <span class="n">ldsc</span> <span class="o">=</span> <span class="n">path</span>
+<span class="kn">input:</span> <span class="n">ss</span><span class="p">,</span> <span class="n">target_geno</span><span class="p">,</span> <span class="n">ldsc</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{cwd}/{_input[0]:bn}.inf_prs.rds&#39;</span>
+<span class="n">sos_run</span><span class="p">(</span><span class="s2">&quot;prs_core&quot;</span><span class="p">,</span> <span class="n">ss</span><span class="o">=</span><span class="n">ss</span><span class="p">,</span><span class="n">target_geno</span><span class="o">=</span><span class="n">target_geno</span><span class="p">,</span> <span class="n">ldsc</span><span class="o">=</span><span class="n">ldsc</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;inf&quot;</span><span class="p">,</span> <span class="n">phenoFile</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="n">covFile</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="n">response</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;inf_prs&quot;</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Grid-model">Grid model<a class="anchor-link" href="#Grid-model">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="p">[</span><span class="n">grid_prs</span><span class="p">]</span>
+<span class="c1"># rds file for summary stats</span>
+<span class="kn">parameter:</span> <span class="n">ss</span> <span class="o">=</span> <span class="n">path</span>
+<span class="c1"># rds file of target data generated from bed file</span>
+<span class="kn">parameter:</span> <span class="n">target_geno</span> <span class="o">=</span> <span class="n">path</span>
+<span class="c1"># ldsc file</span>
+<span class="kn">parameter:</span> <span class="n">ldsc</span> <span class="o">=</span> <span class="n">path</span>
+<span class="c1"># phenotype file, must have a header</span>
+<span class="kn">parameter:</span> <span class="n">phenoFile</span> <span class="o">=</span> <span class="n">path</span>
+<span class="c1"># covariates file, must have a header</span>
+<span class="kn">parameter:</span> <span class="n">covFile</span> <span class="o">=</span> <span class="n">path</span>
+<span class="c1"># either continuous or binary</span>
+<span class="kn">parameter:</span> <span class="n">response</span> <span class="o">=</span> <span class="nb">str</span>
+<span class="kn">input:</span> <span class="n">ss</span><span class="p">,</span> <span class="n">target_geno</span><span class="p">,</span> <span class="n">ldsc</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{cwd}/{_input[0]:bn}.grid_prs.rds&#39;</span>
+<span class="n">sos_run</span><span class="p">(</span><span class="s2">&quot;prs_core&quot;</span><span class="p">,</span> <span class="n">ss</span><span class="o">=</span><span class="n">ss</span><span class="p">,</span><span class="n">target_geno</span><span class="o">=</span><span class="n">target_geno</span><span class="p">,</span> <span class="n">ldsc</span><span class="o">=</span><span class="n">ldsc</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;grid&quot;</span><span class="p">,</span> <span class="n">phenoFile</span><span class="o">=</span><span class="n">phenoFile</span><span class="p">,</span> <span class="n">covFile</span><span class="o">=</span><span class="n">covFile</span><span class="p">,</span> <span class="n">response</span><span class="o">=</span><span class="n">response</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;grid_prs&quot;</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Auto-model">Auto model<a class="anchor-link" href="#Auto-model">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="p">[</span><span class="n">auto_prs</span><span class="p">]</span>
+<span class="c1"># rds file for summary stats</span>
+<span class="kn">parameter:</span> <span class="n">ss</span> <span class="o">=</span> <span class="n">path</span>
+<span class="c1"># rds file of target data generated from bed file</span>
+<span class="kn">parameter:</span> <span class="n">target_geno</span> <span class="o">=</span> <span class="n">path</span>
+<span class="c1"># ldsc file</span>
+<span class="kn">parameter:</span> <span class="n">ldsc</span> <span class="o">=</span> <span class="n">path</span>
+<span class="kn">input:</span> <span class="n">ss</span><span class="p">,</span> <span class="n">target_geno</span><span class="p">,</span> <span class="n">ldsc</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{cwd}/{_input[0]:bn}.auto_prs.rds&#39;</span>
+<span class="n">sos_run</span><span class="p">(</span><span class="s2">&quot;prs_core&quot;</span><span class="p">,</span> <span class="n">ss</span><span class="o">=</span><span class="n">ss</span><span class="p">,</span><span class="n">target_geno</span><span class="o">=</span><span class="n">target_geno</span><span class="p">,</span> <span class="n">ldsc</span><span class="o">=</span><span class="n">ldsc</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span> <span class="n">phenoFile</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="n">covFile</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="n">response</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;auto_prs&quot;</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Predict-phenotype">Predict phenotype<a class="anchor-link" href="#Predict-phenotype">&#182;</a></h2><p><strong>FIXME: in the future we should do K-fold cross validation and summarize average results</strong></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="p">[</span><span class="n">pred_eval</span><span class="p">]</span>
+<span class="c1"># rds file for PRS</span>
+<span class="kn">parameter:</span> <span class="n">prs</span> <span class="o">=</span> <span class="n">path</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+<span class="c1"># phenotype file, must have a header</span>
+<span class="kn">parameter:</span> <span class="n">phenoFile</span> <span class="o">=</span> <span class="n">path</span>
+<span class="c1"># covariates file, must have a header</span>
+<span class="kn">parameter:</span> <span class="n">covFile</span> <span class="o">=</span> <span class="n">path</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+<span class="c1"># either continuous or binary</span>
+<span class="kn">parameter:</span> <span class="n">response</span> <span class="o">=</span> <span class="nb">str</span>
+
+<span class="n">fail_if</span><span class="p">(</span><span class="ow">not</span> <span class="p">(</span><span class="n">covFile</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="ow">or</span> <span class="n">covFile</span> <span class="o">==</span> <span class="n">path</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)),</span> <span class="n">msg</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;Cannot find ``{covFile}``&#39;</span><span class="p">)</span>
+<span class="n">fail_if</span><span class="p">(</span><span class="ow">not</span> <span class="p">(</span><span class="n">prs</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="ow">or</span> <span class="n">prs</span> <span class="o">==</span> <span class="n">path</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)),</span> <span class="n">msg</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;Cannot find ``{prs}``&#39;</span><span class="p">)</span>
+<span class="n">fail_if</span><span class="p">(</span><span class="ow">not</span> <span class="p">(</span><span class="n">prs</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="ow">or</span> <span class="n">covFile</span><span class="o">.</span><span class="n">is_file</span><span class="p">()),</span> <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;At least one of ``--prs`` or ``--covFile`` has to be specified&#39;</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="ow">not</span> <span class="n">prs</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+    <span class="c1"># fake a PRS file name to get proper filename for later</span>
+    <span class="n">prs</span> <span class="o">=</span> <span class="n">path</span><span class="p">(</span><span class="s2">&quot;baseline.out&quot;</span><span class="p">)</span>
+<span class="kn">input:</span> <span class="n">phenoFile</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{cwd}/{_input:bn}.{prs:bn}.rds&#39;</span>
+<span class="kn">task:</span> <span class="kp">trunk_workers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">walltime</span> <span class="o">=</span> <span class="kp">walltime</span><span class="p">,</span> <span class="kp">mem</span> <span class="o">=</span> <span class="kp">mem</span><span class="p">,</span> <span class="kp">cores</span> <span class="o">=</span> <span class="n">numThreads</span><span class="p">,</span> <span class="kp">tags</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{step_name}_{_output:bn}&#39;</span>
+<span class="kn">R:</span> <span class="n">expand</span><span class="o">=</span> <span class="s2">&quot;${ }&quot;</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output:n}.stderr&#39;</span><span class="p">,</span> <span class="n">stdout</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output:n}.stdout&#39;</span>
+    <span class="n">options</span><span class="p">(</span><span class="n">digits</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+    <span class="n">library</span><span class="p">(</span><span class="n">bigsnpr</span><span class="p">)</span>
+    <span class="n">suppressMessages</span><span class="p">(</span><span class="n">library</span><span class="p">(</span><span class="n">gplots</span><span class="p">))</span>
+    <span class="n">suppressMessages</span><span class="p">(</span><span class="n">library</span><span class="p">(</span><span class="n">tidyverse</span><span class="p">))</span>
+    <span class="n">dat</span> <span class="o">=</span> <span class="n">read</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">&quot;${_input}&quot;</span><span class="p">,</span> <span class="n">header</span> <span class="o">=</span> <span class="n">T</span><span class="p">)</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">paste0</span><span class="p">(</span><span class="n">colnames</span><span class="p">(</span><span class="n">dat</span><span class="p">),</span><span class="s2">&quot;~&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="err">$</span><span class="p">{</span><span class="s2">&quot;T&quot;</span> <span class="k">if</span> <span class="n">covFile</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;F&quot;</span><span class="p">})</span> <span class="p">{</span>
+        <span class="n">covariates</span> <span class="o">=</span> <span class="n">read</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">&quot;${covFile}&quot;</span><span class="p">,</span> <span class="n">header</span> <span class="o">=</span> <span class="n">T</span><span class="p">)</span>
+        <span class="n">dat</span> <span class="o">=</span> <span class="n">cbind</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span><span class="n">covariates</span><span class="p">)</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">paste</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">paste</span><span class="p">(</span><span class="n">colnames</span><span class="p">(</span><span class="n">covariates</span><span class="p">),</span> <span class="n">collapse</span> <span class="o">=</span> <span class="s1">&#39;+&#39;</span><span class="p">))</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="p">(</span><span class="err">$</span><span class="p">{</span><span class="s2">&quot;T&quot;</span> <span class="k">if</span> <span class="n">prs</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;F&quot;</span><span class="p">})</span> <span class="p">{</span>
+      <span class="n">dat</span><span class="err">$</span><span class="n">PRS</span> <span class="o">=</span> <span class="n">readRDS</span><span class="p">(</span><span class="s2">&quot;${prs}&quot;</span><span class="p">)</span><span class="err">$</span><span class="n">prs</span>
+      <span class="n">model</span> <span class="o">=</span> <span class="n">paste</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s2">&quot;+PRS&quot;</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="c1"># split train (80%) and test data (20%)</span>
+    <span class="nb">set</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">2021</span><span class="p">)</span>
+    <span class="n">train</span><span class="o">.</span><span class="n">ind</span> <span class="o">=</span> <span class="n">sample</span><span class="p">(</span><span class="n">nrow</span><span class="p">(</span><span class="n">dat</span><span class="p">),</span> <span class="mf">0.8</span><span class="o">*</span><span class="n">nrow</span><span class="p">(</span><span class="n">dat</span><span class="p">))</span>
+    <span class="n">test</span><span class="o">.</span><span class="n">ind</span> <span class="o">=</span> <span class="n">setdiff</span><span class="p">(</span><span class="n">rows_along</span><span class="p">(</span><span class="n">dat</span><span class="p">),</span> <span class="n">train</span><span class="o">.</span><span class="n">ind</span><span class="p">)</span>
+    <span class="c1"># fit model</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="s2">&quot;${response}&quot;</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">response</span><span class="o">==</span><span class="s2">&quot;continuous&quot;</span><span class="p">){</span>
+      <span class="n">fitted</span> <span class="o">=</span> <span class="n">model</span> <span class="o">%&gt;%</span>
+        <span class="k">as</span><span class="o">.</span><span class="n">formula</span> <span class="o">%&gt;%</span>
+        <span class="n">lm</span><span class="p">(</span><span class="o">.</span><span class="p">,</span><span class="n">data</span> <span class="o">=</span> <span class="n">dat</span><span class="p">[</span><span class="n">train</span><span class="o">.</span><span class="n">ind</span><span class="p">,])</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="n">response</span><span class="o">==</span><span class="s2">&quot;binary&quot;</span><span class="p">){</span>
+      <span class="n">fitted</span> <span class="o">=</span> <span class="n">model</span> <span class="o">%&gt;%</span>
+        <span class="k">as</span><span class="o">.</span><span class="n">formula</span> <span class="o">%&gt;%</span>
+        <span class="n">glm</span><span class="p">(</span><span class="o">.</span><span class="p">,</span><span class="n">data</span> <span class="o">=</span> <span class="n">dat</span><span class="p">[</span><span class="n">train</span><span class="o">.</span><span class="n">ind</span><span class="p">,],</span> <span class="n">family</span> <span class="o">=</span> <span class="n">binomial</span><span class="p">)</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="n">stop</span><span class="p">(</span><span class="s2">&quot;response parameter should be continuous or binary&quot;</span><span class="p">)</span>
+    <span class="p">}</span>
+       
+    <span class="c1"># Predict</span>
+    <span class="n">pheno_pred</span> <span class="o">=</span> <span class="n">predict</span><span class="p">(</span><span class="n">fitted</span><span class="p">,</span> <span class="n">dat</span><span class="p">[</span><span class="n">test</span><span class="o">.</span><span class="n">ind</span><span class="p">,])</span>
+    <span class="n">residual</span> <span class="o">=</span> <span class="n">pheno_pred</span><span class="o">-</span><span class="n">dat</span><span class="p">[</span><span class="n">test</span><span class="o">.</span><span class="n">ind</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">tbl</span> <span class="o">=</span> <span class="n">tibble</span><span class="p">(</span><span class="n">model</span> <span class="o">=</span> <span class="n">c</span><span class="p">(</span><span class="s2">&quot;model${prs:bnx}&quot;</span><span class="p">),</span> 
+                   <span class="n">R2</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">summary</span><span class="p">(</span><span class="n">fitted</span><span class="p">)</span><span class="err">$</span><span class="n">adj</span><span class="o">.</span><span class="n">r</span><span class="o">.</span><span class="n">squared</span><span class="p">,</span><span class="mi">5</span><span class="p">),</span>
+                   <span class="n">MSE</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">mean</span><span class="p">(</span><span class="n">residual</span><span class="o">^</span><span class="mi">2</span><span class="p">),</span><span class="mi">5</span><span class="p">))</span>    
+    <span class="c1"># save output</span>
+    <span class="n">pdf</span><span class="p">(</span><span class="nb">file</span> <span class="o">=</span> <span class="s2">&quot;${_output:n}.pdf&quot;</span><span class="p">,</span><span class="n">width</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">10</span><span class="p">,)</span>   
+    <span class="n">textplot</span><span class="p">(</span><span class="k">print</span><span class="p">(</span><span class="n">tbl</span><span class="p">))</span>
+    <span class="n">title</span><span class="p">(</span><span class="s2">&quot;Goodness of fit and MSE&quot;</span><span class="p">)</span>
+    <span class="n">hist</span><span class="p">(</span><span class="n">residual</span><span class="p">,</span><span class="n">prob</span> <span class="o">=</span> <span class="n">T</span><span class="p">)</span>
+    <span class="n">plot</span><span class="p">(</span><span class="n">residual</span><span class="p">,</span> <span class="n">xlab</span> <span class="o">=</span> <span class="s2">&quot;individuals&quot;</span><span class="p">,</span> <span class="n">main</span> <span class="o">=</span> <span class="s2">&quot;Residual Plot&quot;</span><span class="p">)</span>
+    <span class="n">abline</span><span class="p">(</span><span class="n">h</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">lty</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">dev</span><span class="o">.</span><span class="n">off</span><span class="p">()</span>
+    
+    <span class="n">saveRDS</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">fitted</span> <span class="o">=</span> <span class="n">fitted</span><span class="p">,</span> <span class="n">summary</span> <span class="o">=</span> <span class="n">tbl</span><span class="p">,</span> <span class="n">predicted</span> <span class="o">=</span> <span class="n">pheno_pred</span><span class="p">,</span> <span class="n">residual</span> <span class="o">=</span> <span class="n">residual</span><span class="p">),</span> <span class="nb">file</span> <span class="o">=</span> <span class="s2">&quot;${_output}&quot;</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<hr>
+&copy 2020-current Gao Wang and others, Department of Neurology at Columbia University
+<p><small>Exported from <a href="http://github.com/cumc/bioworkflows/blob/711ce963d9ca6ee8fe37bff1e599bde0bba6144f/ldpred/ldpred.ipynb"><code>ldpred/ldpred.ipynb</code></a> committed by gaow on Tue May 25 02:01:01 2021 <a href="http://github.com/cumc/bioworkflows/commit/711ce963d9ca6ee8fe37bff1e599bde0bba6144f">revision 38, 711ce96</a> <a href="https://stephenslab.github.io/ipynb-website/notes.html#Note-about-commit-ids"><span class="fa fa-question-circle"></span></a></small></p>
+</div>
+</div>
+</body>
+</html>

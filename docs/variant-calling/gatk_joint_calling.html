@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="ipynb_website:version" content="0.9.7" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="stylesheet" type="text/css" href="../css/jt.css">
+
+<link rel="stylesheet" type="text/css" href="../css/toc2.css">
+
+<link href="../site_libs/jqueryui-1.11.4/jquery-ui.css">
+<link rel="stylesheet" href="../site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="../site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.9.1/jquery-ui.min.js"></script>
+<script src="../site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="../site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="../site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+
+<link rel="stylesheet"
+      href="../site_libs/highlightjs/null.min.css"
+      type="text/css" />
+
+<script src="../site_libs/highlightjs/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+<script src="../js/doc_toc.js"></script>
+<script src="../js/docs.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX", "output/HTML-CSS"],
+        tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+        displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+        processEscapes: true
+        },
+        "HTML-CSS": {
+            preferredFont: "TeX",
+            availableFonts: ["TeX"],
+            styles: {
+                scale: 110,
+                ".MathJax_Display": {
+                    "font-size": "110%",
+                }
+            }
+        }
+    });
+</script>
+<script>
+function filterDataFrame(id) {
+    var input = document.getElementById("search_" + id);
+    var filter = input.value.toUpperCase();
+    var table = document.getElementById("dataframe_" + id);
+    var tr = table.getElementsByTagName("tr");
+    // Loop through all table rows, and hide those who don't match the search query
+    for (var i = 1; i < tr.length; i++) {
+        for (var j = 0; j < tr[i].cells.length; ++j) {
+            var matched = false;
+            if (tr[i].cells[j].innerHTML.toUpperCase().indexOf(filter) != -1) {
+                tr[i].style.display = "";
+                matched = true
+                break;
+            }
+            if (!matched)
+                tr[i].style.display = "none";
+        }
+    }
+}
+function sortDataFrame(id, n, dtype) {
+    var table = document.getElementById("dataframe_" + id);
+    var tb = table.tBodies[0]; // use `<tbody>` to ignore `<thead>` and `<tfoot>` rows
+    var tr = Array.prototype.slice.call(tb.rows, 0); // put rows into array
+    if (dtype === 'numeric') {
+        var fn = function(a, b) { 
+            return parseFloat(a.cells[n].textContent) <= parseFloat(b.cells[n].textContent) ? -1 : 1;
+        }
+    } else {
+        var fn = function(a, b) {
+            var c = a.cells[n].textContent.trim().localeCompare(b.cells[n].textContent.trim()); 
+            return c > 0 ? 1 : (c < 0 ? -1 : 0) }
+    }
+    var isSorted = function(array, fn) {
+        if (array.length < 2)
+            return 1;
+        var direction = fn(array[0], array[1]); 
+        for (var i = 1; i < array.length - 1; ++i) {
+            var d = fn(array[i], array[i+1]);
+            if (d == 0)
+                continue;
+            else if (direction == 0)
+                direction = d;
+            else if (direction != d)
+                return 0;
+            }
+        return direction;
+    }
+    var sorted = isSorted(tr, fn);
+    if (sorted == 1 || sorted == -1) {
+        // if sorted already, reverse it
+        for(var i = tr.length - 1; i >= 0; --i)
+            tb.appendChild(tr[i]); // append each row in order
+    } else {
+        tr = tr.sort(fn);
+        for(var i = 0; i < tr.length; ++i)
+            tb.appendChild(tr[i]); // append each row in order
+    }
+}
+</script>
+
+<script>
+$( document ).ready(function(){
+            var cfg={'threshold':3,     // depth of toc (number of levels)
+             'number_sections': false,
+             'toc_cell': false,          // useless here
+             'toc_window_display': true, // display the toc window
+             "toc_section_display": "block", // display toc contents in the window
+             'sideBar':true,       // sidebar or floating window
+             'navigate_menu':false       // navigation menu (only in liveNotebook -- do not change)
+            }
+            var st={};                  // some variables used in the script
+            st.rendering_toc_cell = false;
+            st.config_loaded = false;
+            st.extension_initialized=false;
+            st.nbcontainer_marginleft = $('#notebook-container').css('margin-left')
+            st.nbcontainer_marginright = $('#notebook-container').css('margin-right')
+            st.nbcontainer_width = $('#notebook-container').css('width')
+            st.oldTocHeight = undefined
+            st.cell_toc = undefined;
+            st.toc_index=0;
+            // fire the main function with these parameters
+            table_of_contents(cfg, st);
+            var file=variant-callingDict[$("h1:first").attr("id")];
+            $("#toc-level0 a").css("color","#126dce");
+            $('a[href="#'+$("h1:first").attr("id")+'"]').hide()
+            var docs=variant-callingArray;
+            var docs_map=variant-callingArrayMap;
+            var pos=variant-callingArray.indexOf(file);
+            for (var a=pos;a>=0;a--){
+                  $('<li><a href="'+docs[a]+'.html"><font color="#073642"><b>'+docs_map[docs[a]].replace(/_/g," ")+'</b></font></a></li>').insertBefore("#toc-level0 li:eq(0)");
+            }
+            $('a[href="'+file+'.html'+'"]').css("color","#126dce");
+            for (var a=pos+1;a<docs.length;a++){
+                  $(".toc #toc-level0").append('<li><a href="'+docs[a]+'.html"><font color="#073642"><b>'+docs_map[docs[a]].replace(/_/g," ")+'</b></font></a></li>');
+            }
+            // $("#toc-header").hide(); // comment out because it prevents search bar from displaying
+    });
+</script>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+  // mark it active
+  menuAnchor.parent().addClass('active');
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+<div class="container-fluid main-container">
+<!-- tabsets -->
+<script src="../site_libs/navigation-1.1/tabsets.js"></script>
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+
+
+<title>Some computational genomics workflows</title>
+
+<style type = "text/css">
+body {
+  font-family: "Droid Sans";
+  padding-top: 66px;
+  padding-bottom: 40px;
+}
+</style>
+</head>
+
+<body>
+<div tabindex="-1" id="notebook" class="border-box-sizing">
+<div class="container" id="notebook-container">
+
+<!-- code folding -->
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="../index.html">Some computational genomics workflows</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        
+<li>
+  <a href="../index.html">Overview</a>
+</li>
+        
+      </ul>
+        
+<ul class="nav navbar-nav navbar-right">
+<li>
+   <a href="http://github.com/cumc/bioworkflows"> <span class="fa fa-github"></span> </a>
+</li>
+</ul>
+        
+      </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="WGS-GVCF-samples-joint-calling,-filtering-and-annotation">WGS GVCF samples joint calling, filtering and annotation<a class="anchor-link" href="#WGS-GVCF-samples-joint-calling,-filtering-and-annotation">&#182;</a></h1><p>Implementing a GATK + ANNOVAR workflow in <a href="https://github.com/vatlab/SOS">SoS</a>, written by Isabelle Schrauwen with software containers built by Gao Wang.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[1]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="o">%</span><span class="n">revisions</span> <span class="o">-</span><span class="n">s</span> <span class="o">-</span><span class="n">n</span> <span class="mi">10</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+<div class="output_html rendered_html output_subarea ">
+
+        <table class="revision_table">
+        <tr>
+        <th>Revision</th>
+        <th>Author</th>
+        <th>Date</th>
+        <th>Message</th>
+        <tr>
+        <tr><td><a target="_blank" href="git@github.com:cumc/bioworkflows/blob/476245078e440d285c757da84851c64ba089e66c/variant-calling/gatk_joint_calling.ipynb"><span class="revision_id">4762450<span></a></td>
+<td>haoyueshuai</td>
+<td>2020-08-25</td>
+<td>update submit_csg</td></tr><tr><td><a target="_blank" href="git@github.com:cumc/bioworkflows/blob/b7958f99b89b2b506a26d34da3cb99b28caf5b42/variant-calling/gatk_joint_calling.ipynb"><span class="revision_id">b7958f9<span></a></td>
+<td>Gao Wang</td>
+<td>2020-08-25</td>
+<td>Fix a bash variable bug</td></tr><tr><td><a target="_blank" href="git@github.com:cumc/bioworkflows/blob/2986c3cf90347cea74223ff716eeba0ee5533300/variant-calling/gatk_joint_calling.ipynb"><span class="revision_id">2986c3c<span></a></td>
+<td>Gao Wang</td>
+<td>2020-08-25</td>
+<td>Update documentation</td></tr><tr><td><a target="_blank" href="git@github.com:cumc/bioworkflows/blob/c1da8038573460ac4c17111b5c270fdbbac9f7b9/variant-calling/gatk_joint_calling.ipynb"><span class="revision_id">c1da803<span></a></td>
+<td>Gao Wang</td>
+<td>2020-08-25</td>
+<td>Add job submission template for CSG cluster</td></tr><tr><td><a target="_blank" href="git@github.com:cumc/bioworkflows/blob/69e450aeb224d7d827acc5a80f68c27902876da6/variant-calling/gatk_joint_calling.ipynb"><span class="revision_id">69e450a<span></a></td>
+<td>Gao Wang</td>
+<td>2020-08-24</td>
+<td>Add documentation</td></tr><tr><td><a target="_blank" href="git@github.com:cumc/bioworkflows/blob/3b5a1e8ea9a9afceccf7e0f654fd7fb2f2f96991/variant-calling/gatk_joint_calling.ipynb"><span class="revision_id">3b5a1e8<span></a></td>
+<td>Gao Wang</td>
+<td>2020-08-24</td>
+<td>Fix ANNOVAR step</td></tr><tr><td><a target="_blank" href="git@github.com:cumc/bioworkflows/blob/43b3150d35b36a88df55d1e6a959dcb115ca536f/variant-calling/gatk_joint_calling.ipynb"><span class="revision_id">43b3150<span></a></td>
+<td>Gao Wang</td>
+<td>2020-08-23</td>
+<td>Update joint variant calling pipeline with minimal working example</td></tr><tr><td><a target="_blank" href="git@github.com:cumc/bioworkflows/blob/2cacdc2940900db2d114dac5db66e7d8c57456ef/variant-calling/gatk_joint_calling.ipynb"><span class="revision_id">2cacdc2<span></a></td>
+<td>Gao Wang</td>
+<td>2020-08-20</td>
+<td>Remove the need to mount workdir due to recent changes in SoS</td></tr><tr><td><a target="_blank" href="git@github.com:cumc/bioworkflows/blob/afe343c7a569b6bc3c33146f102a27c056f87614/variant-calling/gatk_joint_calling.ipynb"><span class="revision_id">afe343c<span></a></td>
+<td>Gao Wang</td>
+<td>2020-08-20</td>
+<td>Add variant calling pipeline</td></tr></table>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Overview">Overview<a class="anchor-link" href="#Overview">&#182;</a></h2><p>This SoS workflow notebook contains four workflows:</p>
+<ul>
+<li><code>gatk_call</code></li>
+<li><code>gatk_filter</code></li>
+<li><code>annovar</code></li>
+<li><code>submit_csg</code></li>
+</ul>
+<p>The first three workflows are for the analysis and the last one is for submitting jobs on the cluster.</p>
+<p>All workflow steps are numerically ordered to reflect the execution logic. This is the most straightforward SoS workflow style, the "process-oriented" style.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Input-data">Input data<a class="anchor-link" href="#Input-data">&#182;</a></h2><p>Samples in <code>GVCF</code> format, already indexed:</p>
+
+<pre><code>*.gvcf.gz
+*.gvcf.gz.tbi</code></pre>
+<p>To input the list of samples to the workflow, please include all sample file names you would like to analyze, in a text file. For example:</p>
+
+<pre><code>GH.AR.SAD.P1.001.0_X3547_S42_1180478_GVCF.hard-filtered.gvcf.gz
+GH.AR.SAD.P1.003.0_92455_S43_1189700_GVCF.hard-filtered.gvcf.gz
+GH.AR.SAD.P1.004.0_92456_S44_1189701_GVCF.hard-filtered.gvcf.gz
+GH.AR.SAD.P1.005.0_92457_S20_1189702_GVCF.hard-filtered.gvcf.gz
+...</code></pre>
+<p>and save it as, eg, <code>20200820_sample_manifest.txt</code>. This text file will be the input file to the pipeline.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Reference-data-preparation">Reference data preparation<a class="anchor-link" href="#Reference-data-preparation">&#182;</a></h2><p>Human genome reference files are needed for <code>GATK</code> joint calling; <code>ANNOVAR</code> database references are needed for <code>ANNOVAR</code> annotations.</p>
+<ul>
+<li><code>GATK</code> reference files include:</li>
+</ul>
+
+<pre><code>*.fa
+*.fa.fai
+*.dict</code></pre>
+<ul>
+<li><code>ANNOVAR</code> reference files ship with <code>ANNOVAR</code> software, under a folder called <code>humandb</code>.</li>
+</ul>
+<p>This workflow assumes that the required files already exit. This pipeline does not provide steps to download or to generate them automatically, which you could find in the tutorial slides. The pipeline will indeed check the availability of the reference files and quit on error if they are missing.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Run-the-workflow">Run the workflow<a class="anchor-link" href="#Run-the-workflow">&#182;</a></h2><p>The workflow is currently designed to run on a Linux cluster (via <code>singularity</code>) although it can also be executed on a Mac computer
+(via <code>docker</code>). In brief, after installing <a href="https://github.com/vatlab/SOS">SoS</a> (also see section "Software Configuration" below), 
+you can choose to run different workflows modules.</p>
+<p>For example to run the variant calling workflow,</p>
+
+<pre><code>sos run gatk_joint_calling.ipynb call \
+    --vcf-prefix /path/to/some_vcf_file_prefix \
+    --samples /path/to/list/of/sample_gvcf.txt \
+    --samples-dir /path/to/sample_gvcf \
+    --ref-genome /path/to/reference_genome.fa \
+    ...</code></pre>
+<p>to run variant filtering,</p>
+
+<pre><code>sos run gatk_joint_calling.ipynb filter \
+    --vcf-prefix /path/to/some_vcf_file_prefix \
+    ...</code></pre>
+<p>to run annotation,</p>
+
+<pre><code>sos run gatk_joint_calling.ipynb annovar \
+    --vcf-prefix /path/to/some_vcf_file_prefix \
+    ...</code></pre>
+<p>You can put all these 3 commands to one bash file and execute that, so you run all steps one after another.</p>
+<p>Note that <code>...</code> are additional options that fall into two categories:</p>
+<ol>
+<li>Options needed to run the bioinformatics steps (e.g. ref_genome)</li>
+<li>Options needed for SoS to run on different platforms ( e.g. container-option)</li>
+</ol>
+<p>To view all options,</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[2]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="n">sos</span> <span class="n">run</span> <span class="n">gatk_joint_calling</span><span class="o">.</span><span class="n">ipynb</span> <span class="o">-</span><span class="n">h</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>usage: sos run gatk_joint_calling.ipynb
+               [workflow_name | -t targets] [options] [workflow_options]
+  workflow_name:        Single or combined workflows defined in this script
+  targets:              One or more targets to generate
+  options:              Single-hyphen sos parameters (see &#34;sos run -h&#34; for details)
+  workflow_options:     Double-hyphen workflow-specific parameters
+
+Workflows:
+  call
+  filter
+  annovar
+  submit_csg
+
+Global Workflow Options:
+  --vcf-prefix joint_call_output (as path)
+                        Combined VCF file prefix, including path to the output
+                        but without vcf.gz extension, eg
+                        &#34;/path/to/output_filename&#34;.
+  --build hg19
+                        Human genome build
+  --mem 12 (as int)
+                        Memory allocated to a job, in terms of Gigabyte
+  --container-option &#39;gaow/gatk4-annovar&#39;
+                        Software container option
+
+Sections
+  call_1:               Combine GVCF files
+    Workflow Options:
+      --samples VAL (as path, required)
+                        A file listing out all sample GVCF you would like to
+                        analyze. Each line is one sample GVCF name.
+      --samples-dir . (as path)
+                        Directory where sample GVCF files locate.
+      --ref-genome refs/Homo_sapiens.GRCh37.75.dna_sm.primary_assembly.fa (as path)
+                        Path to reference genome file
+  call_2:               Joint calling
+    Workflow Options:
+      --ref-genome VAL (as path, required)
+                        Path to reference genome file
+  filter_1:             Split into SNP and INDEL for separate PASS filters
+  filter_2:             PASS or filter for indels and SNPs (Note | not
+                        recommended for filters) Ignore MQRankSum warnings &lt;-
+                        can only be calculated for het sites (not homs)
+    Workflow Options:
+      --snp-filters QD &lt; 2.0, QD2 QUAL &lt; 30.0, QUAL30 SOR &gt; 3.0, SOR3 FS &gt; 60.0, FS60 MQ &lt; 40.0, MQ40 MQRankSum &lt; -12.5, MQRankSum-12.5 ReadPosRankSum &lt; -8.0, ReadPosRankSum-8 (as list)
+      --indel-filters QD &lt; 2.0, QD2 QUAL &lt; 30.0, QUAL30 FS &gt; 200.0, FS200 ReadPosRankSum &lt; -20.0, ReadPosRankSum-20 (as list)
+  filter_3:             Merge back SNP and INDEL
+  filter_4:             remove non-PASS variants if wanted
+  annovar_1:            Annotate
+    Workflow Options:
+      --humandb VAL (as path, required)
+                        humandb path for ANNOVAR
+      --x-ref  path(f&#34;{humandb}/mart_export_2019_LOFtools3.txt&#34;)
+
+                        add xreffile to option without -exonicsplicing
+                        mart_export_2019_LOFtools3.txt #xreffile latest option
+                        -&gt; Phenotype description,HGNC symbol,MIM morbid descript
+                        ion,CGD_CONDITION,CGD_inh,CGD_man,CGD_comm,LOF_tools
+      --protocol refGene refGeneWithVer knownGene ensGene wgEncodeBroadHmmGm12878HMM wgEncodeBroadHmmHmecHMM wgEncodeBroadHmmHepg2HMM wgEncodeBroadHmmH1hescHMM wgEncodeRegDnaseClusteredV3 wgEncodeRegTfbsClusteredV3 genomicSuperDups wgRna targetScanS phastConsElements46way tfbsConsSites gwasCatalog gnomad211_genome gnomad211_exome popfreq_max_20150413 gme kaviar_20150923 abraom avsnp150 dbnsfp35a dbscsnv11 regsnpintron cadd13gt20 clinvar_20200316 mcap13 gene4denovo201907 (as list)
+                        Annovar protocol
+      --operation g g g gx r r r r r r r r r r r r f f f f f f f f f f f f f f (as list)
+                        Annovar operation
+      --arg &#34;-splicing 12 -exonicsplicing&#34; &#34;-splicing 30&#34; &#34;-splicing 12 -exonicsplicing&#34; &#34;-splicing 12&#34;                           (as list)
+                        Annovar args
+  annovar_2:            Filter out common variants (from 3 databases) with
+                        annovar
+    Workflow Options:
+      --humandb humandb (as path)
+                        humandb path for ANNOVAR
+      --keep &#39;splic|exonic&#39;
+                        keep pathogenic: use &#39;pathogenic|Pathogenic&#39;, keep
+                        splice_exonic: use &#39;splic|exonic&#39;
+  submit_csg:           Job submission on CSG cluster
+    Workflow Options:
+      --cmd-file VAL (as path, required)
+                        Path to job file
+      --time &#39;24:00:00&#39;
+                        Total run time allocated to the script
+      --[no-]dryrun (default to False)
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Please read these options carefully before you start running the analysis.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Minimal-working-example">Minimal working example<a class="anchor-link" href="#Minimal-working-example">&#182;</a></h2><p>A minimal example data-set can be found on CSG cluster. The following commands use this data-set, although in practice you should change the paths to point to your own data of interest.</p>
+<p>Joint calling:</p>
+
+<pre><code>sos run gatk_joint_calling.ipynb call \
+    --container-option /mnt/mfs/statgen/containers/gatk4-annovar.sif \
+    --vcf-prefix output/minimal_example \
+    --samples /mnt/mfs/statgen/data_private/gatk_joint_call_example/20200820_sample_manifest.txt \
+    --samples-dir /mnt/mfs/statgen/data_private/gatk_joint_call_example/ \
+    --ref-genome /mnt/mfs/statgen/isabelle/REF/refs/Homo_sapiens.GRCh37.75.dna_sm.primary_assembly.fa</code></pre>
+<p>Filtering:</p>
+
+<pre><code>sos run gatk_joint_calling.ipynb filter \
+    --container-option /mnt/mfs/statgen/containers/gatk4-annovar.sif \
+    --vcf-prefix output/minimal_example</code></pre>
+<p>Annotating:</p>
+
+<pre><code>sos run gatk_joint_calling.ipynb annovar \
+    --container-option /mnt/mfs/statgen/containers/gatk4-annovar.sif \
+    --vcf-prefix output/minimal_example.snp_indel.filter.PASS \
+    --keep "splic|exonic" \
+    --humandb /mnt/mfs/statgen/isabelle/REF/humandb \
+    --x-ref /mnt/mfs/statgen/isabelle/REF/humandb/mart_export_2019_LOFtools3.txt</code></pre>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Share-the-workflow-with-people">Share the workflow with people<a class="anchor-link" href="#Share-the-workflow-with-people">&#182;</a></h2><p>Use</p>
+
+<pre><code>sos convert gatk_joint_calling.ipynb gatk_joint_calling.html --template sos-cm-toc</code></pre>
+<p>to convert this workflow to an HTML file, then pass it around to others to read it.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Software-configuration">Software configuration<a class="anchor-link" href="#Software-configuration">&#182;</a></h2><p>Instructions on SoS and docker installation can be found on <a href="http://statgen.us/lab-wiki/orientation/jupyter-setup.html">our CSG wiki</a>. 
+The instructions works for both Mac and Linux, unless otherwise specified.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Global-parameter-settings">Global parameter settings<a class="anchor-link" href="#Global-parameter-settings">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[3]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="p">[</span><span class="k">global</span><span class="p">]</span>
+<span class="c1"># Combined VCF file prefix, including path to the output but without vcf.gz extension, </span>
+<span class="c1"># eg &quot;/path/to/output_filename&quot;.</span>
+<span class="kn">parameter:</span> <span class="n">vcf_prefix</span> <span class="o">=</span> <span class="n">path</span><span class="p">(</span><span class="s1">&#39;joint_call_output&#39;</span><span class="p">)</span>
+<span class="c1"># Human genome build</span>
+<span class="kn">parameter:</span> <span class="n">build</span> <span class="o">=</span> <span class="s1">&#39;hg19&#39;</span>
+<span class="c1"># Memory allocated to a job, in terms of Gigabyte</span>
+<span class="kn">parameter:</span> <span class="kp">mem</span><span class="o">=</span><span class="mi">12</span>
+<span class="c1"># Software container option</span>
+<span class="kn">parameter:</span> <span class="n">container_option</span> <span class="o">=</span> <span class="s1">&#39;gaow/gatk4-annovar&#39;</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Joint-variant-calling-from-GVCF-files">Joint variant calling from GVCF files<a class="anchor-link" href="#Joint-variant-calling-from-GVCF-files">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[9]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Combine GVCF files</span>
+<span class="p">[</span><span class="n">call_1</span><span class="p">]</span>
+<span class="c1"># A file listing out all sample GVCF you would like to analyze. </span>
+<span class="c1"># Each line is one sample GVCF name.</span>
+<span class="kn">parameter:</span> <span class="n">samples</span> <span class="o">=</span> <span class="n">path</span>
+<span class="c1"># Directory where sample GVCF files locate.</span>
+<span class="kn">parameter:</span> <span class="n">samples_dir</span> <span class="o">=</span> <span class="n">path</span><span class="p">()</span>
+<span class="c1"># Path to reference genome file</span>
+<span class="kn">parameter:</span> <span class="n">ref_genome</span> <span class="o">=</span> <span class="n">path</span><span class="p">(</span><span class="s1">&#39;refs/Homo_sapiens.GRCh37.75.dna_sm.primary_assembly.fa&#39;</span><span class="p">)</span>
+<span class="c1">#</span>
+<span class="n">fail_if</span><span class="p">(</span><span class="ow">not</span> <span class="n">samples</span><span class="o">.</span><span class="n">is_file</span><span class="p">(),</span> <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Need valid sample name list file input via ``--samples`` option!&#39;</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="n">sample_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="s1">&#39;{samples_dir}/{os.path.basename(x.strip())}&#39;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">open</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span><span class="o">.</span><span class="n">readlines</span><span class="p">()]</span>
+<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sample_files</span><span class="p">:</span>
+    <span class="n">fail_if</span><span class="p">(</span><span class="ow">not</span> <span class="n">path</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">(),</span> <span class="n">msg</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;Cannot find file ``{x}``. Please use ``--samples-dir`` option to specify the directory for sample files.&#39;</span><span class="p">)</span>
+    <span class="n">fail_if</span><span class="p">(</span><span class="ow">not</span> <span class="n">x</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;gvcf.gz&#39;</span><span class="p">),</span> <span class="n">msg</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;Input file ``{x}`` does not have ``.gvcf.gz`` extension.&#39;</span><span class="p">)</span>
+<span class="n">fail_if</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sample_files</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Need at least one input sample file!&#39;</span><span class="p">)</span>
+<span class="n">fail_if</span><span class="p">(</span><span class="ow">not</span> <span class="n">ref_genome</span><span class="o">.</span><span class="n">is_file</span><span class="p">(),</span> <span class="n">msg</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;Cannot find reference genome ``{ref_genome}``. Please use ``--ref-genome`` option to specify it.&#39;</span><span class="p">)</span>
+<span class="n">fail_if</span><span class="p">(</span><span class="ow">not</span> <span class="n">path</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;{ref_genome:a}.fai&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">(),</span> <span class="n">msg</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;Cannot find reference genome index file ``{ref_genome}.fai``. Please make sure it exists.&#39;</span><span class="p">)</span>
+<span class="n">fail_if</span><span class="p">(</span><span class="ow">not</span> <span class="n">path</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;{ref_genome:an}.dict&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">(),</span> <span class="n">msg</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;Cannot find reference genome dict file ``{ref_genome:n}.dict``. Please make sure it exists.&#39;</span><span class="p">)</span>
+
+<span class="kn">depends:</span> <span class="n">system_resource</span><span class="p">(</span><span class="kp">mem</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{mem}G&#39;</span><span class="p">),</span> <span class="n">ref_genome</span>
+<span class="kn">input:</span> <span class="n">sample_files</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{vcf_prefix:a}.combined.vcf.gz&#39;</span>
+
+<span class="kn">bash:</span> <span class="n">container</span><span class="o">=</span><span class="n">container_option</span><span class="p">,</span> <span class="n">volumes</span><span class="o">=</span><span class="p">[</span><span class="n">f</span><span class="s1">&#39;{ref_genome:ad}:{ref_genome:ad}&#39;</span><span class="p">],</span> <span class="n">expand</span><span class="o">=</span><span class="s2">&quot;${ }&quot;</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:n}.err&#39;</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:n}.out&#39;</span>
+    <span class="err">$</span><span class="p">{</span><span class="s1">&#39;&amp;&amp;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;tabix -p vcf </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">_input</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="s1">&#39;.tbi&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">()])}</span>
+    <span class="n">gatk</span> <span class="o">--</span><span class="n">java</span><span class="o">-</span><span class="n">options</span> <span class="s2">&quot;-Xmx${mem}g&quot;</span> <span class="n">CombineGVCFs</span> \
+        <span class="o">-</span><span class="n">R</span> <span class="err">$</span><span class="p">{</span><span class="n">ref_genome</span><span class="p">}</span> \
+        <span class="err">$</span><span class="p">{</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;--variant </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">_input</span><span class="p">])}</span> \
+        <span class="o">-</span><span class="n">O</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">}</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[6]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Joint calling</span>
+<span class="p">[</span><span class="n">call_2</span><span class="p">]</span>
+<span class="c1"># Path to reference genome file</span>
+<span class="kn">parameter:</span> <span class="n">ref_genome</span> <span class="o">=</span> <span class="n">path</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{vcf_prefix:a}.vcf.gz&#39;</span>
+
+
+<span class="kn">bash:</span> <span class="n">container</span><span class="o">=</span><span class="n">container_option</span><span class="p">,</span> <span class="n">volumes</span><span class="o">=</span><span class="p">[</span><span class="n">f</span><span class="s1">&#39;{ref_genome:ad}:{ref_genome:ad}&#39;</span><span class="p">],</span> <span class="n">expand</span><span class="o">=</span><span class="s2">&quot;${ }&quot;</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:nn}.err&#39;</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:nn}.out&#39;</span>
+    <span class="n">gatk</span> <span class="o">--</span><span class="n">java</span><span class="o">-</span><span class="n">options</span> <span class="s2">&quot;-Xmx${mem}g&quot;</span> <span class="n">GenotypeGVCFs</span> \
+        <span class="o">-</span><span class="n">R</span> <span class="err">$</span><span class="p">{</span><span class="n">ref_genome</span><span class="p">}</span> \
+        <span class="o">-</span><span class="n">V</span> <span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">}</span> \
+        <span class="o">-</span><span class="n">O</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">}</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Variant-filtering">Variant filtering<a class="anchor-link" href="#Variant-filtering">&#182;</a></h2><p>Since we have two types of variants SNP and Indels, the first two steps of the filter workflow pipeline process the two variant types in parallel, then merge them and do additional filtering wiht steps 3 and 4.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[10]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Split into SNP and INDEL for separate PASS filters</span>
+<span class="p">[</span><span class="n">filter_1</span><span class="p">]</span>
+<span class="n">variant_type</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;SNP&#39;</span><span class="p">,</span> <span class="s1">&#39;INDEL&#39;</span><span class="p">]</span>
+<span class="kn">input:</span> <span class="n">f</span><span class="s1">&#39;{vcf_prefix:a}.vcf.gz&#39;</span><span class="p">,</span> <span class="n">for_each</span><span class="o">=</span><span class="s1">&#39;variant_type&#39;</span><span class="p">,</span> <span class="kp">concurrent</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{vcf_prefix:a}.{_variant_type.lower()}.vcf.gz&#39;</span>
+
+
+<span class="kn">bash:</span> <span class="n">container</span><span class="o">=</span><span class="n">container_option</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span><span class="s2">&quot;${ }&quot;</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:nn}.err&#39;</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:nn}.out&#39;</span>
+    <span class="n">gatk</span> <span class="o">--</span><span class="n">java</span><span class="o">-</span><span class="n">options</span> <span class="s1">&#39;-Xmx${mem}g&#39;</span> <span class="n">SelectVariants</span> \
+        <span class="o">-</span><span class="n">V</span> <span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">}</span> \
+        <span class="o">-</span><span class="n">select</span><span class="o">-</span><span class="nb">type</span> <span class="err">$</span><span class="p">{</span><span class="n">_variant_type</span><span class="p">}</span> \
+        <span class="o">-</span><span class="n">O</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">}</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[10]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># PASS or filter for indels and SNPs (Note | not recommended for filters)</span>
+<span class="c1"># Ignore MQRankSum warnings &lt;- can only be calculated for het sites (not homs)</span>
+<span class="p">[</span><span class="n">filter_2</span><span class="p">]</span>
+<span class="kn">parameter:</span> <span class="n">snp_filters</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;QD &lt; 2.0, QD2&#39;</span><span class="p">,</span> <span class="s1">&#39;QUAL &lt; 30.0, QUAL30&#39;</span><span class="p">,</span> <span class="s1">&#39;SOR &gt; 3.0, SOR3&#39;</span><span class="p">,</span> <span class="s1">&#39;FS &gt; 60.0, FS60&#39;</span><span class="p">,</span> <span class="s1">&#39;MQ &lt; 40.0, MQ40&#39;</span><span class="p">,</span> <span class="s1">&#39;MQRankSum &lt; -12.5, MQRankSum-12.5&#39;</span><span class="p">,</span> <span class="s1">&#39;ReadPosRankSum &lt; -8.0, ReadPosRankSum-8&#39;</span><span class="p">]</span>
+<span class="kn">parameter:</span> <span class="n">indel_filters</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;QD &lt; 2.0, QD2&quot;</span><span class="p">,</span> <span class="s2">&quot;QUAL &lt; 30.0, QUAL30&quot;</span><span class="p">,</span> <span class="s2">&quot;FS &gt; 200.0, FS200&quot;</span><span class="p">,</span> <span class="s2">&quot;ReadPosRankSum &lt; -20.0, ReadPosRankSum-20&quot;</span><span class="p">]</span>
+<span class="kn">input:</span> <span class="n">paired_with</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">filter_option</span><span class="o">=</span><span class="p">[</span><span class="n">snp_filters</span><span class="p">,</span> <span class="n">indel_filters</span><span class="p">])</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{_input:nn}.filter.vcf.gz&#39;</span>
+
+
+<span class="kn">bash:</span> <span class="n">container</span><span class="o">=</span><span class="n">container_option</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span><span class="s2">&quot;${ }&quot;</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:nn}.err&#39;</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:nn}.out&#39;</span>
+    <span class="n">gatk</span> <span class="o">--</span><span class="n">java</span><span class="o">-</span><span class="n">options</span> <span class="s1">&#39;-Xmx${mem}g&#39;</span> <span class="n">VariantFiltration</span> \
+        <span class="o">-</span><span class="n">V</span> <span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">}</span> \
+        <span class="err">$</span><span class="p">{</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;-filter &quot;</span><span class="si">%s</span><span class="s1">&quot; --filter-name &quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">y</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">_input</span><span class="o">.</span><span class="n">filter_option</span><span class="p">])}</span> \
+        <span class="o">-</span><span class="n">O</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">}</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Merge back SNP and INDEL</span>
+<span class="p">[</span><span class="n">filter_3</span><span class="p">]</span>
+<span class="kn">input:</span> <span class="n">group_by</span> <span class="o">=</span> <span class="s1">&#39;all&#39;</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{vcf_prefix:a}.snp_indel.filter.vcf.gz&#39;</span>
+
+
+<span class="kn">bash:</span> <span class="n">container</span><span class="o">=</span><span class="n">container_option</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span><span class="s2">&quot;${ }&quot;</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:nn}.err&#39;</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:nn}.out&#39;</span>
+    <span class="n">gatk</span> <span class="o">--</span><span class="n">java</span><span class="o">-</span><span class="n">options</span> <span class="s1">&#39;-Xmx${mem}g&#39;</span> <span class="n">MergeVcfs</span> \
+     <span class="o">-</span><span class="n">I</span> <span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">[</span><span class="mi">0</span><span class="p">]}</span> <span class="o">-</span><span class="n">I</span> <span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">[</span><span class="mi">1</span><span class="p">]}</span> <span class="o">-</span><span class="n">O</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">}</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># remove non-PASS variants if wanted</span>
+<span class="p">[</span><span class="n">filter_4</span><span class="p">]</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{vcf_prefix:a}.snp_indel.filter.PASS.vcf.gz&#39;</span>
+
+
+<span class="kn">bash:</span> <span class="n">container</span><span class="o">=</span><span class="n">container_option</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span><span class="s2">&quot;${ }&quot;</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:nn}.err&#39;</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:nn}.out&#39;</span>
+    <span class="n">gatk</span> <span class="o">--</span><span class="n">java</span><span class="o">-</span><span class="n">options</span> <span class="s1">&#39;-Xmx${mem}g&#39;</span> <span class="n">SelectVariants</span> \
+        <span class="o">-</span><span class="n">V</span> <span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">}</span> <span class="o">-</span><span class="n">O</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">}</span> \
+        <span class="o">--</span><span class="n">exclude</span><span class="o">-</span><span class="n">filtered</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Annotation">Annotation<a class="anchor-link" href="#Annotation">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># convert vcf to annovar input format</span>
+<span class="p">[</span><span class="n">annovar_1</span><span class="p">]</span>
+<span class="kn">input:</span> <span class="n">f</span><span class="s1">&#39;{vcf_prefix:a}.vcf.gz&#39;</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{_input:nn}.avinput&#39;</span>
+
+<span class="kn">bash:</span> <span class="n">container</span><span class="o">=</span><span class="n">container_option</span><span class="p">,</span><span class="n">expand</span><span class="o">=</span><span class="s2">&quot;${ }&quot;</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output[0]:n}.err&#39;</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output[0]:n}.out&#39;</span>
+
+    <span class="n">convert2annovar</span><span class="o">.</span><span class="n">pl</span> \
+        <span class="o">-</span><span class="n">includeinfo</span> \
+        <span class="o">-</span><span class="n">allsample</span> \
+        <span class="o">-</span><span class="n">withfreq</span> \
+        <span class="o">-</span><span class="n">format</span> <span class="n">vcf4</span> <span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">}</span> <span class="o">&gt;</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">[</span><span class="mi">0</span><span class="p">]}</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[11]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Annotate </span>
+<span class="p">[</span><span class="n">annovar_2</span><span class="p">]</span>
+<span class="c1"># humandb path for ANNOVAR</span>
+<span class="kn">parameter:</span> <span class="n">humandb</span> <span class="o">=</span> <span class="n">path</span>
+<span class="c1">#add xreffile to option without -exonicsplicing</span>
+<span class="c1">#mart_export_2019_LOFtools3.txt #xreffile latest option -&gt; Phenotype description,HGNC symbol,MIM morbid description,CGD_CONDITION,CGD_inh,CGD_man,CGD_comm,LOF_tools</span>
+<span class="kn">parameter:</span> <span class="n">x_ref</span> <span class="o">=</span> <span class="n">path</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;{humandb}/mart_export_2019_LOFtools3.txt&quot;</span><span class="p">)</span>
+<span class="c1"># Annovar protocol</span>
+<span class="kn">parameter:</span> <span class="n">protocol</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;refGene&#39;</span><span class="p">,</span> <span class="s1">&#39;refGeneWithVer&#39;</span><span class="p">,</span> <span class="s1">&#39;knownGene&#39;</span><span class="p">,</span> <span class="s1">&#39;ensGene&#39;</span><span class="p">,</span> <span class="s1">&#39;wgEncodeBroadHmmGm12878HMM&#39;</span><span class="p">,</span> <span class="s1">&#39;wgEncodeBroadHmmHmecHMM&#39;</span><span class="p">,</span> <span class="s1">&#39;wgEncodeBroadHmmHepg2HMM&#39;</span><span class="p">,</span> <span class="s1">&#39;wgEncodeBroadHmmH1hescHMM&#39;</span><span class="p">,</span> <span class="s1">&#39;wgEncodeRegDnaseClusteredV3&#39;</span><span class="p">,</span> <span class="s1">&#39;wgEncodeRegTfbsClusteredV3&#39;</span><span class="p">,</span> <span class="s1">&#39;genomicSuperDups&#39;</span><span class="p">,</span> <span class="s1">&#39;wgRna&#39;</span><span class="p">,</span> <span class="s1">&#39;targetScanS&#39;</span><span class="p">,</span> <span class="s1">&#39;phastConsElements46way&#39;</span><span class="p">,</span> <span class="s1">&#39;tfbsConsSites&#39;</span><span class="p">,</span> <span class="s1">&#39;gwasCatalog&#39;</span><span class="p">,</span> <span class="s1">&#39;gnomad211_genome&#39;</span><span class="p">,</span> <span class="s1">&#39;gnomad211_exome&#39;</span><span class="p">,</span> <span class="s1">&#39;popfreq_max_20150413&#39;</span><span class="p">,</span> <span class="s1">&#39;gme&#39;</span><span class="p">,</span> <span class="s1">&#39;kaviar_20150923&#39;</span><span class="p">,</span> <span class="s1">&#39;abraom&#39;</span><span class="p">,</span> <span class="s1">&#39;avsnp150&#39;</span><span class="p">,</span> <span class="s1">&#39;dbnsfp35a&#39;</span><span class="p">,</span> <span class="s1">&#39;dbscsnv11&#39;</span><span class="p">,</span> <span class="s1">&#39;regsnpintron&#39;</span><span class="p">,</span> <span class="s1">&#39;cadd13gt20&#39;</span><span class="p">,</span> <span class="s1">&#39;clinvar_20200316&#39;</span><span class="p">,</span> <span class="s1">&#39;mcap13&#39;</span><span class="p">,</span> <span class="s1">&#39;gene4denovo201907&#39;</span><span class="p">]</span>
+<span class="c1"># Annovar operation</span>
+<span class="kn">parameter:</span> <span class="n">operation</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="s1">&#39;gx&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">]</span>
+<span class="c1"># Annovar args</span>
+<span class="kn">parameter:</span> <span class="n">arg</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&quot;-splicing 12 -exonicsplicing&quot;&#39;</span><span class="p">,</span> <span class="s1">&#39;&quot;-splicing 30&quot;&#39;</span><span class="p">,</span> <span class="s1">&#39;&quot;-splicing 12 -exonicsplicing&quot;&#39;</span><span class="p">,</span> <span class="s1">&#39;&quot;-splicing 12&quot;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">]</span>
+<span class="kn">input:</span> <span class="n">f</span><span class="s1">&#39;{vcf_prefix:a}.avinput&#39;</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{vcf_prefix:a}.{build}_multianno.csv&#39;</span>
+
+<span class="kn">bash:</span> <span class="n">container</span><span class="o">=</span><span class="n">container_option</span><span class="p">,</span> <span class="n">volumes</span><span class="o">=</span><span class="p">[</span><span class="n">f</span><span class="s1">&#39;{humandb:a}:{humandb:a}&#39;</span><span class="p">,</span> <span class="n">f</span><span class="s1">&#39;{x_ref:ad}:{x_ref:ad}&#39;</span><span class="p">],</span> <span class="n">expand</span><span class="o">=</span><span class="s2">&quot;${ }&quot;</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{vcf_prefix:a}.err&#39;</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{vcf_prefix:a}.out&#39;</span>
+    <span class="c1">#do not add -intronhgvs as option -&gt; writes cDNA variants as HGVS but creates issues (+2 splice site reported only)</span>
+    <span class="c1">#-nastring . can only be . for VCF files</span>
+    <span class="c1">#regsnpintron might cause shifted lines (be carefull using)</span>
+    <span class="n">table_annovar</span><span class="o">.</span><span class="n">pl</span> \
+        <span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">}</span> \
+        <span class="err">$</span><span class="p">{</span><span class="n">humandb</span><span class="p">}</span> \
+        <span class="o">-</span><span class="n">buildver</span> <span class="err">$</span><span class="p">{</span><span class="n">build</span><span class="p">}</span> \
+        <span class="o">-</span><span class="n">out</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">:</span><span class="n">nn</span><span class="p">}</span>\
+        <span class="o">-</span><span class="n">remove</span> \
+        <span class="o">-</span><span class="n">polish</span> \
+        <span class="o">-</span><span class="n">nastring</span> <span class="o">.</span> \
+        <span class="o">-</span><span class="n">protocol</span> <span class="err">$</span><span class="p">{</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">protocol</span><span class="p">)}</span> \
+        <span class="o">-</span><span class="n">operation</span> <span class="err">$</span><span class="p">{</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">operation</span><span class="p">)}</span> \
+        <span class="o">-</span><span class="n">arg</span> <span class="err">$</span><span class="p">{</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">arg</span><span class="p">)}</span> \
+        <span class="o">-</span><span class="n">csvout</span> \
+        <span class="o">-</span><span class="n">xreffile</span> <span class="err">$</span><span class="p">{</span><span class="n">x_ref</span><span class="p">}</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The step below provides some annotation filtered results. If you want to run your own annotation you can do it by running <code>ANNOVAR</code> from the singularity image directly, for example:</p>
+
+<pre><code>singularity exec  /mnt/mfs/statgen/containers/gatk4-annovar.sif annotate_variation.pl \
+    -filter -dbtype gnomad211_exome \
+    -build hg19 \
+    -score_threshold 0.005 \
+    minimal_example.snp_indel.filter.PASS.hg19_multianno.exonic_splic.txt \
+    humandb \
+    -out minimal_example.snp_indel.filter.PASS.hg19_multianno.exonic_splic</code></pre>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[12]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Filter out common variants (from 3 databases) with annovar </span>
+<span class="p">[</span><span class="n">annovar_3</span><span class="p">]</span>
+<span class="c1"># humandb path for ANNOVAR</span>
+<span class="kn">parameter:</span> <span class="n">humandb</span> <span class="o">=</span> <span class="n">path</span><span class="p">(</span><span class="s2">&quot;humandb/&quot;</span><span class="p">)</span>
+<span class="c1"># keep pathogenic: use &#39;pathogenic|Pathogenic&#39;,</span>
+<span class="c1"># keep splice_exonic: use &#39;splic|exonic&#39;</span>
+<span class="kn">parameter:</span> <span class="n">keep</span><span class="o">=</span><span class="s2">&quot;splic|exonic&quot;</span>
+<span class="n">tag</span> <span class="o">=</span> <span class="s1">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">keep</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;|&#39;</span><span class="p">))))</span>
+<span class="kn">input:</span> <span class="n">f</span><span class="s1">&#39;{vcf_prefix:a}.vcf.gz&#39;</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{_input[0]:n}.{tag}.txt&#39;</span><span class="p">,</span> 
+        <span class="n">f</span><span class="s1">&#39;{_input[0]:n}.{tag}.exome_genome.{build}_popfreq_max_20150413_filtered&#39;</span>
+
+<span class="kn">bash:</span> <span class="n">container</span><span class="o">=</span><span class="n">container_option</span><span class="p">,</span> <span class="n">volumes</span><span class="o">=</span><span class="p">[</span><span class="n">f</span><span class="s1">&#39;{humandb:a}:{humandb:a}&#39;</span><span class="p">],</span> <span class="n">expand</span><span class="o">=</span><span class="s2">&quot;${ }&quot;</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output[0]:n}.err&#39;</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output[0]:n}.out&#39;</span>
+    <span class="nb">set</span> <span class="o">-</span><span class="n">e</span>
+    <span class="n">awk</span> <span class="s1">&#39;FNR == 1 {print} /${keep}/{print}&#39;</span> <span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">[</span><span class="mi">0</span><span class="p">]}</span>  <span class="o">&gt;</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">[</span><span class="mi">0</span><span class="p">]}</span>
+    
+    <span class="n">annotate_variation</span><span class="o">.</span><span class="n">pl</span> <span class="o">-</span><span class="nb">filter</span> <span class="o">-</span><span class="n">dbtype</span> <span class="n">gnomad211_exome</span> \
+        <span class="o">-</span><span class="n">build</span> <span class="err">$</span><span class="p">{</span><span class="n">build</span><span class="p">}</span> \
+        <span class="o">-</span><span class="n">score_threshold</span> <span class="mf">0.005</span> \
+        <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">[</span><span class="mi">0</span><span class="p">]}</span> \
+        <span class="err">$</span><span class="p">{</span><span class="n">humandb</span><span class="p">}</span> \
+        <span class="o">-</span><span class="n">out</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">n</span><span class="p">}</span>
+    
+    <span class="n">annotate_variation</span><span class="o">.</span><span class="n">pl</span> <span class="o">-</span><span class="nb">filter</span> <span class="o">-</span><span class="n">dbtype</span> <span class="n">gnomad211_genome</span> \
+        <span class="o">-</span><span class="n">build</span> <span class="err">$</span><span class="p">{</span><span class="n">build</span><span class="p">}</span> \
+        <span class="o">-</span><span class="n">score_threshold</span> <span class="mf">0.005</span> \
+        <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">n</span><span class="p">}</span><span class="o">.</span><span class="err">$</span><span class="p">{</span><span class="n">build</span><span class="p">}</span><span class="n">_gnomad211_exome_filtered</span> \
+        <span class="err">$</span><span class="p">{</span><span class="n">humandb</span><span class="p">}</span> \
+        <span class="o">-</span><span class="n">out</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">n</span><span class="p">}</span><span class="o">.</span><span class="n">exome</span>
+
+    <span class="n">annotate_variation</span><span class="o">.</span><span class="n">pl</span> <span class="o">-</span><span class="nb">filter</span> <span class="o">-</span><span class="n">dbtype</span> <span class="n">popfreq_max_20150413</span> \
+        <span class="o">-</span><span class="n">build</span> <span class="err">$</span><span class="p">{</span><span class="n">build</span><span class="p">}</span> \
+        <span class="o">-</span><span class="n">score_threshold</span> <span class="mf">0.005</span> \
+        <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">n</span><span class="p">}</span><span class="o">.</span><span class="n">exome</span><span class="o">.</span><span class="err">$</span><span class="p">{</span><span class="n">build</span><span class="p">}</span><span class="n">_gnomad211_genome_filtered</span> \
+        <span class="err">$</span><span class="p">{</span><span class="n">humandb</span><span class="p">}</span> \
+        <span class="o">-</span><span class="n">out</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">n</span><span class="p">}</span><span class="o">.</span><span class="n">exome_genome</span>
+    <span class="n">rm</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">nn</span><span class="p">}</span><span class="o">*</span><span class="n">_dropped</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Submit-jobs-to-the-cluster">Submit jobs to the cluster<a class="anchor-link" href="#Submit-jobs-to-the-cluster">&#182;</a></h2><p>Suppose we would like to submit these lines of commands to the cluster:</p>
+
+<pre><code>sos run gatk_joint_calling.ipynb call \
+    --container-option /mnt/mfs/statgen/containers/gatk4-annovar.sif \
+    --vcf-prefix output/minimal_example \
+    --samples /mnt/mfs/statgen/data_private/gatk_joint_call_example/20200820_sample_manifest.txt \
+    --samples-dir /mnt/mfs/statgen/data_private/gatk_joint_call_example/ \
+    --ref-genome /mnt/mfs/statgen/isabelle/REF/refs/Homo_sapiens.GRCh37.75.dna_sm.primary_assembly.fa
+
+sos run gatk_joint_calling.ipynb filter \
+    --container-option /mnt/mfs/statgen/containers/gatk4-annovar.sif \
+    --vcf-prefix output/minimal_example
+
+sos run gatk_joint_calling.ipynb annovar \
+    --container-option /mnt/mfs/statgen/containers/gatk4-annovar.sif \
+    --vcf-prefix output/minimal_example.snp_indel.filter.PASS \
+    --keep "splic|exonic" \
+    --humandb /mnt/mfs/statgen/isabelle/REF/humandb \
+    --x-ref /mnt/mfs/statgen/isabelle/REF/humandb/mart_export_2019_LOFtools3.txt</code></pre>
+<p>First, we save the above lines to a text file, e.g. call it <code>analysis_commands_20200825.txt</code>, then use the following workflow steps to allocate resources and submit the jobs.</p>
+<p>Example to submit a job:</p>
+
+<pre><code>sos run gatk_joint_calling.ipynb submit_csg \
+    --cmd_file command_1027.txt 
+
+sos run ~/gatk_joint_calling_test.ipynb submit_csg     --cmd_file ~/gatk_joint_calling/command_1027.txt</code></pre>
+<p>If you want to run in a dryrun mode, meaning just simply test the process but do not genrate results</p>
+
+<pre><code>sos run gatk_joint_calling.ipynb submit_csg \
+    --cmd_file analysis_commands_20200825.txt \
+    --dryrun True</code></pre>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Job submission on CSG cluster</span>
+<span class="p">[</span><span class="n">submit_csg</span><span class="p">]</span>
+<span class="c1"># Path to job file</span>
+<span class="kn">parameter:</span> <span class="n">cmd_file</span><span class="o">=</span><span class="n">path</span>
+<span class="c1"># Total run time allocated to the script</span>
+<span class="kn">parameter:</span> <span class="n">time</span><span class="o">=</span><span class="s1">&#39;36:00:00&#39;</span>
+<span class="kn">parameter:</span> <span class="n">dryrun</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="kn">input:</span> <span class="n">cmd_file</span>
+<span class="kn">python3:</span> <span class="n">expand</span> <span class="o">=</span> <span class="s1">&#39;$[ ]&#39;</span>
+    <span class="n">tpl</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">    #!/bin/sh</span>
+<span class="s1">    #$ -l h_rt=$[time]</span>
+<span class="s1">    #$ -l h_vmem=$[mem+6]G</span>
+<span class="s1">    #$ -N gatk_joint_call</span>
+<span class="s1">    #$ -cwd</span>
+<span class="s1">    #$ -j y</span>
+<span class="s1">    #$ -S /bin/bash</span>
+<span class="s1">    module load Singularity</span>
+<span class="s1">    export PATH=$HOME/miniconda3/bin:$PATH</span>
+<span class="s1">    set -e</span>
+<span class="s1">    &#39;&#39;&#39;</span>
+    <span class="n">script</span> <span class="o">=</span> <span class="n">tpl</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="err">$</span><span class="p">[</span><span class="n">_input</span><span class="p">:</span><span class="n">r</span><span class="p">])</span><span class="o">.</span><span class="n">readlines</span><span class="p">())</span>
+    <span class="n">exe</span> <span class="o">=</span> <span class="s1">&#39;cat&#39;</span> <span class="k">if</span> <span class="err">$</span><span class="p">[</span><span class="n">dryrun</span><span class="p">]</span> <span class="k">else</span> <span class="s1">&#39;qsub&#39;</span>
+    <span class="kn">from</span> <span class="nn">subprocess</span> <span class="kn">import</span> <span class="n">Popen</span><span class="p">,</span> <span class="n">PIPE</span>
+    <span class="kn">import</span> <span class="nn">sys</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">Popen</span><span class="p">(</span><span class="n">exe</span><span class="p">,</span> <span class="n">shell</span> <span class="o">=</span> <span class="bp">False</span><span class="p">,</span> <span class="n">stdin</span> <span class="o">=</span> <span class="n">PIPE</span><span class="p">,</span> <span class="n">stdout</span> <span class="o">=</span> <span class="n">PIPE</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">PIPE</span><span class="p">,</span> <span class="n">close_fds</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">p</span><span class="o">.</span><span class="n">communicate</span><span class="p">(</span><span class="n">script</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">getdefaultencoding</span><span class="p">())):</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">getdefaultencoding</span><span class="p">())</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">output</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<hr>
+&copy 2020-current Gao Wang and others, Department of Neurology at Columbia University
+<p><small>Exported from <a href="http://github.com/cumc/bioworkflows/blob/5cb6923408d92893e824ee6e1c981e7d37cd224c/variant-calling/gatk_joint_calling.ipynb"><code>variant-calling/gatk_joint_calling.ipynb</code></a> committed by Gao Wang on Fri Mar 5 14:19:51 2021 <a href="http://github.com/cumc/bioworkflows/commit/5cb6923408d92893e824ee6e1c981e7d37cd224c">revision 18, 5cb6923</a> <a href="https://stephenslab.github.io/ipynb-website/notes.html#Note-about-commit-ids"><span class="fa fa-question-circle"></span></a></small></p>
+</div>
+</div>
+</body>
+</html>

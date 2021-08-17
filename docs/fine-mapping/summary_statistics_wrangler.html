@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="ipynb_website:version" content="0.9.7" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="stylesheet" type="text/css" href="../css/jt.css">
+
+<link rel="stylesheet" type="text/css" href="../css/toc2.css">
+
+<link href="../site_libs/jqueryui-1.11.4/jquery-ui.css">
+<link rel="stylesheet" href="../site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="../site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.9.1/jquery-ui.min.js"></script>
+<script src="../site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="../site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="../site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+
+<link rel="stylesheet"
+      href="../site_libs/highlightjs/null.min.css"
+      type="text/css" />
+
+<script src="../site_libs/highlightjs/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+<script src="../js/doc_toc.js"></script>
+<script src="../js/docs.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX", "output/HTML-CSS"],
+        tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+        displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+        processEscapes: true
+        },
+        "HTML-CSS": {
+            preferredFont: "TeX",
+            availableFonts: ["TeX"],
+            styles: {
+                scale: 110,
+                ".MathJax_Display": {
+                    "font-size": "110%",
+                }
+            }
+        }
+    });
+</script>
+<script>
+function filterDataFrame(id) {
+    var input = document.getElementById("search_" + id);
+    var filter = input.value.toUpperCase();
+    var table = document.getElementById("dataframe_" + id);
+    var tr = table.getElementsByTagName("tr");
+    // Loop through all table rows, and hide those who don't match the search query
+    for (var i = 1; i < tr.length; i++) {
+        for (var j = 0; j < tr[i].cells.length; ++j) {
+            var matched = false;
+            if (tr[i].cells[j].innerHTML.toUpperCase().indexOf(filter) != -1) {
+                tr[i].style.display = "";
+                matched = true
+                break;
+            }
+            if (!matched)
+                tr[i].style.display = "none";
+        }
+    }
+}
+function sortDataFrame(id, n, dtype) {
+    var table = document.getElementById("dataframe_" + id);
+    var tb = table.tBodies[0]; // use `<tbody>` to ignore `<thead>` and `<tfoot>` rows
+    var tr = Array.prototype.slice.call(tb.rows, 0); // put rows into array
+    if (dtype === 'numeric') {
+        var fn = function(a, b) { 
+            return parseFloat(a.cells[n].textContent) <= parseFloat(b.cells[n].textContent) ? -1 : 1;
+        }
+    } else {
+        var fn = function(a, b) {
+            var c = a.cells[n].textContent.trim().localeCompare(b.cells[n].textContent.trim()); 
+            return c > 0 ? 1 : (c < 0 ? -1 : 0) }
+    }
+    var isSorted = function(array, fn) {
+        if (array.length < 2)
+            return 1;
+        var direction = fn(array[0], array[1]); 
+        for (var i = 1; i < array.length - 1; ++i) {
+            var d = fn(array[i], array[i+1]);
+            if (d == 0)
+                continue;
+            else if (direction == 0)
+                direction = d;
+            else if (direction != d)
+                return 0;
+            }
+        return direction;
+    }
+    var sorted = isSorted(tr, fn);
+    if (sorted == 1 || sorted == -1) {
+        // if sorted already, reverse it
+        for(var i = tr.length - 1; i >= 0; --i)
+            tb.appendChild(tr[i]); // append each row in order
+    } else {
+        tr = tr.sort(fn);
+        for(var i = 0; i < tr.length; ++i)
+            tb.appendChild(tr[i]); // append each row in order
+    }
+}
+</script>
+
+<script>
+$( document ).ready(function(){
+            var cfg={'threshold':3,     // depth of toc (number of levels)
+             'number_sections': false,
+             'toc_cell': false,          // useless here
+             'toc_window_display': true, // display the toc window
+             "toc_section_display": "block", // display toc contents in the window
+             'sideBar':true,       // sidebar or floating window
+             'navigate_menu':false       // navigation menu (only in liveNotebook -- do not change)
+            }
+            var st={};                  // some variables used in the script
+            st.rendering_toc_cell = false;
+            st.config_loaded = false;
+            st.extension_initialized=false;
+            st.nbcontainer_marginleft = $('#notebook-container').css('margin-left')
+            st.nbcontainer_marginright = $('#notebook-container').css('margin-right')
+            st.nbcontainer_width = $('#notebook-container').css('width')
+            st.oldTocHeight = undefined
+            st.cell_toc = undefined;
+            st.toc_index=0;
+            // fire the main function with these parameters
+            table_of_contents(cfg, st);
+            var file=fine-mappingDict[$("h1:first").attr("id")];
+            $("#toc-level0 a").css("color","#126dce");
+            $('a[href="#'+$("h1:first").attr("id")+'"]').hide()
+            var docs=fine-mappingArray;
+            var docs_map=fine-mappingArrayMap;
+            var pos=fine-mappingArray.indexOf(file);
+            for (var a=pos;a>=0;a--){
+                  $('<li><a href="'+docs[a]+'.html"><font color="#073642"><b>'+docs_map[docs[a]].replace(/_/g," ")+'</b></font></a></li>').insertBefore("#toc-level0 li:eq(0)");
+            }
+            $('a[href="'+file+'.html'+'"]').css("color","#126dce");
+            for (var a=pos+1;a<docs.length;a++){
+                  $(".toc #toc-level0").append('<li><a href="'+docs[a]+'.html"><font color="#073642"><b>'+docs_map[docs[a]].replace(/_/g," ")+'</b></font></a></li>');
+            }
+            // $("#toc-header").hide(); // comment out because it prevents search bar from displaying
+    });
+</script>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+  // mark it active
+  menuAnchor.parent().addClass('active');
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+<div class="container-fluid main-container">
+<!-- tabsets -->
+<script src="../site_libs/navigation-1.1/tabsets.js"></script>
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+
+
+<title>Some computational genomics workflows</title>
+
+<style type = "text/css">
+body {
+  font-family: "Droid Sans";
+  padding-top: 66px;
+  padding-bottom: 40px;
+}
+</style>
+</head>
+
+<body>
+<div tabindex="-1" id="notebook" class="border-box-sizing">
+<div class="container" id="notebook-container">
+
+<!-- code folding -->
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="../index.html">Some computational genomics workflows</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        
+<li>
+  <a href="../index.html">Overview</a>
+</li>
+        
+      </ul>
+        
+<ul class="nav navbar-nav navbar-right">
+<li>
+   <a href="http://github.com/cumc/bioworkflows"> <span class="fa fa-github"></span> </a>
+</li>
+</ul>
+        
+      </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Summary-statistics-data-mungling-in-preparation-for-fine-mapping-pipelines">Summary statistics data mungling in preparation for fine-mapping pipelines<a class="anchor-link" href="#Summary-statistics-data-mungling-in-preparation-for-fine-mapping-pipelines">&#182;</a></h1><p>This pipeline extracts loci of interest from association analysis summary statistics data, intersecting it with genotype data to compute correlation matrix, and output the data-set per loci with summary statistics and genotype correlations matched. Additionally it extracts prior inclusion probability (annotation scores) for each variant in the data-set, if the information is available.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>This pipeline was devised by Gao Wang and implemented by Min Qiao at The University of Chicago. It can be downloaded <a href="https://github.com/gaow/fine-mapping/tree/master/workflow">from here</a>.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Input">Input<a class="anchor-link" href="#Input">&#182;</a></h2><ul>
+<li><p>Summary statistics file, <code>gzip</code> compressed, containing information of 6 or 7 columns of core information</p>
+<ul>
+<li>chromsome</li>
+<li>position</li>
+<li>reference allele</li>
+<li>alternative allele</li>
+<li>[${\beta}$ (effect size) and standard error (se)] or $z$ score</li>
+</ul>
+<p>The input file does not have to follow this ordering. It can be specified by <code>--columns</code> parameter later. Additionally it is possible to input a column <code>loci ID</code> using <code>--loci-column</code>. It is relevant for QTL analysis where the same position can belong to different loci.</p>
+</li>
+<li><p>Loci file, similar in flavor to <code>bed</code> files.</p>
+
+<pre><code>1st column is chr; 2nd is chunk start position; 3rd is chunk end position; 4th is loci identifier.
+
+  chr22   44995308    46470495    1699
+  chr22   46470495    47596318    1700
+  chr22   47596318    48903703    1701
+  chr22   48903703    49824534    1702
+  chr22   49824534    51243298    1703
+
+</code></pre>
+<p>If the last column is not available the first 3 columns will be concatenated to become the loci identifier.</p>
+<p>Note that default data-base for loci can be, naturally, LD blocks. For example European genomes are typically divided into 1703 LD chunks (exclude X chromosome).</p>
+</li>
+</ul>
+<ul>
+<li><p>Prior inclusion probability, for example:</p>
+
+<pre><code>1st columns format “chr:bp:ref:alt”，2nd is prior
+
+  1:1847856:T:G  1.4413e-04
+  1:1847979:T:C  7.3716e-05
+  1:1848109:C:G  1.4413e-04
+  1:1848160:A:G  1.4413e-04
+  1:1848734:A:G  7.3716e-05
+
+</code></pre>
+<p>This is the default format from the enrichment analysis tool called <code>torus</code>.</p>
+</li>
+<li><p>Genotype data reference panel (or panels if by chromosome), in VCF format. Ideally this is the genotype data used to generate the summary statistics; but external reference panel can also be used. 
+A popular choice is <a href="http://hgdownload.cse.ucsc.edu/gbdb/hg19/1000Genomes/phase3">1000 Genomes (data download)</a> for genotypes of 
+<a href="ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/integrated_call_samples_v3.20130502.ALL.panel">different population (data download)</a>.</p>
+<ul>
+<li>There are 503 Europeans (<code>EUR</code>) in 1000 Genomes data.</li>
+</ul>
+<p>For genotype in multiple VCF files the input have to be a 'manifest' file under the same directory with the VCF files and reads like:</p>
+
+<pre><code>1 ALL.chr1.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.EUR.vcf.gz
+2 ALL.chr2.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.EUR.vcf.gz
+...</code></pre>
+<p>where each line is white-space separated with the first the chromosome number and second the file name.</p>
+<p><strong>For UChicago midway users</strong>: reference genotype data for 1000 Genomes EUR samples are extracted using workflow <code>prepare_1KG_reference</code> below. The output can be found under <code>/project2/xinhe/mqiao/SuSiE_GWAS/1KG_EUR/</code>. The manifest file <code>1KG_EUR.manifest</code> was prepared by:</p>
+
+<pre><code>for i in {1..22} X; do echo $i ALL.chr$i.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.EUR.vcf.gz; done &gt; 1KG_EUR.manifest</code></pre>
+</li>
+</ul>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The end of this workflow notebook has some example commands running on some toy data. These toy data (500MB; did not bother to make it smaller due to my laziness) <a href="http://shiny.stephenslab.uchicago.edu/gaow/finemapping_summary_stats_example.tar.gz">can be downloaded from here</a> if you want to reproduce these commands.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Pitfalls-in-data-mungling-with-external-reference-panel">Pitfalls in data mungling with external reference panel<a class="anchor-link" href="#Pitfalls-in-data-mungling-with-external-reference-panel">&#182;</a></h2><ol>
+<li>Genomic coordinate can be zero- or one-based. That means SNP positions can start from <strong>start from 0</strong>, instead of 1. This is indeed the case for 1000 Genomes data. In order to be consistent with one-based summary statistics, we need to <strong>add 1</strong> to all 1000 genome SNPs position.</li>
+<li>Reference and alternative alleles may mismatch between summary statistics and the reference panel. If it is a simple ref / alt flip we need to also flip the coding of genotypes or sign of summary statistics to adjust for the effect size direction. If it is strand flip we need to convert summary statistics and genotype data to use the same strand first and take from there. </li>
+<li>When strand flip is involved, cases such as A/T and C/G are no longer identifiable -- whether it be strand flip or ref / alt flip. We will have to remove these locus (having A/T or C/G genotypes) from analysis.</li>
+</ol>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Data-extraction-steps">Data extraction steps<a class="anchor-link" href="#Data-extraction-steps">&#182;</a></h2><ol>
+<li>Denote summary statistics matrix in the specific loci as $S_1$, and annotation (prior) matrix as $A_1$. The number of row in these two matrices is the number of SNPs in summary statistics of the study of interest.</li>
+<li><p>Extract corresponding genotype from reference panel in VCF format for this loci. Denote this genotype matrix as $G_1$. Rows are SNPs, columns are population genotypes.</p>
+<ul>
+<li>Genotype coding: we use numeric coding 0, 1 and 2 indicating the number of "non-reference allele". In other words we have the following "mapping rule":
+<pre><code>  0|0  -&gt;  0
+  1|0  -&gt;  1
+  1|1  -&gt;  2
+  2|0  -&gt;  1
+  2|1  -&gt;  2
+  2|2  -&gt;  2</code></pre>
+</li>
+<li>Non-variant sites (lines having identical genotypes for everybody) will be removed.</li>
+</ul>
+</li>
+<li><p>Find overlapped SNPs of $S_1$ and $G_1$, then extract new genotype matrix from $G_1$ excluding non-overlaps, denote as $G_2$, and new summary statistics matrix from $S_1$ excluding non-overlaps, denote as $S_2$.</p>
+</li>
+<li><p>Compare $G_2$ and $S_2$'s reference and alternative allele, flip coding as necessary, generating new summay statistic matrix $S_3$ and new genotype matrix $G_3$. There could be several situations as follows:</p>
+<ul>
+<li>completely identical;</li>
+<li>Not identical, but identical after switching ref and alt in $S_2$: add opposite sign for z score and beta; does not apply to <code>A/T</code>, <code>T/A</code>, <code>G/C</code> or <code>C/G</code> for <code>ref/alt</code>;</li>
+<li>Not identical, but identical after strand flip ref and alt in $S_2$: keep the sign of z score and beta; does not apply to <code>A/T</code>, <code>T/A</code>, <code>G/C</code> or <code>C/G</code> for <code>ref/alt</code>;</li>
+<li>Not identical, but identical after strand flip ref and alt then swith their positions: add opposite sign for z score and beta; only apply to <code>A/G</code>, <code>G/A</code>, <code>A/C</code>, <code>C/A</code>, <code>T/C</code>, <code>C/T</code>, <code>T/G</code> and <code>G/T</code>.</li>
+<li>Not identical, <code>A/T</code>, <code>T/A</code>, <code>G/C</code> or <code>C/G</code> for <code>ref/alt</code>: consider this situation at last; if flip strand has applied in this LD block, then flip strand and keep the sign of z score and beta; if not, switch ref and alt of $S_2$, add opposite sign for z score and beta.</li>
+<li>Not identical after previous 5 substeps: drop.</li>
+</ul>
+</li>
+<li>Calculate row correlation matrix of $G_3$, denote as $R$. The number of rows and columns of $R$ is the number of SNPs in $G_3$.</li>
+<li>Obtain overlapped SNPs for $S_3$ and $A_1$ and use overlapped SNPs to generate new annotation/prior $A_2$.</li>
+</ol>
+<p>Notice that if genotype data used to generate the summary statistics is available as reference panel, there should not be a need for 4. But it is a good double-check anyways to do 4 -- we therefore provide an option to specify whether or not we expect step 4 is unnecessary; and if so, throw an error when we found discrepency in 4, instead of trying to fix those.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Outputs">Outputs<a class="anchor-link" href="#Outputs">&#182;</a></h2><ul>
+<li>$S_3$: the number of rows of $S_3$ is the same with $A_2$. It can be 4 columns, <code>chr:pos  beta  se  ID</code>, or 3 columns, <code>chr:pos z ID</code>.</li>
+<li>$R$: correlation matrix, #SNPs $\times$ #SNPs of $G_3$.</li>
+<li>$A_2$: adjusted annotation/prior information, the number of rows is the same with $S_3$.</li>
+</ul>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Software-requirement">Software requirement<a class="anchor-link" href="#Software-requirement">&#182;</a></h2><ul>
+<li>Python package <code>cyvcf2</code>, <code>conda install -c bioconda cyvcf2</code></li>
+<li><code>tabix</code> and <code>bcftools</code>, <code>conda install -c tabix bcftools</code></li>
+</ul>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[1]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="o">%</span><span class="n">cd</span> <span class="o">~/</span><span class="n">GIT</span><span class="o">/</span><span class="n">github</span><span class="o">/</span><span class="n">fine</span><span class="o">-</span><span class="n">mapping</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>/scratch/midway2/gaow/GIT/github/fine-mapping</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[2]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="n">sos</span> <span class="n">run</span> <span class="n">workflow</span><span class="o">/</span><span class="n">summary_statistics_wrangler</span><span class="o">.</span><span class="n">ipynb</span> <span class="o">-</span><span class="n">h</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>usage: sos run workflow/summary_statistics_wrangler.ipynb
+               [workflow_name | -t targets] [options] [workflow_options]
+  workflow_name:        Single or combined workflows defined in this script
+  targets:              One or more targets to generate
+  options:              Single-hyphen sos parameters (see &#34;sos run -h&#34; for details)
+  workflow_options:     Double-hyphen workflow-specific parameters
+
+Workflows:
+  prepare_1KG_reference
+  default
+
+Global Workflow Options:
+  --reference . (as path)
+                        Reference panel, either VCF file or a manifest file each
+                        line is &#34;chrom number &lt;white space&gt; VCF file name&#34; the
+                        manifest file have to be in the same folder as the VCF
+                        files it refers to.
+  --loci . (as path)
+                        Loci file
+  --ss-data . (as path)
+                        summary statistics
+  --[no-]strand-flip (default to True)
+                        Use --no-strand-flip to set it to false if you are sure
+                        there is no strand_flip involved
+  --[no-]ref-flip (default to True)
+                        Use --no-ref-flip to set it to false if you are sure
+                        there is no reference / alternative mismatch involved
+  --job-size 80 (as int)
+                        For cluster jobs, number of loci to analyze per job
+
+Sections
+  prepare_1KG_reference: Get information about a specified race
+    Workflow Options:
+      --race EUR
+                        Race identifier in 1000 genomes
+      --panel-meta . (as path)
+                        Path to
+                        `integrated_call_samples_v3.20130502.ALL.panel.txt`
+  default_1:            Get summary stats
+    Workflow Options:
+      --columns 1 2 3 4 5 6 (as list)
+                        Have to be 5 or 6 numbers indicating the required
+                        columns to be extracted from summary statistics file 6
+                        numbers for [&#39;chr&#39;,&#39;bp&#39;,&#39;ref&#39;,&#39;alt&#39;,&#39;beta&#39;,&#39;se&#39;] 5
+                        numbers fo [&#39;chr&#39;,&#39;bp&#39;,&#39;ref&#39;,&#39;alt&#39;,&#39;z&#39;]
+      --loci-column 0 (as int)
+                        ID column index, optional
+      --[no-]header (default to True)
+                        use --no-header to indicate that input summary
+                        statistics file does not have a header
+      --adjust-panel-position 0 (as int)
+                        when set to N (typically 0, 1 or -1) the genomic
+                        position in the panel will be adjusted by N, ie.
+                        position = position + N This is useful when summary
+                        stats and reference panel have different coordinates
+                        (off by 1 position)
+      --panel-chrom-prefix &#39;&#39;
+                        Either empty, or `chr`
+  default_2:            Get annotations
+    Workflow Options:
+      --annotation &#39;name:/path/to/annotation/file&#39;
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[2]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="p">[</span><span class="k">global</span><span class="p">]</span>
+<span class="c1"># Reference panel, either VCF file or a manifest file each line is &quot;chrom number &lt;white space&gt; VCF file name&quot;</span>
+<span class="c1"># the manifest file have to be in the same folder as the VCF files it refers to.</span>
+<span class="kn">parameter:</span> <span class="n">reference</span> <span class="o">=</span> <span class="n">path</span><span class="p">()</span>
+<span class="c1"># Loci file</span>
+<span class="kn">parameter:</span> <span class="n">loci</span> <span class="o">=</span> <span class="n">path</span><span class="p">()</span>
+<span class="c1"># summary statistics</span>
+<span class="kn">parameter:</span> <span class="n">ss_data</span> <span class="o">=</span> <span class="n">path</span><span class="p">()</span>
+<span class="c1"># Use --no-strand-flip to set it to false</span>
+<span class="c1"># if you are sure there is no strand_flip involved</span>
+<span class="kn">parameter:</span> <span class="n">strand_flip</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="c1"># Use --no-ref-flip to set it to false</span>
+<span class="c1"># if you are sure there is no reference / alternative mismatch involved</span>
+<span class="kn">parameter:</span> <span class="n">ref_flip</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="c1"># For cluster jobs, number of loci to analyze per job</span>
+<span class="kn">parameter:</span> <span class="n">job_size</span> <span class="o">=</span> <span class="mi">80</span>
+
+<span class="c1"># Decide whether or not reference panel matches summary statistics</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">ref_flip</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">strand_flip</span><span class="p">:</span>
+    <span class="n">strictly_match</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="kn">else:</span>
+    <span class="n">strictly_match</span> <span class="o">=</span> <span class="bp">False</span>
+
+<span class="c1"># Check if files exist</span>
+<span class="n">fail_if</span><span class="p">(</span><span class="ow">not</span> <span class="n">reference</span><span class="o">.</span><span class="n">is_file</span><span class="p">(),</span> <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Please specify valid path for --reference&#39;</span><span class="p">)</span>
+<span class="n">fail_if</span><span class="p">(</span><span class="ow">not</span> <span class="n">loci</span><span class="o">.</span><span class="n">is_file</span><span class="p">(),</span> <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Please specify valid path for --loci&#39;</span><span class="p">)</span>
+<span class="n">fail_if</span><span class="p">(</span><span class="ow">not</span> <span class="n">ss_data</span><span class="o">.</span><span class="n">is_file</span><span class="p">(),</span> <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Please specify valid path for --ss-data&#39;</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Preparing-external-reference-genotypes">Preparing external reference genotypes<a class="anchor-link" href="#Preparing-external-reference-genotypes">&#182;</a></h2><p>For 1000 genomes data, using <code>integrated_call_samples_v3.20130502.ALL.panel.txt</code> file to extract sample ID for given population (eg <code>EUR</code>) and subset the data. We only need to run it once.</p>
+<p>If loci manifest is provided it generate both a new loci manifest file and the files it contains.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Example usage:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="n">sos</span> <span class="n">run</span> <span class="n">workflow</span><span class="o">/</span><span class="n">summary_statistics_wrangler</span><span class="o">.</span><span class="n">ipynb</span> <span class="n">prepare_1KG_reference</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[1]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Get information about a specified race</span>
+<span class="p">[</span><span class="n">prepare_1KG_reference</span><span class="p">]</span>
+<span class="kn">depends:</span> <span class="n">executable</span><span class="p">(</span><span class="s2">&quot;bcftools&quot;</span><span class="p">),</span> <span class="n">executable</span><span class="p">(</span><span class="s2">&quot;tabix&quot;</span><span class="p">)</span>
+<span class="c1"># Race identifier in 1000 genomes</span>
+<span class="kn">parameter:</span> <span class="n">race</span> <span class="o">=</span> <span class="s2">&quot;EUR&quot;</span>
+<span class="c1"># Path to `integrated_call_samples_v3.20130502.ALL.panel.txt`</span>
+<span class="kn">parameter:</span> <span class="n">panel_meta</span> <span class="o">=</span> <span class="n">path</span><span class="p">()</span>
+<span class="n">stop_if</span><span class="p">(</span><span class="ow">not</span> <span class="n">panel_meta</span><span class="o">.</span><span class="n">is_file</span><span class="p">(),</span> <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Please specify valid path for --panel-meta&#39;</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">reference</span><span class="p">)</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;vcf.gz&#39;</span><span class="p">):</span>
+    <span class="n">chroms</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;0&#39;</span><span class="p">]</span>
+    <span class="n">genotypes</span> <span class="o">=</span> <span class="p">[</span><span class="n">reference</span><span class="p">]</span>
+<span class="kn">else:</span>
+    <span class="n">manifest</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">open</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{reference:a}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">readlines</span><span class="p">()]</span>
+    <span class="n">meta</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">manifest</span><span class="p">]</span>
+    <span class="n">genotypes</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">manifest</span><span class="p">]</span>
+
+<span class="kn">input:</span> <span class="n">genotypes</span><span class="p">,</span> <span class="n">group_by</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">paired_with</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">chrom</span><span class="o">=</span><span class="n">chroms</span><span class="p">)</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s2">&quot;{_input:nn}.{race}.vcf.gz&quot;</span>
+<span class="kn">task:</span> <span class="kp">trunk_workers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">trunk_size</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">walltime</span> <span class="o">=</span> <span class="s1">&#39;5m&#39;</span><span class="p">,</span> <span class="kp">mem</span> <span class="o">=</span> <span class="s1">&#39;2G&#39;</span><span class="p">,</span> <span class="kp">cores</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">tags</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{step_name}_{_output:bn}&#39;</span>
+
+<span class="kn">bash:</span> <span class="n">expand</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">grep</span> <span class="o">-</span><span class="n">w</span> <span class="s2">&quot;{race}&quot;</span> <span class="p">{</span><span class="n">panel_meta</span><span class="p">}</span> <span class="o">|</span> <span class="n">cut</span> <span class="o">-</span><span class="n">f</span> <span class="mi">1</span> <span class="o">&gt;</span> <span class="p">{</span><span class="n">_output</span><span class="p">:</span><span class="n">nn</span><span class="p">}</span><span class="n">_extracted</span><span class="o">.</span><span class="n">txt</span>
+    <span class="n">bcftools</span> <span class="n">view</span> <span class="o">-</span><span class="n">S</span> <span class="p">{</span><span class="n">_output</span><span class="p">:</span><span class="n">nn</span><span class="p">}</span><span class="n">_extracted</span><span class="o">.</span><span class="n">txt</span> <span class="p">{</span><span class="n">_input</span><span class="p">}</span> <span class="o">-</span><span class="n">Oz</span> <span class="o">&gt;</span> <span class="p">{</span><span class="n">_output</span><span class="p">}</span>
+    <span class="n">tabix</span> <span class="o">-</span><span class="n">p</span> <span class="n">vcf</span> <span class="p">{</span><span class="n">_output</span><span class="p">}</span>
+    <span class="n">rm</span> <span class="p">{</span><span class="n">_output</span><span class="p">:</span><span class="n">nn</span><span class="p">}</span><span class="n">_extracted</span><span class="o">.</span><span class="n">txt</span>
+
+<span class="k">if</span> <span class="ow">not</span> <span class="nb">str</span><span class="p">(</span><span class="n">reference</span><span class="p">)</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;vcf.gz&#39;</span><span class="p">):</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;{reference:n}.{race}.{reference:x}&quot;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">_output</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{item.chrom} {item}&#39;</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Obtain-summary-statistics-data-set">Obtain summary statistics data-set<a class="anchor-link" href="#Obtain-summary-statistics-data-set">&#182;</a></h2><ol>
+<li>Obtain reference genotypes for given loci: matrix $G1$</li>
+<li>Obtain summary statistics and the matching genotype correlation for given loci</li>
+</ol>
+<p>For step 2, we obtain genotype matrix 𝐺2, summary statistics 𝑆2, compare ref/alt in 𝑆2 and 𝐺2 =&gt; 𝑆3 and 𝐺3, then calculate 𝑅=row_corr(𝐺3) and save to disk.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[5]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Get summary stats</span>
+<span class="p">[</span><span class="n">default_1</span> <span class="p">(</span><span class="n">get</span> <span class="n">summary</span> <span class="n">statistics</span><span class="p">)]</span>
+<span class="kn">depends:</span> <span class="n">Py_Module</span><span class="p">(</span><span class="s1">&#39;cyvcf2&#39;</span><span class="p">)</span>
+<span class="c1"># Have to be 5 or 6 numbers indicating the required columns</span>
+<span class="c1"># to be extracted from summary statistics file</span>
+<span class="c1"># 6 numbers for [&#39;chr&#39;,&#39;bp&#39;,&#39;ref&#39;,&#39;alt&#39;,&#39;beta&#39;,&#39;se&#39;]</span>
+<span class="c1"># 5 numbers fo [&#39;chr&#39;,&#39;bp&#39;,&#39;ref&#39;,&#39;alt&#39;,&#39;z&#39;]</span>
+<span class="kn">parameter:</span> <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">]</span>
+<span class="c1"># ID column index, optional</span>
+<span class="kn">parameter:</span> <span class="n">loci_column</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="c1"># use --no-header to indicate that input summary statistics file does not have a header</span>
+<span class="kn">parameter:</span> <span class="n">header</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="c1"># when set to N (typically 0, 1 or -1) the genomic position</span>
+<span class="c1"># in the panel will be adjusted by N, ie. position = position + N</span>
+<span class="c1"># This is useful when summary stats and reference panel have different coordinates (off by 1 position)</span>
+<span class="kn">parameter:</span> <span class="n">adjust_panel_position</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="c1"># Either empty, or `chr`</span>
+<span class="kn">parameter:</span> <span class="n">panel_chrom_prefix</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="n">fail_if</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">columns</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">),</span> <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Input column ID has to be of length 5 or 6.&#39;</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">reference</span><span class="p">)</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;vcf.gz&#39;</span><span class="p">):</span>
+    <span class="n">genotype</span> <span class="o">=</span> <span class="n">reference</span>
+<span class="kn">else:</span>
+    <span class="n">genotype</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([</span><span class="nb">tuple</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">())</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">open</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{reference:a}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">readlines</span><span class="p">()])</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">genotype</span><span class="p">:</span>
+        <span class="n">genotype</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{reference:ad}&#39;</span><span class="p">,</span> <span class="n">genotype</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+<span class="n">chunks</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">open</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{loci:a}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="p">)]</span>
+<span class="n">prefix</span> <span class="o">=</span> <span class="n">paths</span><span class="p">([</span><span class="n">f</span><span class="s2">&quot;{ss_data:n}/{c[-1] if len(c) &gt; 3 else &#39;</span><span class="si">%s</span><span class="s2">_</span><span class="si">%s</span><span class="s2">_</span><span class="si">%s</span><span class="s2">&#39; % (c[0], c[1], c[2])}&quot;</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">chunks</span><span class="p">])</span>
+    
+<span class="kn">input:</span> <span class="n">for_each</span> <span class="o">=</span> <span class="s1">&#39;chunks&#39;</span>
+<span class="kn">output:</span> <span class="n">summary_stats</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;{prefix[_index]}/{prefix[_index]:b}.summary_stats.gz&quot;</span><span class="p">,</span>
+        <span class="n">ld_matrix</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;{prefix[_index]}/{prefix[_index]:b}.LD.gz&quot;</span>
+        
+<span class="kn">task:</span> <span class="kp">trunk_workers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">trunk_size</span> <span class="o">=</span> <span class="n">job_size</span><span class="p">,</span> <span class="kp">walltime</span> <span class="o">=</span> <span class="s1">&#39;5m&#39;</span><span class="p">,</span> <span class="kp">mem</span> <span class="o">=</span> <span class="s1">&#39;5G&#39;</span><span class="p">,</span> <span class="kp">cores</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">tags</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{step_name}_{_output[&quot;summary_stats&quot;]:bn}&#39;</span>
+
+<span class="kn">python3:</span> <span class="n">expand</span> <span class="o">=</span> <span class="s2">&quot;${ }&quot;</span><span class="p">,</span> <span class="n">stdout</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output[&quot;summary_stats&quot;]:nn}.allele_flip.log&#39;</span>
+    <span class="kn">from</span> <span class="nn">cyvcf2</span> <span class="kn">import</span> <span class="n">VCF</span>
+    <span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span><span class="o">,</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+    <span class="kn">import</span> <span class="nn">datetime</span><span class="o">,</span> <span class="nn">sys</span>
+
+    <span class="k">def</span> <span class="nf">exit_if_empty</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="n">is_empty</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="n">x</span><span class="o">.</span><span class="n">empty</span>
+        <span class="k">if</span> <span class="n">is_empty</span><span class="p">:</span>
+            <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;${_output[&#39;summary_stats&#39;]}&quot;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;${_output[&#39;ld_matrix&#39;]}&quot;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># Step 1: extract relevant summary statistics</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(),</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">locus</span> <span class="o">=</span> <span class="err">$</span><span class="p">{</span><span class="n">_chunks</span><span class="p">}</span>
+    <span class="n">col_to_use</span> <span class="o">=</span> <span class="err">$</span><span class="p">{[</span><span class="n">x</span><span class="o">-</span><span class="mi">1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">]}</span>
+    <span class="n">loci_col</span> <span class="o">=</span> <span class="err">$</span><span class="p">{</span><span class="n">loci_column</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">loci_col</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">col_to_use</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loci_col</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">col_ranks</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">col_to_use</span><span class="p">)),</span> <span class="n">key</span><span class="o">=</span><span class="n">col_to_use</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">)]</span>
+    <span class="n">S1</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_table</span><span class="p">(</span><span class="err">$</span><span class="p">{</span><span class="n">ss_data</span><span class="p">:</span><span class="n">ar</span><span class="p">},</span> <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;gzip&#39;</span><span class="p">,</span> <span class="n">header</span> <span class="o">=</span> <span class="err">$</span><span class="p">{</span><span class="mi">0</span> <span class="k">if</span> <span class="n">header</span> <span class="k">else</span> <span class="bp">None</span><span class="p">},</span> <span class="n">index_col</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">usecols</span> <span class="o">=</span> <span class="n">col_to_use</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">loci_col</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;chr&#39;</span><span class="p">,</span><span class="s1">&#39;bp&#39;</span><span class="p">,</span><span class="s1">&#39;ref&#39;</span><span class="p">,</span><span class="s1">&#39;alt&#39;</span><span class="p">,</span><span class="s1">&#39;beta&#39;</span><span class="p">,</span><span class="s1">&#39;se&#39;</span><span class="p">,</span><span class="s1">&#39;locus_id&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">S1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">7</span> <span class="k">else</span> <span class="p">[</span><span class="s1">&#39;chr&#39;</span><span class="p">,</span><span class="s1">&#39;bp&#39;</span><span class="p">,</span><span class="s1">&#39;ref&#39;</span><span class="p">,</span><span class="s1">&#39;alt&#39;</span><span class="p">,</span><span class="s1">&#39;z&#39;</span><span class="p">,</span><span class="s1">&#39;locus_id&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;chr&#39;</span><span class="p">,</span><span class="s1">&#39;bp&#39;</span><span class="p">,</span><span class="s1">&#39;ref&#39;</span><span class="p">,</span><span class="s1">&#39;alt&#39;</span><span class="p">,</span><span class="s1">&#39;beta&#39;</span><span class="p">,</span><span class="s1">&#39;se&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">S1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">6</span> <span class="k">else</span> <span class="p">[</span><span class="s1">&#39;chr&#39;</span><span class="p">,</span><span class="s1">&#39;bp&#39;</span><span class="p">,</span><span class="s1">&#39;ref&#39;</span><span class="p">,</span><span class="s1">&#39;alt&#39;</span><span class="p">,</span><span class="s1">&#39;z&#39;</span><span class="p">]</span>
+    <span class="n">S1</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">columns</span><span class="p">[</span><span class="n">r</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">col_ranks</span><span class="p">]</span>
+    <span class="n">S1</span> <span class="o">=</span> <span class="n">S1</span><span class="p">[</span><span class="n">columns</span><span class="p">]</span>
+    <span class="n">S1</span><span class="p">[</span><span class="s2">&quot;chr&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S1</span><span class="p">[</span><span class="s2">&quot;chr&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;chr&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
+    <span class="n">locus</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">locus</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;chr&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">&quot;locus_id&quot;</span> <span class="ow">in</span> <span class="n">S1</span><span class="o">.</span><span class="n">columns</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">locus</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="n">S1</span> <span class="o">=</span> <span class="n">S1</span><span class="p">[(</span><span class="n">S1</span><span class="p">[</span><span class="s2">&quot;chr&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">locus</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">S1</span><span class="p">[</span><span class="s2">&quot;bp&quot;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="nb">int</span><span class="p">(</span><span class="n">locus</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">S1</span><span class="p">[</span><span class="s2">&quot;bp&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="nb">int</span><span class="p">(</span><span class="n">locus</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">S1</span><span class="p">[</span><span class="s2">&quot;locus_id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">locus</span><span class="p">[</span><span class="mi">3</span><span class="p">])]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">S1</span> <span class="o">=</span> <span class="n">S1</span><span class="p">[(</span><span class="n">S1</span><span class="p">[</span><span class="s2">&quot;chr&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">locus</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">S1</span><span class="p">[</span><span class="s2">&quot;bp&quot;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="nb">int</span><span class="p">(</span><span class="n">locus</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">S1</span><span class="p">[</span><span class="s2">&quot;bp&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="nb">int</span><span class="p">(</span><span class="n">locus</span><span class="p">[</span><span class="mi">2</span><span class="p">]))]</span>
+    <span class="n">exit_if_empty</span><span class="p">(</span><span class="n">S1</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;SAMPLE: </span><span class="si">%s</span><span class="se">\t</span><span class="s2">LENGTH:</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="s2">&quot;S1&quot;</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">S1</span><span class="p">)))</span>
+    <span class="n">S1</span><span class="p">[</span><span class="s2">&quot;ID&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S1</span><span class="p">[</span><span class="s2">&quot;chr&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;:&quot;</span> <span class="o">+</span> <span class="n">S1</span><span class="p">[</span><span class="s2">&quot;bp&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+    <span class="c1"># Step 2: get genotypes</span>
+    <span class="n">chromosome</span> <span class="o">=</span> <span class="s1">&#39;${panel_chrom_prefix}&#39;</span><span class="o">+</span><span class="s1">&#39;${_chunks[0].replace(&quot;chr&quot;,&quot;&quot;)}&#39;</span>
+    <span class="n">panel</span> <span class="o">=</span> <span class="err">$</span><span class="p">{</span><span class="n">path</span><span class="p">(</span><span class="n">genotype</span><span class="p">[</span><span class="n">_chunks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;chr&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">genotype</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="n">genotype</span><span class="p">):</span><span class="n">ar</span><span class="p">}</span>
+    <span class="c1"># loci region</span>
+    <span class="n">queryid</span> <span class="o">=</span> <span class="n">chromosome</span> <span class="o">+</span> <span class="s2">&quot;:&quot;</span> <span class="o">+</span> <span class="s2">&quot;${_chunks[1]}&quot;</span> <span class="o">+</span> <span class="s2">&quot;-&quot;</span> <span class="o">+</span> <span class="s2">&quot;${_chunks[2]}&quot;</span>
+    <span class="n">off_set</span> <span class="o">=</span> <span class="err">$</span><span class="p">{</span><span class="n">adjust_panel_position</span><span class="p">}</span>
+    <span class="c1"># scan VCF chunk</span>
+    <span class="n">vcf</span> <span class="o">=</span> <span class="n">VCF</span><span class="p">(</span><span class="n">panel</span><span class="p">,</span> <span class="n">gts012</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">n_G0</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">var_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">S1</span><span class="p">[</span><span class="s2">&quot;ID&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+    <span class="c1">## Attention: 1000 Genome position start from 0, not 1! So need to set off_set=1 for variant.start</span>
+    <span class="k">for</span> <span class="n">variant</span> <span class="ow">in</span> <span class="n">vcf</span><span class="p">(</span><span class="n">queryid</span><span class="p">):</span>
+        <span class="n">n_G0</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">var_id</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{variant.CHROM.replace(&quot;chr&quot;,&quot;&quot;)}:{variant.start+off_set}&#39;</span>
+        <span class="k">if</span> <span class="n">var_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">var_ids</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">variant</span><span class="o">.</span><span class="n">ALT</span><span class="p">)):</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="p">[</span><span class="n">var_id</span><span class="p">,</span> <span class="n">variant</span><span class="o">.</span><span class="n">REF</span><span class="p">,</span> <span class="n">variant</span><span class="o">.</span><span class="n">ALT</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">+</span> \
+                    <span class="p">[</span><span class="n">x</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">variant</span><span class="o">.</span><span class="n">genotypes</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="mi">3</span><span class="p">:]))</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="c1"># remove non-variant site in reference panel</span>
+                <span class="k">continue</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;SAMPLE: </span><span class="si">%s</span><span class="se">\t</span><span class="s2">LENGTH:</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="s2">&quot;G0&quot;</span><span class="p">,</span><span class="n">n_G0</span><span class="p">))</span>
+    <span class="n">exit_if_empty</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+    <span class="n">G1</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;ID&#39;</span><span class="p">,</span> <span class="s1">&#39;ref&#39;</span><span class="p">,</span> <span class="s1">&#39;alt&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">vcf</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;SAMPLE: </span><span class="si">%s</span><span class="se">\t</span><span class="s2">LENGTH:</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="s2">&quot;G1&quot;</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">G1</span><span class="p">)))</span>
+
+    <span class="c1"># Step 3: overlap genotypes and summary statistics for LD matrix</span>
+    <span class="c1"># S2</span>
+    <span class="c1"># have to drop duplicates in S2 because in some files there are duplicates!</span>
+    <span class="n">S2</span> <span class="o">=</span> <span class="n">S1</span><span class="p">[</span><span class="n">S1</span><span class="p">[</span><span class="s2">&quot;ID&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">G1</span><span class="p">[</span><span class="s2">&quot;ID&quot;</span><span class="p">])]</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">()</span>
+    <span class="n">exit_if_empty</span><span class="p">(</span><span class="n">S2</span><span class="p">)</span>
+    <span class="c1">#S2[&quot;ID&quot;] = S2[&quot;ID&quot;].fillna</span>
+    
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;SAMPLE: </span><span class="si">%s</span><span class="se">\t</span><span class="s2">LENGTH:</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="s2">&quot;S2&quot;</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">S2</span><span class="p">)))</span>
+    <span class="c1"># 𝐺2</span>
+    <span class="c1"># have to drop duplicates in S2 because for some reason there are duplicates in reference panel</span>
+    <span class="n">G2</span> <span class="o">=</span> <span class="n">G1</span><span class="p">[</span><span class="n">G1</span><span class="p">[</span><span class="s2">&quot;ID&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">S1</span><span class="p">[</span><span class="s2">&quot;ID&quot;</span><span class="p">])]</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">()</span>
+    <span class="n">exit_if_empty</span><span class="p">(</span><span class="n">G2</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;SAMPLE: </span><span class="si">%s</span><span class="se">\t</span><span class="s2">LENGTH:</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="s2">&quot;G2&quot;</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">G2</span><span class="p">)))</span>
+    <span class="c1"># 𝑆2 and 𝐺2 : reference and alternative</span>
+    <span class="c1"># at ta cg gc</span>
+    <span class="k">def</span> <span class="nf">gt</span><span class="p">(</span><span class="n">s1</span><span class="p">,</span><span class="n">s2</span><span class="p">,</span><span class="n">s3</span><span class="p">,</span><span class="n">s4</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">s1</span><span class="o">+</span><span class="n">s2</span> <span class="o">==</span> <span class="s2">&quot;AT&quot;</span> <span class="ow">and</span> <span class="n">s3</span><span class="o">+</span><span class="n">s4</span> <span class="o">==</span> <span class="s2">&quot;TA&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">s1</span><span class="o">+</span><span class="n">s2</span> <span class="o">==</span> <span class="s2">&quot;GC&quot;</span> <span class="ow">and</span> <span class="n">s3</span><span class="o">+</span><span class="n">s4</span> <span class="o">==</span> <span class="s2">&quot;CG&quot;</span> <span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">s1</span><span class="o">+</span><span class="n">s2</span> <span class="o">==</span> <span class="s2">&quot;TA&quot;</span> <span class="ow">and</span> <span class="n">s3</span><span class="o">+</span><span class="n">s4</span> <span class="o">==</span> <span class="s2">&quot;AT&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">s1</span><span class="o">+</span><span class="n">s2</span> <span class="o">==</span> <span class="s2">&quot;CG&quot;</span> <span class="ow">and</span> <span class="n">s3</span><span class="o">+</span><span class="n">s4</span> <span class="o">==</span> <span class="s2">&quot;GC&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="err">$</span><span class="p">{</span><span class="mi">0</span> <span class="k">if</span> <span class="n">strand_flip</span> <span class="k">else</span> <span class="mi">1</span><span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">1</span>
+    <span class="c1"># flip</span>
+    <span class="k">def</span> <span class="nf">atcg</span><span class="p">(</span><span class="n">inp</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">inp</span> <span class="o">==</span> <span class="s2">&quot;A&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;T&quot;</span>
+        <span class="k">elif</span> <span class="n">inp</span> <span class="o">==</span> <span class="s2">&quot;T&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;A&quot;</span>
+        <span class="k">elif</span> <span class="n">inp</span> <span class="o">==</span> <span class="s2">&quot;G&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;C&quot;</span>
+        <span class="k">elif</span> <span class="n">inp</span> <span class="o">==</span> <span class="s2">&quot;C&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;G&quot;</span>
+    <span class="c1"># S3</span>
+    <span class="n">FLIPD</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># adjusted</span>
+    <span class="n">ADJ</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1"># equal</span>
+    <span class="n">EQUAL</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1"># flipped by strand </span>
+    <span class="n">FLIPNUM</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1"># flipped by reference and alternative</span>
+    <span class="n">REFALTNUM</span> <span class="o">=</span> <span class="mi">0</span>
+    
+    <span class="c1"># keep at/ta/cg/gc line numbers</span>
+    <span class="n">at_cg_id</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">S2</span><span class="p">)):</span>
+        <span class="n">old_id</span> <span class="o">=</span> <span class="n">S2</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;:&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">S2</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;:&quot;</span> <span class="o">+</span> <span class="n">S2</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;:&quot;</span> <span class="o">+</span> <span class="n">S2</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">S2</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="o">+</span> <span class="p">[</span><span class="n">old_id</span><span class="p">]</span>
+        <span class="n">G2S2</span> <span class="o">=</span> <span class="n">G2</span><span class="p">[</span><span class="n">G2</span><span class="p">[</span><span class="s2">&quot;ID&quot;</span><span class="p">]</span><span class="o">==</span><span class="n">S2</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">([</span><span class="nb">set</span><span class="p">([</span><span class="n">S2</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span><span class="n">S2</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">3</span><span class="p">]])</span> <span class="o">!=</span> <span class="nb">set</span><span class="p">([</span><span class="n">G2S2</span><span class="p">[</span><span class="s2">&quot;ref&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">G2S2</span><span class="p">[</span><span class="s2">&quot;alt&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">idx</span><span class="p">]])</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">G2S2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])]):</span>
+            <span class="n">ADJ</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">G2S2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="c1"># not at/ta/gc/cg</span>
+            <span class="k">if</span> <span class="n">gt</span><span class="p">(</span><span class="n">S2</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span><span class="n">S2</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span><span class="n">G2S2</span><span class="p">[</span><span class="s2">&quot;ref&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span><span class="n">G2S2</span><span class="p">[</span><span class="s2">&quot;alt&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">G2S2</span><span class="p">[</span><span class="s2">&quot;ref&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">==</span> <span class="n">S2</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span> <span class="ow">and</span> <span class="n">G2S2</span><span class="p">[</span><span class="s2">&quot;alt&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">==</span> <span class="n">S2</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">3</span><span class="p">]:</span>
+                    <span class="n">EQUAL</span><span class="o">+=</span><span class="mi">1</span>
+                    <span class="n">FLIPD</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">G2S2</span><span class="p">[</span><span class="s2">&quot;alt&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">==</span> <span class="n">S2</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span> <span class="ow">and</span> <span class="n">G2S2</span><span class="p">[</span><span class="s2">&quot;ref&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">==</span> <span class="n">S2</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">3</span><span class="p">]:</span>
+                    <span class="n">REFALTNUM</span><span class="o">+=</span><span class="mi">1</span>
+                    <span class="n">line</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">line</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">line</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                    <span class="n">line</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">line</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+                    <span class="n">FLIPD</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">atcg</span><span class="p">(</span><span class="n">S2</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span> <span class="o">==</span> <span class="n">G2S2</span><span class="p">[</span><span class="s2">&quot;ref&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="ow">and</span> <span class="n">atcg</span><span class="p">(</span><span class="n">S2</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span> <span class="o">==</span> <span class="n">G2S2</span><span class="p">[</span><span class="s2">&quot;alt&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">idx</span><span class="p">]:</span>
+                    <span class="n">FLIPNUM</span><span class="o">+=</span><span class="mi">1</span>
+                    <span class="n">line</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">line</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">atcg</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span> <span class="n">atcg</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+                    <span class="n">FLIPD</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">atcg</span><span class="p">(</span><span class="n">S2</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span> <span class="o">==</span> <span class="n">G2S2</span><span class="p">[</span><span class="s2">&quot;alt&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="ow">and</span> <span class="n">atcg</span><span class="p">(</span><span class="n">S2</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span> <span class="o">==</span> <span class="n">G2S2</span><span class="p">[</span><span class="s2">&quot;ref&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">idx</span><span class="p">]:</span>
+                    <span class="n">REFALTNUM</span><span class="o">+=</span><span class="mi">1</span>
+                    <span class="n">FLIPNUM</span><span class="o">+=</span><span class="mi">1</span>
+                    <span class="n">line</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">line</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">atcg</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="mi">3</span><span class="p">]),</span> <span class="n">atcg</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+                    <span class="n">line</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">line</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+                    <span class="n">FLIPD</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># not sure what to do yet</span>
+                    <span class="c1"># print(1, line)</span>
+                    <span class="k">pass</span>
+            <span class="c1"># at/ta/cg/gc only do ref/alt flip</span>
+            <span class="k">elif</span> <span class="n">gt</span><span class="p">(</span><span class="n">S2</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span><span class="n">S2</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span><span class="n">G2S2</span><span class="p">[</span><span class="s2">&quot;ref&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span><span class="n">G2S2</span><span class="p">[</span><span class="s2">&quot;alt&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">G2S2</span><span class="p">[</span><span class="s2">&quot;ref&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">==</span> <span class="n">S2</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span> <span class="ow">and</span> <span class="n">G2S2</span><span class="p">[</span><span class="s2">&quot;alt&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">==</span> <span class="n">S2</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">3</span><span class="p">]:</span>
+                    <span class="n">EQUAL</span><span class="o">+=</span><span class="mi">1</span>
+                    <span class="n">FLIPD</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                    <span class="n">at_cg_id</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">FLIPD</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">G2S2</span><span class="p">[</span><span class="s2">&quot;alt&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">==</span> <span class="n">S2</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span> <span class="ow">and</span> <span class="n">G2S2</span><span class="p">[</span><span class="s2">&quot;ref&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">==</span> <span class="n">S2</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">3</span><span class="p">]:</span>
+                    <span class="n">REFALTNUM</span><span class="o">+=</span><span class="mi">1</span>
+                    <span class="n">line</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">line</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">line</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                    <span class="n">line</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">line</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>                
+                    <span class="n">FLIPD</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                    <span class="n">at_cg_id</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">FLIPD</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># print(0, line)</span>
+                    <span class="k">pass</span>
+    <span class="k">if</span> <span class="err">$</span><span class="p">{</span><span class="n">strictly_match</span><span class="p">}</span> <span class="ow">and</span> <span class="p">(</span><span class="n">FLIPNUM</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">REFALTNUM</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Strict panel match failed for locus {locus}.&quot;</span><span class="p">)</span>
+    <span class="c1">#</span>
+    <span class="n">MISMATCH</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">S2</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">FLIPD</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">FLIPNUM</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># flips involved, we need to remove at/ta/cg/gc</span>
+        <span class="n">FLIPD</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">FLIPD</span><span class="p">)</span> <span class="k">if</span> <span class="n">j</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">at_cg_id</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">at_cg_id</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">S1</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="k">if</span> <span class="n">x</span> <span class="o">!=</span> <span class="s1">&#39;ID&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;original_ID&quot;</span><span class="p">]</span>
+    <span class="n">S3</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">FLIPD</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">columns</span><span class="p">)</span>
+    <span class="n">S3</span><span class="p">[</span><span class="s2">&quot;ID&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S3</span><span class="p">[</span><span class="s2">&quot;chr&quot;</span><span class="p">]</span> <span class="o">+</span><span class="s2">&quot;:&quot;</span><span class="o">+</span><span class="n">S3</span><span class="p">[</span><span class="s2">&quot;bp&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;:&quot;</span> <span class="o">+</span> <span class="n">S3</span><span class="p">[</span><span class="s2">&quot;ref&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;:&quot;</span> <span class="o">+</span> <span class="n">S3</span><span class="p">[</span><span class="s2">&quot;alt&quot;</span><span class="p">]</span>
+    <span class="n">G2</span><span class="p">[</span><span class="s2">&quot;ID&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">G2</span><span class="p">[[</span><span class="s1">&#39;ID&#39;</span><span class="p">,</span> <span class="s1">&#39;ref&#39;</span><span class="p">,</span> <span class="s1">&#39;alt&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="s1">&#39;:&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># 𝐺3</span>
+    <span class="n">G3</span> <span class="o">=</span> <span class="n">G2</span><span class="p">[</span><span class="n">G2</span><span class="p">[</span><span class="s2">&quot;ID&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">S3</span><span class="p">[</span><span class="s2">&quot;ID&quot;</span><span class="p">])]</span>
+    <span class="k">assert</span> <span class="n">G3</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">S3</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">exit_if_empty</span><span class="p">(</span><span class="n">S3</span><span class="p">)</span>
+    <span class="c1"># recover original ID</span>
+    <span class="n">S3</span><span class="p">[</span><span class="s2">&quot;ID&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S3</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;original_ID&quot;</span><span class="p">)</span>
+    <span class="n">S3</span> <span class="o">=</span> <span class="n">S3</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;chr&quot;</span><span class="p">,</span> <span class="s2">&quot;bp&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">S3</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;ID&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="s1">&#39;beta&#39;</span><span class="p">,</span> <span class="s1">&#39;se&#39;</span><span class="p">)])</span>
+    <span class="n">columns</span> <span class="o">=</span> <span class="n">S3</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+    <span class="n">columns</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">columns</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">columns</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;ID&#39;</span><span class="p">)))</span>
+    <span class="n">S3</span><span class="p">[</span><span class="n">columns</span><span class="p">]</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s2">&quot;${_output[&#39;summary_stats&#39;]}&quot;</span><span class="p">,</span><span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">header</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">compression</span> <span class="o">=</span> <span class="s1">&#39;gzip&#39;</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;SAMPLE: </span><span class="si">%s</span><span class="se">\t</span><span class="s2">LENGTH:</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="s2">&quot;S3&quot;</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">S3</span><span class="p">)))</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;equal:</span><span class="si">%s</span><span class="se">\n</span><span class="s2">flipped by strand:</span><span class="si">%d</span><span class="se">\n</span><span class="s2">flipped by reference and alternative:</span><span class="si">%d</span><span class="se">\n</span><span class="s2">total adjusted:</span><span class="si">%d</span><span class="se">\n</span><span class="s2">total mismatch:</span><span class="si">%d</span><span class="se">\n</span><span class="s2">total A/T and C/G removed:</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">EQUAL</span><span class="p">,</span><span class="n">FLIPNUM</span><span class="p">,</span><span class="n">REFALTNUM</span><span class="p">,</span><span class="n">ADJ</span><span class="p">,</span><span class="n">MISMATCH</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">at_cg_id</span><span class="p">)))</span>
+    <span class="c1"># 𝑅=row_corr(𝐺3) OUT</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="s2">&quot;${_output[&#39;ld_matrix&#39;]}&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">corrcoef</span><span class="p">(</span><span class="n">G3</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;ID&#39;</span><span class="p">,</span> <span class="s2">&quot;ref&quot;</span><span class="p">,</span><span class="s2">&quot;alt&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> <span class="k">if</span> <span class="n">G3</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">]]),</span> <span class="n">fmt</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%.5f</span><span class="s1">&#39;</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Obtain-annotation-$A_2$">Obtain annotation $A_2$<a class="anchor-link" href="#Obtain-annotation-$A_2$">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[7]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Get annotations</span>
+<span class="p">[</span><span class="n">default_2</span> <span class="p">(</span><span class="n">get</span> <span class="n">annotations</span><span class="p">)]</span>
+<span class="kn">parameter:</span> <span class="n">annotation</span> <span class="o">=</span> <span class="s2">&quot;name:/path/to/annotation/file&quot;</span>
+<span class="n">anno</span><span class="p">,</span> <span class="n">prior_file</span> <span class="o">=</span> <span class="n">annotation</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+<span class="n">prior_file</span> <span class="o">=</span> <span class="n">path</span><span class="p">(</span><span class="n">prior_file</span><span class="p">)</span>
+<span class="n">stop_if</span><span class="p">(</span><span class="ow">not</span> <span class="n">prior_file</span><span class="o">.</span><span class="n">is_file</span><span class="p">(),</span> <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Quit because annotation file is not found&#39;</span><span class="p">)</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s2">&quot;{_input[&#39;summary_stats&#39;]:nn}.{anno}.gz&quot;</span>
+<span class="n">skip_if</span><span class="p">(</span><span class="n">_input</span><span class="p">[</span><span class="s1">&#39;summary_stats&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">_input</span><span class="p">[</span><span class="s1">&#39;ld_matrix&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+
+<span class="kn">task:</span> <span class="kp">trunk_workers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">trunk_size</span> <span class="o">=</span> <span class="n">job_size</span><span class="p">,</span> <span class="kp">walltime</span> <span class="o">=</span> <span class="s1">&#39;10m&#39;</span><span class="p">,</span> <span class="kp">mem</span> <span class="o">=</span> <span class="s1">&#39;2G&#39;</span><span class="p">,</span> <span class="kp">cores</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">tags</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{step_name}_{_output:bn}&#39;</span>
+
+<span class="kn">python3:</span> <span class="n">expand</span><span class="o">=</span><span class="s2">&quot;${ }&quot;</span>
+    <span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+    <span class="n">A1</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_table</span><span class="p">(</span><span class="s2">&quot;${prior_file}&quot;</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;gzip&#39;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;\s+&quot;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+    <span class="n">A1</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ID&quot;</span><span class="p">,</span><span class="s2">&quot;VALUE&quot;</span><span class="p">]</span>
+    <span class="n">S3</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_table</span><span class="p">(</span><span class="s2">&quot;${_input[&#39;summary_stats&#39;]}&quot;</span><span class="p">,</span><span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;gzip&#39;</span><span class="p">)</span>
+    <span class="c1"># have to drop duplicates in A2 because in some files there are duplicates!</span>
+    <span class="n">A2</span> <span class="o">=</span> <span class="n">A1</span><span class="p">[</span><span class="n">A1</span><span class="p">[</span><span class="s2">&quot;ID&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">S3</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span><span class="mi">0</span><span class="p">])][[</span><span class="s2">&quot;ID&quot;</span><span class="p">,</span><span class="s2">&quot;VALUE&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">S3</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span><span class="mi">0</span><span class="p">])</span> <span class="o">!=</span> <span class="nb">set</span><span class="p">(</span><span class="n">A2</span><span class="p">[</span><span class="s2">&quot;ID&quot;</span><span class="p">]):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;SNPs in summary statistics and annotation are not identical.&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">A2</span> <span class="o">=</span> <span class="n">A2</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;ID&quot;</span><span class="p">)</span>
+        <span class="n">A2</span> <span class="o">=</span> <span class="n">A2</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">S3</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">A2</span> <span class="o">=</span> <span class="n">A2</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+    <span class="n">A2</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s2">&quot;${_output}&quot;</span><span class="p">,</span><span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">header</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;gzip&#39;</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Run-preprocessing-pipeline">Run preprocessing pipeline<a class="anchor-link" href="#Run-preprocessing-pipeline">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>eQTL data example run:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="n">sos</span> <span class="n">run</span> <span class="n">workflow</span><span class="o">/</span><span class="n">summary_statistics_wrangler</span><span class="o">.</span><span class="n">ipynb</span> <span class="o">--</span><span class="n">reference</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">gaow</span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="mi">19</span><span class="o">-</span><span class="n">Dec</span><span class="o">-</span><span class="mi">2018</span><span class="o">/</span><span class="mi">1</span><span class="n">KG_EUR</span><span class="o">/</span><span class="n">test</span><span class="o">.</span><span class="n">manifest</span> \
+        <span class="o">--</span><span class="n">loci</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">gaow</span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="mi">19</span><span class="o">-</span><span class="n">Dec</span><span class="o">-</span><span class="mi">2018</span><span class="o">/</span><span class="n">metasoft</span><span class="o">/</span><span class="n">one_loci</span><span class="o">.</span><span class="n">txt</span> \
+        <span class="o">--</span><span class="n">ss</span><span class="o">-</span><span class="n">data</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">gaow</span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="mi">19</span><span class="o">-</span><span class="n">Dec</span><span class="o">-</span><span class="mi">2018</span><span class="o">/</span><span class="n">metasoft</span><span class="o">/</span><span class="n">gtex_metasoft_summary_stats</span><span class="o">.</span><span class="n">gz</span> \
+        <span class="o">--</span><span class="n">columns</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span> <span class="mi">4</span> <span class="mi">6</span> <span class="mi">7</span> <span class="o">--</span><span class="n">loci</span><span class="o">-</span><span class="n">column</span> <span class="mi">5</span> <span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">header</span> \
+        <span class="o">-</span><span class="n">q</span> <span class="n">none</span> <span class="o">-</span><span class="n">j</span> <span class="mi">8</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>GWAS data example run (with annotations)</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="n">sos</span> <span class="n">run</span> <span class="n">workflow</span><span class="o">/</span><span class="n">summary_statistics_wrangler</span><span class="o">.</span><span class="n">ipynb</span> <span class="o">--</span><span class="n">reference</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">gaow</span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="mi">19</span><span class="o">-</span><span class="n">Dec</span><span class="o">-</span><span class="mi">2018</span><span class="o">/</span><span class="mi">1</span><span class="n">KG_EUR</span><span class="o">/</span><span class="n">test</span><span class="o">.</span><span class="n">manifest</span> \
+        <span class="o">--</span><span class="n">loci</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">gaow</span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="mi">19</span><span class="o">-</span><span class="n">Dec</span><span class="o">-</span><span class="mi">2018</span><span class="o">/</span><span class="n">SCZ</span><span class="o">/</span><span class="n">chunks</span><span class="o">.</span><span class="n">list</span> \
+        <span class="o">--</span><span class="n">ss</span><span class="o">-</span><span class="n">data</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">gaow</span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="mi">19</span><span class="o">-</span><span class="n">Dec</span><span class="o">-</span><span class="mi">2018</span><span class="o">/</span><span class="n">SCZ</span><span class="o">/</span><span class="n">Summary_statistics</span><span class="o">.</span><span class="n">gz</span> \
+        <span class="o">--</span><span class="n">columns</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span> <span class="mi">4</span> <span class="mi">6</span> <span class="mi">7</span> <span class="o">--</span><span class="n">adjust</span><span class="o">-</span><span class="n">panel</span><span class="o">-</span><span class="n">position</span> <span class="mi">1</span> \
+        <span class="o">--</span><span class="n">annotation</span> <span class="n">atac</span><span class="o">-</span><span class="n">seq</span><span class="p">:</span><span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">gaow</span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="mi">19</span><span class="o">-</span><span class="n">Dec</span><span class="o">-</span><span class="mi">2018</span><span class="o">/</span><span class="n">SCZ</span><span class="o">/</span><span class="n">Annotation_atac</span><span class="o">-</span><span class="n">seq</span><span class="o">.</span><span class="n">gz</span> \
+        <span class="o">-</span><span class="n">q</span> <span class="n">none</span> <span class="o">-</span><span class="n">j</span> <span class="mi">8</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><strong>For UChicago midway users</strong>: to run these pipelines on RCC cluster, please take a look at <code>midway2.yml</code> file (found in this repository), modify it as you see fit, and replace <code>-q none -j 8</code> with:</p>
+
+<pre><code>-c workflow/midway2.yml -q midway2 -J 40</code></pre>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Results-preview">Results preview<a class="anchor-link" href="#Results-preview">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Reference-panel-matching-summary">Reference panel matching summary<a class="anchor-link" href="#Reference-panel-matching-summary">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[12]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="o">%</span><span class="n">preview</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">gaow</span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="mi">19</span><span class="o">-</span><span class="n">Dec</span><span class="o">-</span><span class="mi">2018</span><span class="o">/</span><span class="n">SCZ</span><span class="o">/</span><span class="n">Summary_statistics</span><span class="o">/</span><span class="n">chr9_84630941_84813641</span><span class="o">/</span><span class="n">chr9_84630941_84813641</span><span class="o">.</span><span class="n">allele_flip</span><span class="o">.</span><span class="n">log</span> <span class="o">-</span><span class="n">n</span> <span class="o">--</span><span class="n">limit</span> <span class="mi">20</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+<div class="output_html rendered_html output_subarea ">
+<div class="sos_hint">%preview /home/gaow/tmp/19-Dec-2018/SCZ/Summary_statistics/chr9_84630941_84813641.allele_flip.log</div>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+<div class="output_html rendered_html output_subarea ">
+<div class="sos_hint">> /home/gaow/tmp/19-Dec-2018/SCZ/Summary_statistics/chr9_84630941_84813641.allele_flip.log (271 B):</div>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+<div class="output_html rendered_html output_subarea ">
+<div class="sos_hint">13 lines</div>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>2018-12-21 12:48:22.194216 
+
+SAMPLE: S1	LENGTH:184
+SAMPLE: G1	LENGTH:1034
+SAMPLE: S2	LENGTH:182
+SAMPLE: G2	LENGTH:182
+SAMPLE: S3	LENGTH:182
+equal:94
+flipped by strand:0
+flipped by reference and alternative:88
+total adjusted:0
+total mismatch:0
+total A/T and C/G removed:0</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Summary-statistics-matrix-S3">Summary statistics matrix S3<a class="anchor-link" href="#Summary-statistics-matrix-S3">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[13]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="o">%</span><span class="n">preview</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">gaow</span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="mi">19</span><span class="o">-</span><span class="n">Dec</span><span class="o">-</span><span class="mi">2018</span><span class="o">/</span><span class="n">SCZ</span><span class="o">/</span><span class="n">Summary_statistics</span><span class="o">/</span><span class="n">chr9_84630941_84813641</span><span class="o">/</span><span class="n">chr9_84630941_84813641</span><span class="o">.</span><span class="n">summary_stats</span><span class="o">.</span><span class="n">txt</span> <span class="o">-</span><span class="n">n</span> <span class="o">-</span><span class="n">l</span> <span class="mi">10</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+<div class="output_html rendered_html output_subarea ">
+<div class="sos_hint">%preview /home/gaow/tmp/19-Dec-2018/SCZ/Summary_statistics/chr9_84630941_84813641.summary_stats.txt</div>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+<div class="output_html rendered_html output_subarea ">
+<div class="sos_hint">> /home/gaow/tmp/19-Dec-2018/SCZ/Summary_statistics/chr9_84630941_84813641.summary_stats.txt (6.0 KiB):</div>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+<div class="output_html rendered_html output_subarea ">
+<div class="sos_hint">182 lines (10 displayed, see --limit)</div>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>9:84631606:A:G	-0.024303	0.0176
+9:84632950:A:G	0.021595	0.0174
+9:84635599:A:G	-0.0587	0.0555
+9:84636858:A:T	0.011901	0.025
+9:84636881:A:G	0.022104	0.0174
+9:84638794:T:C	-0.038596	0.0337
+9:84638880:A:C	-0.121004	0.0643
+9:84639829:A:G	-0.058703	0.0558
+9:84640522:A:G	0.024605000000000002	0.0175
+9:84640717:T:C	-0.046501999999999995	0.0345</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Annotation/prior-matrix-A2">Annotation/prior matrix A2<a class="anchor-link" href="#Annotation/prior-matrix-A2">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[14]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="o">%</span><span class="n">preview</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">gaow</span><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="mi">19</span><span class="o">-</span><span class="n">Dec</span><span class="o">-</span><span class="mi">2018</span><span class="o">/</span><span class="n">SCZ</span><span class="o">/</span><span class="n">Summary_statistics</span><span class="o">/</span><span class="n">chr9_84630941_84813641</span><span class="o">/</span><span class="n">chr9_84630941_84813641</span><span class="o">.</span><span class="n">Annotation_atac</span><span class="o">-</span><span class="n">seq</span><span class="o">.</span><span class="n">txt</span> <span class="o">-</span><span class="n">n</span> <span class="o">-</span><span class="n">l</span> <span class="mi">10</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+<div class="output_html rendered_html output_subarea ">
+<div class="sos_hint">%preview /home/gaow/tmp/19-Dec-2018/SCZ/Summary_statistics/chr9_84630941_84813641.Annotation_atac-seq.txt</div>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+<div class="output_html rendered_html output_subarea ">
+<div class="sos_hint">> /home/gaow/tmp/19-Dec-2018/SCZ/Summary_statistics/chr9_84630941_84813641.Annotation_atac-seq.txt (4.6 KiB):</div>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+<div class="output_html rendered_html output_subarea ">
+<div class="sos_hint">182 lines (10 displayed, see --limit)</div>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>9:84631606:A:G	7.3588e-05
+9:84632950:A:G	7.3588e-05
+9:84635599:A:G	7.3588e-05
+9:84636858:A:T	7.3588e-05
+9:84636881:A:G	7.3588e-05
+9:84638794:T:C	7.3588e-05
+9:84638880:A:C	7.3588e-05
+9:84639829:A:G	0.00023664
+9:84640522:A:G	7.3588e-05
+9:84640717:T:C	7.3588e-05</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="&#119877;:-LD-matrix">&#119877;: LD matrix<a class="anchor-link" href="#&#119877;:-LD-matrix">&#182;</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[15]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">read_table</span><span class="p">(</span><span class="s1">&#39;/home/gaow/tmp/19-Dec-2018/SCZ/Summary_statistics/chr9_84630941_84813641/chr9_84630941_84813641.LD.txt&#39;</span><span class="p">,</span> <span class="n">sep</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="n">header</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">nrows</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[15]:</div>
+
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+      <th>8</th>
+      <th>9</th>
+      <th>...</th>
+      <th>172</th>
+      <th>173</th>
+      <th>174</th>
+      <th>175</th>
+      <th>176</th>
+      <th>177</th>
+      <th>178</th>
+      <th>179</th>
+      <th>180</th>
+      <th>181</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1.00000</td>
+      <td>-0.16511</td>
+      <td>-0.08450</td>
+      <td>-0.05728</td>
+      <td>-0.16511</td>
+      <td>-0.09862</td>
+      <td>0.26204</td>
+      <td>-0.08450</td>
+      <td>-0.16958</td>
+      <td>-0.09553</td>
+      <td>...</td>
+      <td>0.19386</td>
+      <td>0.23134</td>
+      <td>0.28432</td>
+      <td>-0.09078</td>
+      <td>-0.13401</td>
+      <td>-0.06267</td>
+      <td>0.17942</td>
+      <td>-0.13495</td>
+      <td>0.22525</td>
+      <td>0.36580</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>-0.16511</td>
+      <td>1.00000</td>
+      <td>0.35094</td>
+      <td>-0.12045</td>
+      <td>1.00000</td>
+      <td>-0.08884</td>
+      <td>-0.05748</td>
+      <td>0.35094</td>
+      <td>0.99163</td>
+      <td>-0.08591</td>
+      <td>...</td>
+      <td>-0.08443</td>
+      <td>0.00125</td>
+      <td>-0.02916</td>
+      <td>0.70175</td>
+      <td>-0.08891</td>
+      <td>0.29019</td>
+      <td>0.00745</td>
+      <td>-0.07106</td>
+      <td>-0.12696</td>
+      <td>-0.04784</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>-0.08450</td>
+      <td>0.35094</td>
+      <td>1.00000</td>
+      <td>-0.06756</td>
+      <td>0.35094</td>
+      <td>-0.05645</td>
+      <td>-0.02924</td>
+      <td>1.00000</td>
+      <td>0.35389</td>
+      <td>-0.05572</td>
+      <td>...</td>
+      <td>-0.11853</td>
+      <td>0.27991</td>
+      <td>-0.02222</td>
+      <td>-0.02840</td>
+      <td>-0.04367</td>
+      <td>0.04285</td>
+      <td>0.29319</td>
+      <td>0.00498</td>
+      <td>-0.04503</td>
+      <td>-0.04552</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>-0.05728</td>
+      <td>-0.12045</td>
+      <td>-0.06756</td>
+      <td>1.00000</td>
+      <td>-0.12045</td>
+      <td>-0.00022</td>
+      <td>-0.05648</td>
+      <td>-0.06756</td>
+      <td>-0.11798</td>
+      <td>-0.01960</td>
+      <td>...</td>
+      <td>-0.19109</td>
+      <td>-0.01319</td>
+      <td>0.00848</td>
+      <td>-0.08558</td>
+      <td>-0.08434</td>
+      <td>-0.01702</td>
+      <td>-0.01805</td>
+      <td>-0.06870</td>
+      <td>0.00707</td>
+      <td>-0.08792</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>-0.16511</td>
+      <td>1.00000</td>
+      <td>0.35094</td>
+      <td>-0.12045</td>
+      <td>1.00000</td>
+      <td>-0.08884</td>
+      <td>-0.05748</td>
+      <td>0.35094</td>
+      <td>0.99163</td>
+      <td>-0.08591</td>
+      <td>...</td>
+      <td>-0.08443</td>
+      <td>0.00125</td>
+      <td>-0.02916</td>
+      <td>0.70175</td>
+      <td>-0.08891</td>
+      <td>0.29019</td>
+      <td>0.00745</td>
+      <td>-0.07106</td>
+      <td>-0.12696</td>
+      <td>-0.04784</td>
+    </tr>
+  </tbody>
+</table>
+<p>5 rows × 182 columns</p>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<hr>
+&copy 2020-current Gao Wang and others, Department of Neurology at Columbia University
+<p><small>Exported from <a href="http://github.com/cumc/bioworkflows/blob/ff78415809fd8b1cca40ed7169b361c2dbfecf46/fine-mapping/summary_statistics_wrangler.ipynb"><code>fine-mapping/summary_statistics_wrangler.ipynb</code></a> committed by Gao Wang on Wed Jul 1 19:39:25 2020 <a href="http://github.com/cumc/bioworkflows/commit/ff78415809fd8b1cca40ed7169b361c2dbfecf46">revision 1, ff78415</a> <a href="https://stephenslab.github.io/ipynb-website/notes.html#Note-about-commit-ids"><span class="fa fa-question-circle"></span></a></small></p>
+</div>
+</div>
+</body>
+</html>
