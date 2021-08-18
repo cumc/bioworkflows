@@ -2,7 +2,8 @@
 
 Author: Mengyu Zhang, Gao Wang
 
-This repo shows the work on ldpred2 pipeline developed by Mengyu Zhang and Gao Wang. The pipeline is built on R package `bigsnpr` developed by Florian Privé et al. 
+This repo shows the work on ldpred2 pipeline developed by Mengyu Zhang with input from Gao Wang. 
+The pipeline is built on R package `bigsnpr` developed by Florian Privé et al. 
 
 The overall workflow shown in `ldpred.ipynb` is 
 
@@ -14,4 +15,4 @@ The overall workflow shown in `ldpred.ipynb` is
 
 4. predict polygenic risk score
 
-`MVP.ipynb` shows the commands for analyzing Million Veteran Program data and related results.
+`HDL_example.ipynb` shows the commands for analyzing real-world data from Million Veteran Program and UK Biobank.

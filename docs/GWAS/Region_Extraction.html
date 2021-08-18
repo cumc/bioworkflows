@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="ipynb_website:version" content="0.9.7" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="stylesheet" type="text/css" href="../css/jt.css">
+
+<link rel="stylesheet" type="text/css" href="../css/toc2.css">
+
+<link href="../site_libs/jqueryui-1.11.4/jquery-ui.css">
+<link rel="stylesheet" href="../site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="../site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.9.1/jquery-ui.min.js"></script>
+<script src="../site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="../site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="../site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+
+<link rel="stylesheet"
+      href="../site_libs/highlightjs/null.min.css"
+      type="text/css" />
+
+<script src="../site_libs/highlightjs/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+<script src="../js/doc_toc.js"></script>
+<script src="../js/docs.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX", "output/HTML-CSS"],
+        tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+        displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+        processEscapes: true
+        },
+        "HTML-CSS": {
+            preferredFont: "TeX",
+            availableFonts: ["TeX"],
+            styles: {
+                scale: 110,
+                ".MathJax_Display": {
+                    "font-size": "110%",
+                }
+            }
+        }
+    });
+</script>
+<script>
+function filterDataFrame(id) {
+    var input = document.getElementById("search_" + id);
+    var filter = input.value.toUpperCase();
+    var table = document.getElementById("dataframe_" + id);
+    var tr = table.getElementsByTagName("tr");
+    // Loop through all table rows, and hide those who don't match the search query
+    for (var i = 1; i < tr.length; i++) {
+        for (var j = 0; j < tr[i].cells.length; ++j) {
+            var matched = false;
+            if (tr[i].cells[j].innerHTML.toUpperCase().indexOf(filter) != -1) {
+                tr[i].style.display = "";
+                matched = true
+                break;
+            }
+            if (!matched)
+                tr[i].style.display = "none";
+        }
+    }
+}
+function sortDataFrame(id, n, dtype) {
+    var table = document.getElementById("dataframe_" + id);
+    var tb = table.tBodies[0]; // use `<tbody>` to ignore `<thead>` and `<tfoot>` rows
+    var tr = Array.prototype.slice.call(tb.rows, 0); // put rows into array
+    if (dtype === 'numeric') {
+        var fn = function(a, b) { 
+            return parseFloat(a.cells[n].textContent) <= parseFloat(b.cells[n].textContent) ? -1 : 1;
+        }
+    } else {
+        var fn = function(a, b) {
+            var c = a.cells[n].textContent.trim().localeCompare(b.cells[n].textContent.trim()); 
+            return c > 0 ? 1 : (c < 0 ? -1 : 0) }
+    }
+    var isSorted = function(array, fn) {
+        if (array.length < 2)
+            return 1;
+        var direction = fn(array[0], array[1]); 
+        for (var i = 1; i < array.length - 1; ++i) {
+            var d = fn(array[i], array[i+1]);
+            if (d == 0)
+                continue;
+            else if (direction == 0)
+                direction = d;
+            else if (direction != d)
+                return 0;
+            }
+        return direction;
+    }
+    var sorted = isSorted(tr, fn);
+    if (sorted == 1 || sorted == -1) {
+        // if sorted already, reverse it
+        for(var i = tr.length - 1; i >= 0; --i)
+            tb.appendChild(tr[i]); // append each row in order
+    } else {
+        tr = tr.sort(fn);
+        for(var i = 0; i < tr.length; ++i)
+            tb.appendChild(tr[i]); // append each row in order
+    }
+}
+</script>
+
+<script>
+$( document ).ready(function(){
+            var cfg={'threshold':3,     // depth of toc (number of levels)
+             'number_sections': false,
+             'toc_cell': false,          // useless here
+             'toc_window_display': true, // display the toc window
+             "toc_section_display": "block", // display toc contents in the window
+             'sideBar':true,       // sidebar or floating window
+             'navigate_menu':false       // navigation menu (only in liveNotebook -- do not change)
+            }
+            var st={};                  // some variables used in the script
+            st.rendering_toc_cell = false;
+            st.config_loaded = false;
+            st.extension_initialized=false;
+            st.nbcontainer_marginleft = $('#notebook-container').css('margin-left')
+            st.nbcontainer_marginright = $('#notebook-container').css('margin-right')
+            st.nbcontainer_width = $('#notebook-container').css('width')
+            st.oldTocHeight = undefined
+            st.cell_toc = undefined;
+            st.toc_index=0;
+            // fire the main function with these parameters
+            table_of_contents(cfg, st);
+            var file=GWASDict[$("h1:first").attr("id")];
+            $("#toc-level0 a").css("color","#126dce");
+            $('a[href="#'+$("h1:first").attr("id")+'"]').hide()
+            var docs=GWASArray;
+            var docs_map=GWASArrayMap;
+            var pos=GWASArray.indexOf(file);
+            for (var a=pos;a>=0;a--){
+                  $('<li><a href="'+docs[a]+'.html"><font color="#073642"><b>'+docs_map[docs[a]].replace(/_/g," ")+'</b></font></a></li>').insertBefore("#toc-level0 li:eq(0)");
+            }
+            $('a[href="'+file+'.html'+'"]').css("color","#126dce");
+            for (var a=pos+1;a<docs.length;a++){
+                  $(".toc #toc-level0").append('<li><a href="'+docs[a]+'.html"><font color="#073642"><b>'+docs_map[docs[a]].replace(/_/g," ")+'</b></font></a></li>');
+            }
+            // $("#toc-header").hide(); // comment out because it prevents search bar from displaying
+    });
+</script>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+  // mark it active
+  menuAnchor.parent().addClass('active');
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+<div class="container-fluid main-container">
+<!-- tabsets -->
+<script src="../site_libs/navigation-1.1/tabsets.js"></script>
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+
+
+<title>Some computational genomics workflows</title>
+
+<style type = "text/css">
+body {
+  font-family: "Droid Sans";
+  padding-top: 66px;
+  padding-bottom: 40px;
+}
+</style>
+</head>
+
+<body>
+<div tabindex="-1" id="notebook" class="border-box-sizing">
+<div class="container" id="notebook-container">
+
+<!-- code folding -->
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="../index.html">Some computational genomics workflows</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        
+<li>
+  <a href="../index.html">Overview</a>
+</li>
+        
+      </ul>
+        
+<ul class="nav navbar-nav navbar-right">
+<li>
+   <a href="http://github.com/cumc/bioworkflows"> <span class="fa fa-github"></span> </a>
+</li>
+</ul>
+        
+      </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Extracting-data-for-genomic-regions-of-interest">Extracting data for genomic regions of interest<a class="anchor-link" href="#Extracting-data-for-genomic-regions-of-interest">&#182;</a></h1>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Aim">Aim<a class="anchor-link" href="#Aim">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>To extract the summary statistics and genotype on specific genomic regions and calculate their LD matrix.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Pre-requisites">Pre-requisites<a class="anchor-link" href="#Pre-requisites">&#182;</a></h2><p>Make sure you install the pre-requisited before running this notebook:</p>
+
+<pre><code>pip install pybgen
+pip install bed-reader
+pip install scipy</code></pre>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Input-and-Output">Input and Output<a class="anchor-link" href="#Input-and-Output">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Input">Input<a class="anchor-link" href="#Input">&#182;</a></h3><ul>
+<li><code>--region-file</code>, including a list of regions<ul>
+<li>Each locus will be represented by one line in the region file with 3 columns chr, start, and end. e.g. <code>7 27723990 28723990</code></li>
+</ul>
+</li>
+<li><code>--geno-path</code>, the path of a genotype inventory, which lists the path of all genotype file in <code>bgen</code> format or in <code>plink</code> format.<ul>
+<li>The list is a file with 2 columns: <code>chr genotype_file_chr.ext</code>. </li>
+<li>The first column is chromosome ID, the 2nd file is genotype for that chromosome.</li>
+<li>When chromosome ID is 0, it implies that the genotype file contains all the genotypes.</li>
+</ul>
+</li>
+<li><code>--pheno-path</code>, the path of a phenotype.<ul>
+<li>The phenotype file should have a column with the name <code>IID</code>, which is used to represent the sample ID.</li>
+</ul>
+</li>
+<li><code>--bgen-sample-path</code>, the path of a file including the sample in the <code>bgen</code> files.<ul>
+<li>If the genotype file is in <code>bgen</code> format, you should provide this path.</li>
+</ul>
+</li>
+<li><code>--sumstats-path</code>, the path of the GWAS file, including all summary statistics (eg, $\hat{\beta}$, $SE(\hat{\beta})$ and p-values)<ul>
+<li>These summary statistics should contain at least these columns: <code>chrom, pos, ref, alt, snp_id, bhat, sbhat, p</code></li>
+</ul>
+</li>
+<li><code>--unrelated-samples</code>, the file path of unrelated samples with a column named <code>IID</code>.   </li>
+<li><code>--cwd</code>, the path of output directory</li>
+</ul>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Output">Output<a class="anchor-link" href="#Output">&#182;</a></h3><ul>
+<li><code>rg_stat</code>, the reginonal summary stats<ul>
+<li>The rowname is the variant ID.</li>
+<li>It should contain at least the following columns: <code>CHR, BP, SNP, ALT, REF, BETA, SE, Z, P</code>.</li>
+</ul>
+</li>
+<li><code>rg_geno</code>,the regional genotypes<ul>
+<li>The rowname is the variant ID, which should match with the rowname of <code>rg_stat</code>.</li>
+<li>The column name is the sample's IID, which is sorted by the sample in phenotype.</li>
+</ul>
+</li>
+<li><code>pld</code>, the regional approximate population LD calculated by unrelated individuals</li>
+<li><code>sld</code>, the regional approximate sample LD calcualted by unrelated individuals in a phenotype.</li>
+</ul>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Workflow-usage">Workflow usage<a class="anchor-link" href="#Workflow-usage">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Using our minimal working example data-set where we have already generated results for fastGWA,</p>
+<h3 id="For-bgen-format-input">For <code>bgen</code> format input<a class="anchor-link" href="#For-bgen-format-input">&#182;</a></h3>
+<pre><code>sos run LMM.ipynb fastGWA \
+    --cwd output \
+    --bfile data/genotypes.bed \
+    --sampleFile data/imputed_genotypes.sample \
+    --genoFile data/imputed_genotypes_chr*.bgen \
+    --phenoFile data/phenotypes.txt \
+    --formatFile data/fastGWA_template.yml \
+    --phenoCol BMI \
+    --covarCol SEX \
+    --qCovarCol AGE \
+    --numThreads 1 \
+    --bgenMinMAF 0.001 \
+    --bgenMinINFO 0.1 \
+    --parts 2 \
+    --p-filter 1</code></pre>
+
+<pre><code>sos run Region_Extraction.ipynb \
+    --cwd candidate_loci \
+    --region-file data/regions.txt \
+    --pheno-path data/phenotypes.txt \
+    --geno-path data/genotype_inventory.txt \
+    --bgen-sample-path data/imputed_genotypes.sample \
+    --sumstats-path output/phenotypes_BMI.fastGWA.snp_stats.gz \
+    --unrelated-samples data/unrelated_samples.txt \
+    --job-size 1</code></pre>
+<h3 id="For-PLINK-format-input">For PLINK format input<a class="anchor-link" href="#For-PLINK-format-input">&#182;</a></h3>
+<pre><code>sos run LMM.ipynb fastGWA \
+    --cwd output \
+    --bfile data/genotypes.bed \
+    --genoFile data/genotypes21_22.bed \
+    --phenoFile data/phenotypes.txt \
+    --formatFile data/fastGWA_template.yml \
+    --phenoCol BMI \
+    --covarCol SEX \
+    --qCovarCol AGE \
+    --numThreads 1 \
+    --bgenMinMAF 0.001 \
+    --bgenMinINFO 0.1 \
+    --parts 2 \
+    --p-filter 1</code></pre>
+
+<pre><code>sos run Region_Extraction.ipynb \
+    --cwd candidate_loci \
+    --region-file data/regions_plink.txt \
+    --pheno-path data/phenotypes.txt \
+    --geno-path data/genotype_inventory_plink.txt \
+    --bgen-sample-path data/imputed_genotypes.sample \
+    --sumstats-path output/phenotypes_BMI.fastGWA.snp_stats.gz \
+    --unrelated-samples data/unrelated_samples.txt \
+    --job-size 1</code></pre>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Workflow-codes">Workflow codes<a class="anchor-link" href="#Workflow-codes">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[2]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="p">[</span><span class="k">global</span><span class="p">]</span>
+<span class="c1"># Work directory where output will be saved to</span>
+<span class="kn">parameter:</span> <span class="n">cwd</span> <span class="o">=</span> <span class="n">path</span>
+<span class="c1"># Region specifications</span>
+<span class="kn">parameter:</span> <span class="n">region_file</span> <span class="o">=</span> <span class="n">path</span>
+<span class="c1"># Genotype file inventory</span>
+<span class="kn">parameter:</span> <span class="n">geno_path</span> <span class="o">=</span> <span class="n">path</span>
+<span class="c1"># Phenotype path</span>
+<span class="kn">parameter:</span> <span class="n">pheno_path</span> <span class="o">=</span> <span class="n">path</span>
+<span class="c1"># Sample file path, for bgen format</span>
+<span class="kn">parameter:</span> <span class="n">bgen_sample_path</span> <span class="o">=</span> <span class="n">path</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+<span class="c1"># Path to summary stats file</span>
+<span class="kn">parameter:</span> <span class="n">sumstats_path</span> <span class="o">=</span> <span class="n">path</span>
+<span class="c1"># Path to summary stats format configuration</span>
+<span class="kn">parameter:</span> <span class="n">format_config_path</span> <span class="o">=</span> <span class="n">path</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+<span class="c1"># Path to samples of unrelated individuals</span>
+<span class="kn">parameter:</span> <span class="n">unrelated_samples</span> <span class="o">=</span> <span class="n">path</span>
+<span class="c1"># Number of tasks to run in each job on cluster</span>
+<span class="kn">parameter:</span> <span class="n">job_size</span> <span class="o">=</span> <span class="nb">int</span>
+
+<span class="n">fail_if</span><span class="p">(</span><span class="ow">not</span> <span class="n">region_file</span><span class="o">.</span><span class="n">is_file</span><span class="p">(),</span> <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Cannot find regions to extract. Please specify them using ``--region-file`` option.&#39;</span><span class="p">)</span>
+<span class="c1"># Load all regions of interest. Each item in the list will be a region: (chr, start, end)</span>
+<span class="n">regions</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="nb">tuple</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">())</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">open</span><span class="p">(</span><span class="n">region_file</span><span class="p">)</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()]))</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Some-utility-functions">Some utility functions<a class="anchor-link" href="#Some-utility-functions">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[1]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="p">[</span><span class="n">default_1</span> <span class="p">(</span><span class="n">export</span> <span class="n">utils</span> <span class="n">script</span><span class="p">)]</span>
+<span class="kn">depends:</span> <span class="n">Py_Module</span><span class="p">(</span><span class="s1">&#39;xxhash&#39;</span><span class="p">),</span> <span class="n">Py_Module</span><span class="p">(</span><span class="s1">&#39;pandas&#39;</span><span class="p">),</span> <span class="n">Py_Module</span><span class="p">(</span><span class="s1">&#39;dask&#39;</span><span class="p">),</span> <span class="n">Py_Module</span><span class="p">(</span><span class="s1">&#39;scipy&#39;</span><span class="p">)</span>
+<span class="kn">parameter:</span> <span class="n">scan_window</span> <span class="o">=</span> <span class="mi">10000000</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{cwd:a}/utils.py&#39;</span>
+<span class="kn">report:</span> <span class="n">expand</span> <span class="o">=</span> <span class="s1">&#39;${ }&#39;</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{cwd:a}/utils.py&#39;</span>
+
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+    <span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+    <span class="kn">import</span> <span class="nn">dask.dataframe</span> <span class="kn">as</span> <span class="nn">dd</span>
+    <span class="kn">from</span> <span class="nn">xxhash</span> <span class="kn">import</span> <span class="n">xxh32</span> <span class="k">as</span> <span class="n">xxh</span>
+
+    <span class="k">def</span> <span class="nf">shorten_id</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">x</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">30</span> <span class="k">else</span> <span class="n">f</span><span class="s2">&quot;{x.split(&#39;_&#39;)[0]}_{xxh(x).hexdigest()}&quot;</span>
+
+    <span class="k">def</span> <span class="nf">read_sumstat</span><span class="p">(</span><span class="nb">file</span><span class="p">,</span> <span class="n">config_file</span><span class="p">):</span>
+        <span class="n">sumstats</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="nb">file</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;gzip&#39;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">quotechar</span><span class="o">=</span><span class="s1">&#39;&quot;&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">config_file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">yaml</span>
+            <span class="n">config</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">config_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">))</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">sumstats</span> <span class="o">=</span> <span class="n">sumstats</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span><span class="nb">list</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">values</span><span class="p">())]</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;According to {config_file}, input summary statistics should have the following columns: {list(config.values())}.&#39;</span><span class="p">)</span>
+            <span class="n">sumstats</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">sumstats</span><span class="o">.</span><span class="n">SNP</span> <span class="o">=</span> <span class="n">sumstats</span><span class="o">.</span><span class="n">SNP</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">shorten_id</span><span class="p">)</span>
+        <span class="n">sumstats</span><span class="o">.</span><span class="n">CHR</span> <span class="o">=</span> <span class="n">sumstats</span><span class="o">.</span><span class="n">CHR</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">sumstats</span><span class="o">.</span><span class="n">POS</span> <span class="o">=</span> <span class="n">sumstats</span><span class="o">.</span><span class="n">POS</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">sumstats</span>
+
+    <span class="k">def</span> <span class="nf">regional_stats</span><span class="p">(</span><span class="n">sumstats</span><span class="p">,</span> <span class="n">region</span><span class="p">):</span>
+        <span class="n">ss</span> <span class="o">=</span> <span class="n">sumstats</span><span class="p">[(</span><span class="n">sumstats</span><span class="o">.</span><span class="n">CHR</span> <span class="o">==</span> <span class="n">region</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">sumstats</span><span class="o">.</span><span class="n">POS</span> <span class="o">&gt;=</span> <span class="n">region</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">sumstats</span><span class="o">.</span><span class="n">POS</span> <span class="o">&lt;=</span> <span class="n">region</span><span class="p">[</span><span class="mi">2</span><span class="p">])]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">ss</span><span class="p">[</span><span class="s1">&#39;Z&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">p2z</span><span class="p">(</span><span class="n">ss</span><span class="o">.</span><span class="n">P</span><span class="p">,</span><span class="n">ss</span><span class="o">.</span><span class="n">BETA</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">ss</span>
+
+    <span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">norm</span>
+    <span class="k">def</span> <span class="nf">p2z</span><span class="p">(</span><span class="n">pval</span><span class="p">,</span><span class="n">beta</span><span class="p">,</span><span class="n">twoside</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">twoside</span><span class="p">:</span>
+            <span class="n">pval</span> <span class="o">=</span> <span class="n">pval</span><span class="o">/</span><span class="mi">2</span>
+        <span class="n">z</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">norm</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="n">pval</span><span class="p">))</span>
+        <span class="n">ind</span><span class="o">=</span><span class="n">beta</span><span class="o">&lt;</span><span class="mi">0</span>
+        <span class="n">z</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span><span class="o">=-</span><span class="n">z</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">z</span>
+
+    <span class="k">def</span> <span class="nf">plink_slice</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">region</span><span class="p">):</span>
+        <span class="n">bim</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">chrom</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">chromosome</span><span class="p">,</span> <span class="n">pos</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">bp_position</span><span class="p">,</span> <span class="n">a1</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">allele_2</span><span class="p">,</span> <span class="n">a0</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">allele_1</span><span class="p">))</span>
+        <span class="n">fam</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">fid</span><span class="o">=</span><span class="n">p</span><span class="o">.</span><span class="n">fid</span><span class="p">,</span><span class="n">iid</span><span class="o">=</span><span class="n">p</span><span class="o">.</span><span class="n">iid</span><span class="p">))</span>
+        <span class="c1"># see https://github.com/fastlmm/bed-reader</span>
+        <span class="n">variants</span> <span class="o">=</span> <span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">chromosome</span><span class="o">==</span><span class="nb">str</span><span class="p">(</span><span class="n">region</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">bp_position</span> <span class="o">&gt;=</span> <span class="n">region</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">bp_position</span> <span class="o">&lt;=</span> <span class="n">region</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">bim</span> <span class="o">=</span> <span class="n">bim</span><span class="p">[</span><span class="n">variants</span><span class="p">]</span>
+        <span class="n">bed</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">s_</span><span class="p">[:,</span><span class="n">variants</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+        <span class="k">return</span> <span class="n">bim</span><span class="p">,</span> <span class="n">fam</span><span class="p">,</span> <span class="n">bed</span>
+
+    <span class="k">def</span> <span class="nf">bgen_region</span><span class="p">(</span><span class="n">region</span><span class="p">,</span><span class="n">geno</span><span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float16&#39;</span><span class="p">):</span>
+        <span class="n">snps</span><span class="p">,</span><span class="n">genos</span><span class="o">=</span><span class="p">[],[]</span>
+        <span class="n">i</span><span class="o">=</span><span class="mi">0</span>
+        <span class="k">for</span> <span class="n">t</span><span class="p">,</span><span class="n">g</span> <span class="ow">in</span> <span class="n">geno</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">iter_variants_in_region</span><span class="p">(</span><span class="s1">&#39;0&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">region</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">if</span> <span class="n">region</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">&lt;</span><span class="mi">10</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">region</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span><span class="n">region</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">region</span><span class="p">[</span><span class="mi">2</span><span class="p">]):</span>
+            <span class="n">snps</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">chrom</span><span class="p">),</span><span class="n">t</span><span class="o">.</span><span class="kp">name</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="n">t</span><span class="o">.</span><span class="n">pos</span><span class="p">,</span><span class="n">t</span><span class="o">.</span><span class="n">a1</span><span class="p">,</span><span class="n">t</span><span class="o">.</span><span class="n">a2</span><span class="p">,</span><span class="n">i</span><span class="p">])</span>
+            <span class="n">genos</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">))</span>
+            <span class="n">i</span><span class="o">+=</span><span class="mi">1</span>
+        <span class="k">return</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">snps</span><span class="p">,</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;chrom&#39;</span><span class="p">,</span><span class="s1">&#39;snp&#39;</span><span class="p">,</span><span class="s1">&#39;cm&#39;</span><span class="p">,</span><span class="s1">&#39;pos&#39;</span><span class="p">,</span><span class="s1">&#39;a0&#39;</span><span class="p">,</span><span class="s1">&#39;a1&#39;</span><span class="p">,</span><span class="s1">&#39;i&#39;</span><span class="p">]),</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">genos</span><span class="p">))</span>
+    
+    <span class="k">def</span> <span class="nf">check_unique</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">variable</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">idx</span><span class="o">.</span><span class="n">duplicated</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;{variable} index has duplicated elements!&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">extract_region</span><span class="p">(</span><span class="n">org_region</span><span class="p">,</span> <span class="n">input_sumstats_path</span><span class="p">,</span> <span class="n">input_format_config</span><span class="p">,</span> <span class="n">geno_file</span><span class="p">,</span> <span class="n">input_pheno_path</span><span class="p">,</span> <span class="n">input_unrelated_samples</span><span class="p">,</span> <span class="n">output_sumstats</span><span class="p">,</span> <span class="n">output_genotype</span><span class="p">,</span> <span class="n">output_pld</span><span class="p">,</span> <span class="n">output_sld</span><span class="p">,</span> <span class="n">output_general</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">os</span>
+        
+        <span class="c1"># Load the file of summary statistics and standardize it.</span>
+        <span class="n">gwas</span> <span class="o">=</span> <span class="n">read_sumstat</span><span class="p">(</span><span class="n">input_sumstats_path</span><span class="p">,</span> <span class="n">input_format_config</span><span class="p">)</span>
+        <span class="c1"># Load phenotype file</span>
+        <span class="n">pheno</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">input_pheno_path</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">delim_whitespace</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">quotechar</span><span class="o">=</span><span class="s1">&#39;&quot;&#39;</span><span class="p">)</span>
+        <span class="c1"># Load unrelated sample file</span>
+        <span class="n">unr</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">input_unrelated_samples</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">delim_whitespace</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">quotechar</span><span class="o">=</span><span class="s1">&#39;&quot;&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">geno_file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.bed&#39;</span><span class="p">):</span>
+            <span class="n">plink</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="kn">from</span> <span class="nn">bed_reader</span> <span class="kn">import</span> <span class="n">open_bed</span>
+            <span class="n">geno</span> <span class="o">=</span> <span class="n">open_bed</span><span class="p">(</span><span class="n">geno_file</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">geno_file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.bgen&#39;</span><span class="p">):</span>
+            <span class="n">plink</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="kn">from</span> <span class="nn">pybgen</span> <span class="kn">import</span> <span class="n">PyBGEN</span>
+            <span class="n">bgen</span> <span class="o">=</span> <span class="n">PyBGEN</span><span class="p">(</span><span class="n">geno_file</span><span class="p">)</span>
+            <span class="n">sample_file</span> <span class="o">=</span> <span class="n">geno_file</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.bgen&#39;</span><span class="p">,</span> <span class="s1">&#39;.sample&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">sample_file</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="err">$</span><span class="p">{</span><span class="n">bgen_sample_path</span><span class="p">:</span><span class="n">r</span><span class="p">}):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Cannot find the matching sample file ``{sample_file}`` for ``{geno_file}``.</span><span class="se">\n</span><span class="s2">You can specify path to sample file for all BGEN files using ``--bgen-sample-path``.&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">sample_file</span> <span class="o">=</span> <span class="err">$</span><span class="p">{</span><span class="n">bgen_sample_path</span><span class="p">:</span><span class="n">r</span><span class="p">}</span>
+            <span class="n">bgen_fam</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">sample_file</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">delim_whitespace</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">quotechar</span><span class="o">=</span><span class="s1">&#39;&quot;&#39;</span><span class="p">,</span><span class="n">skiprows</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">bgen_fam</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;fid&#39;</span><span class="p">,</span><span class="s1">&#39;iid&#39;</span><span class="p">,</span><span class="s1">&#39;missing&#39;</span><span class="p">,</span><span class="s1">&#39;sex&#39;</span><span class="p">]</span>
+            <span class="n">geno</span> <span class="o">=</span> <span class="p">[</span><span class="n">bgen</span><span class="p">,</span><span class="n">bgen_fam</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Plesae provide the genotype files with PLINK binary format or BGEN format&#39;</span><span class="p">)</span>
+
+        <span class="c1"># extraction starts here</span>
+        <span class="kn">import</span> <span class="nn">gc</span>
+        <span class="kn">import</span> <span class="nn">time</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">localtime</span><span class="p">()</span>
+        <span class="c1"># Extract the summary stat</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{time.strftime(&quot;%H:%M:%S&quot;, t)}: Extracting summary statistics ...&#39;</span><span class="p">)</span>
+        
+        <span class="c1"># chose the method of incrementing the regions by a certain amount and then doing all checking calculations to decrease</span>
+        <span class="c1"># the time it takes for execution and to decrease the likelihood of reaching the memory capacity</span>
+        
+        
+        <span class="n">region_inc</span> <span class="o">=</span> <span class="err">$</span><span class="p">{</span><span class="n">scan_window</span><span class="p">}</span> <span class="c1"># size of the incrementer we will be doing</span>
+        <span class="n">curr_region_lbound</span> <span class="o">=</span> <span class="n">org_region</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="c1"># the current left bound for the regions</span>
+        <span class="n">curr_region_rbound</span> <span class="o">=</span> <span class="n">org_region</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">region_inc</span> <span class="c1"># the current right bound for the regions</span>
+        
+        <span class="c1"># WILL NEED THESE FOR LD MATRIX AND ONWARD</span>
+        <span class="n">iid_ph</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">rg_stat_SNP</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">phenoIID</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">batch_id</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">pop_ld_ind</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">sample_ld_ind</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">while</span> <span class="n">curr_region_lbound</span> <span class="o">&lt;=</span> <span class="n">org_region</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span> <span class="c1"># since we want to increment, we want to make sure our left bound is less than max right</span>
+            <span class="c1"># check to see if right bound works</span>
+            <span class="k">if</span> <span class="n">curr_region_rbound</span> <span class="o">&lt;</span> <span class="n">org_region</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+                <span class="n">sub_region</span> <span class="o">=</span> <span class="p">(</span><span class="n">org_region</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">curr_region_lbound</span><span class="p">,</span> <span class="n">curr_region_rbound</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sub_region</span> <span class="o">=</span> <span class="p">(</span><span class="n">org_region</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">curr_region_lbound</span><span class="p">,</span> <span class="n">org_region</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+                
+            <span class="c1"># increment for the next iteration</span>
+            <span class="n">curr_region_lbound</span> <span class="o">+=</span> <span class="n">region_inc</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">curr_region_rbound</span> <span class="o">+=</span> <span class="n">region_inc</span> <span class="o">+</span> <span class="mi">1</span>
+            
+            <span class="c1"># call and do checks on rg_stat</span>
+            <span class="n">rg_stat</span> <span class="o">=</span> <span class="n">regional_stats</span><span class="p">(</span><span class="n">gwas</span><span class="p">,</span> <span class="n">region</span><span class="p">)</span> <span class="c1"># only calling on a fraction of the region</span>
+            <span class="n">rg_stat</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">rg_stat</span><span class="o">.</span><span class="n">CHR</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">rg_stat</span><span class="o">.</span><span class="n">POS</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">rg_stat</span><span class="o">.</span><span class="n">REF</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">rg_stat</span><span class="o">.</span><span class="n">ALT</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+            <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;The regional summary statistics of {sub_region[0]}_{sub_region[1]}_{sub_region[2]} has {len(rg_stat.index)} variants&#39;</span><span class="p">)</span>
+            <span class="n">check_unique</span><span class="p">(</span><span class="n">rg_stat</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="s2">&quot;Summary statistics&quot;</span><span class="p">)</span>
+            
+            <span class="c1"># geno, pheno, unr, and plink are defined prior to the while loop</span>
+            <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{time.strftime(&quot;%H:%M:%S&quot;, t)}: Extracting genotypes in {&quot;plink&quot; if plink else &quot;bgen&quot;} format ...&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">plink</span><span class="p">:</span>
+                <span class="n">rg_bim</span><span class="p">,</span><span class="n">rg_fam</span><span class="p">,</span><span class="n">rg_bed</span> <span class="o">=</span> <span class="n">plink_slice</span><span class="p">(</span><span class="n">geno</span><span class="p">,</span><span class="n">sub_region</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">rg_bim</span><span class="p">,</span><span class="n">rg_bed</span><span class="o">=</span><span class="n">bgen_region</span><span class="p">(</span><span class="n">sub_region</span><span class="p">,</span><span class="n">geno</span><span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float16&#39;</span><span class="p">)</span>
+                <span class="n">rg_fam</span> <span class="o">=</span> <span class="n">geno</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{time.strftime(&quot;%H:%M:%S&quot;, t)}: Checking SNP and sample IDs ...&#39;</span><span class="p">)</span>
+            <span class="c1"># FIXME: why do we have duplicates? Let&#39;s see in practice how many duplicates are reported. I hope none.</span>
+            <span class="n">rg_bim</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">rg_bim</span><span class="o">.</span><span class="n">chrom</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">rg_bim</span><span class="o">.</span><span class="n">pos</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">rg_bim</span><span class="o">.</span><span class="n">a1</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">rg_bim</span><span class="o">.</span><span class="n">a0</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+            <span class="n">check_unique</span><span class="p">(</span><span class="n">rg_bim</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="s1">&#39;SNPs in reference genotype&#39;</span><span class="p">)</span>
+            <span class="n">rg_fam</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">rg_fam</span><span class="o">.</span><span class="n">iid</span>
+            <span class="n">check_unique</span><span class="p">(</span><span class="n">rg_fam</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="s1">&#39;FAM info&#39;</span><span class="p">)</span>
+            <span class="n">rg_bed</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rg_bed</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="n">rg_bim</span><span class="o">.</span><span class="n">index</span><span class="p">,</span><span class="n">columns</span><span class="o">=</span><span class="n">rg_fam</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+            <span class="n">exclude_idx</span> <span class="o">=</span> <span class="n">rg_bed</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">duplicated</span><span class="p">(</span><span class="n">keep</span><span class="o">=</span><span class="s1">&#39;first&#39;</span><span class="p">)</span>
+
+            <span class="n">exc</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">each</span> <span class="ow">in</span> <span class="n">exclude_idx</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">each</span> <span class="o">==</span> <span class="bp">True</span><span class="p">:</span>
+                    <span class="n">exc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">rg_bed</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">exc</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            
+            <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;The regional genotype file of {sub_region[0]}_{sub_region[1]}_{sub_region[2]} has {len(rg_bed.index)} variants&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">(</span><span class="n">rg_stat</span><span class="o">.</span><span class="n">index</span><span class="p">)</span><span class="o">==</span><span class="nb">list</span><span class="p">(</span><span class="n">rg_bed</span><span class="o">.</span><span class="n">index</span><span class="p">):</span>
+               <span class="c1"># overlapping variants</span>
+                <span class="n">com_row_idx</span> <span class="o">=</span> <span class="n">rg_bed</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">rg_stat</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">com_row_idx</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Variants ID between sub-region summary statistics and reference genotype are non-overlapping. This sub-region is skipped.&quot;</span><span class="p">)</span>
+                    <span class="k">continue</span>
+                <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;The regional genotype file ({len(rg_bed.index)} variants) and the regional summary statistics ({len(rg_stat.index)} variants) do not match with each other. The overlapping variants ({len(com_row_idx)} variants) will be selected.&#39;</span><span class="p">)</span>
+                <span class="n">rg_stat</span> <span class="o">=</span> <span class="n">rg_stat</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">com_row_idx</span><span class="p">,:]</span>
+                <span class="n">rg_bed</span> <span class="o">=</span> <span class="n">rg_bed</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">com_row_idx</span><span class="p">,:]</span>
+                
+                <span class="n">temp_iid_unr</span> <span class="o">=</span> <span class="n">rg_fam</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">unr</span><span class="o">.</span><span class="n">IID</span><span class="p">))</span> <span class="c1"># iid_unr</span>
+                
+                <span class="n">pheno</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">pheno</span><span class="o">.</span><span class="n">IID</span>
+                <span class="n">check_unique</span><span class="p">(</span><span class="n">pheno</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="s2">&quot;Phenotype&quot;</span><span class="p">)</span>
+                <span class="n">temp_iid_ph</span> <span class="o">=</span> <span class="n">pheno</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">rg_fam</span><span class="o">.</span><span class="n">index</span><span class="p">)</span> <span class="c1"># iid_ph</span>
+                
+                <span class="c1"># mean imputation for missing genotypes</span>
+                <span class="n">rg_bed</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span> <span class="n">rg_bed</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">inplace</span> <span class="o">=</span> <span class="bp">True</span> <span class="p">)</span>
+                
+                <span class="n">temp_three_intersec</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">temp_iid_unr</span><span class="p">)</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">temp_iid_ph</span><span class="p">)</span>
+
+            <span class="n">batch_id</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">rg_stat</span><span class="o">.</span><span class="n">to_pickle</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{output_sumstats + &quot;.batch_&quot; + str(batch_id) + &quot;.pickle&quot;}&#39;</span><span class="p">)</span>
+            <span class="n">rg_bed</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span><span class="n">temp_iid_ph</span><span class="p">]</span><span class="o">.</span><span class="n">to_pickle</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{output_genotype + &quot;.batch_&quot; + str(batch_id) + &quot;.pickle&quot;}&#39;</span><span class="p">)</span>
+
+            <span class="n">pop_ld</span> <span class="o">=</span> <span class="n">rg_bed</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span><span class="n">temp_iid_unr</span><span class="p">]</span>
+            <span class="n">pop_ld_ind</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">pop_ld</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">to_list</span><span class="p">())</span>
+            <span class="n">pop_ld</span> <span class="o">=</span> <span class="n">pop_ld</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{output_general + &quot;pre_pop_ld.batch_&quot; + str(batch_id) + &quot;.npy&quot;}&#39;</span><span class="p">,</span> <span class="n">pop_ld</span><span class="p">,</span> <span class="n">allow_pickle</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+            <span class="n">sample_ld</span> <span class="o">=</span> <span class="n">rg_bed</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span><span class="n">temp_three_intersec</span><span class="p">]</span>
+            <span class="n">sample_ld_ind</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">sample_ld</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">to_list</span><span class="p">())</span>
+            <span class="n">sample_ld</span> <span class="o">=</span> <span class="n">sample_ld</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{output_general + &quot;pre_sample_ld.batch_&quot; + str(batch_id) + &quot;.npy&quot;}&#39;</span><span class="p">,</span> <span class="n">sample_ld</span><span class="p">,</span> <span class="n">allow_pickle</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    
+            <span class="k">for</span> <span class="n">each</span> <span class="ow">in</span> <span class="n">temp_iid_ph</span><span class="p">:</span> <span class="c1">#order based on pheno</span>
+                <span class="n">iid_ph</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">each</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">each</span> <span class="ow">in</span> <span class="n">rg_stat</span><span class="o">.</span><span class="n">SNP</span><span class="p">:</span>
+                <span class="n">rg_stat_SNP</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">each</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">each</span> <span class="ow">in</span> <span class="n">pheno</span><span class="o">.</span><span class="n">IID</span><span class="p">:</span>
+                <span class="n">phenoIID</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">each</span><span class="p">)</span>
+                
+            <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+
+        <span class="c1"># genotypes in the sample of a specific phenotype with ordering match</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">iid_ph</span> <span class="o">==</span> <span class="n">phenoIID</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Warning: Some samples with phenotype do not have genotypes&#39;</span><span class="p">)</span>    
+
+        <span class="c1"># merge data into CSV files</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{time.strftime(&quot;%H:%M:%S&quot;, t)}: Merging data batches ...&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">batch_id</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Region data extraction failed because variants ID between region summary statistics and reference genotype are completely non-overlapping.&quot;</span><span class="p">)</span>
+        <span class="n">rg_stat</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{output_sumstats + &quot;.batch_&quot; + str(b+1) + &quot;.pickle&quot;}&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_id</span><span class="p">)])</span>
+        <span class="n">rg_stat</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">output_sumstats</span><span class="p">,</span> <span class="n">sep</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">header</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+        <span class="n">rg_bed</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{output_genotype + &quot;.batch_&quot; + str(b+1) + &quot;.pickle&quot;}&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_id</span><span class="p">)])</span>
+        <span class="n">rg_bed</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">output_genotype</span><span class="p">,</span> <span class="n">sep</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">header</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+
+        <span class="kn">import</span> <span class="nn">pickle</span>
+        
+        <span class="n">ld</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        
+        <span class="n">ld</span><span class="p">[</span><span class="s2">&quot;rg_bed&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{output_general + &quot;pre_pop_ld.batch_&quot; + str(b+1) + &quot;.npy&quot;}&#39;</span><span class="p">,</span> <span class="n">allow_pickle</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_id</span><span class="p">)],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">ld</span><span class="p">[</span><span class="s2">&quot;index&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pop_ld_ind</span>
+    
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{output_general + &quot;.pre_pop_ld.pickle&quot;}&#39;</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span>
+            <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">ld</span><span class="p">,</span> <span class="n">handle</span><span class="p">)</span>
+
+        <span class="n">ld</span><span class="p">[</span><span class="s2">&quot;rg_bed&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{output_general + &quot;pre_sample_ld.batch_&quot; + str(b+1) + &quot;.npy&quot;}&#39;</span><span class="p">,</span> <span class="n">allow_pickle</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_id</span><span class="p">)],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">ld</span><span class="p">[</span><span class="s2">&quot;index&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sample_ld_ind</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{output_general + &quot;.pre_sample_ld.pickle&quot;}&#39;</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span>
+            <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">ld</span><span class="p">,</span> <span class="n">handle</span><span class="p">)</span>
+
+
+        <span class="kn">import</span> <span class="nn">os</span>
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_id</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{output_sumstats + &quot;.batch_&quot; + str(b+1) + &quot;.pickle&quot;}&#39;</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{output_genotype + &quot;.batch_&quot; + str(b+1) + &quot;.pickle&quot;}&#39;</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{output_general + &quot;pre_pop_ld.batch_&quot; + str(b+1) + &quot;.npy&quot;}&#39;</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{output_general + &quot;pre_sample_ld.batch_&quot; + str(b+1) + &quot;.npy&quot;}&#39;</span><span class="p">)</span>
+
+
+    <span class="k">def</span> <span class="nf">get_ld</span><span class="p">(</span><span class="n">geno_file</span><span class="p">,</span> <span class="n">output_file</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">pickle</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">geno_file</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
+        
+
+        <span class="n">index</span> <span class="o">=</span> <span class="n">b</span><span class="p">[</span><span class="s2">&quot;index&quot;</span><span class="p">]</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">b</span><span class="p">[</span><span class="s2">&quot;rg_bed&quot;</span><span class="p">]</span>
+
+        <span class="n">batch_size</span> <span class="o">=</span> <span class="mi">5</span>
+        <span class="n">curr</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">stdev_percol</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">means</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># for each row in x, compute the stdev and append it</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="n">mean</span> <span class="o">=</span> <span class="n">i</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">-</span> <span class="n">mean</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">stdev_percol</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+            <span class="n">means</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mean</span><span class="p">)</span>
+        
+        <span class="n">mylis</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># first&#39;s row information</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)):</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">means</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+            <span class="c1"># second&#39;s row information</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)):</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">means</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">s</span><span class="p">)</span>
+
+                <span class="n">val</span> <span class="o">=</span> <span class="n">a</span> <span class="o">/</span> <span class="p">(</span><span class="n">stdev_percol</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">stdev_percol</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+                <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+
+            <span class="n">mylis</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+
+        <span class="n">corr</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">mylis</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">corr</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="n">sep</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">header</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="bp">False</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+
+        <span class="kn">import</span> <span class="nn">os</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{geno_file}&#39;</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Extract-data">Extract data<a class="anchor-link" href="#Extract-data">&#182;</a></h2><p>This step runs in parallel for all loci listed in the region file (via <code>for_each</code>).</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[1]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="p">[</span><span class="n">default_2</span> <span class="p">(</span><span class="n">extract</span> <span class="n">genotypes</span><span class="p">)]</span>
+<span class="kn">depends:</span> <span class="n">Py_Module</span><span class="p">(</span><span class="s1">&#39;bed_reader&#39;</span><span class="p">),</span> <span class="n">Py_Module</span><span class="p">(</span><span class="s1">&#39;pybgen&#39;</span><span class="p">),</span> <span class="n">f</span><span class="s1">&#39;{cwd:a}/utils.py&#39;</span>
+<span class="kn">input:</span> <span class="n">geno_path</span><span class="p">,</span> <span class="n">pheno_path</span><span class="p">,</span> <span class="n">sumstats_path</span><span class="p">,</span> <span class="n">unrelated_samples</span><span class="p">,</span> <span class="n">for_each</span> <span class="o">=</span> <span class="s1">&#39;regions&#39;</span>
+<span class="kn">output:</span> <span class="n">sumstats</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{cwd:a}/{_regions[0]}_{_regions[1]}_{_regions[2]}/{sumstats_path:bn}_{_regions[0]}_{_regions[1]}_{_regions[2]}.sumstats.gz&#39;</span><span class="p">,</span>
+        <span class="n">genotype</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{cwd:a}/{_regions[0]}_{_regions[1]}_{_regions[2]}/{sumstats_path:bn}_{_regions[0]}_{_regions[1]}_{_regions[2]}.genotype.gz&#39;</span><span class="p">,</span>
+        <span class="n">pld</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{cwd:a}/{_regions[0]}_{_regions[1]}_{_regions[2]}/{sumstats_path:bn}_{_regions[0]}_{_regions[1]}_{_regions[2]}.pre_pop_ld.pickle&#39;</span><span class="p">,</span>
+        <span class="n">sld</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{cwd:a}/{_regions[0]}_{_regions[1]}_{_regions[2]}/{sumstats_path:bn}_{_regions[0]}_{_regions[1]}_{_regions[2]}.pre_sample_ld.pickle&#39;</span>
+<span class="kn">task:</span> <span class="kp">trunk_workers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">trunk_size</span> <span class="o">=</span> <span class="n">job_size</span><span class="p">,</span> <span class="kp">walltime</span> <span class="o">=</span> <span class="s1">&#39;4h&#39;</span><span class="p">,</span> <span class="kp">mem</span> <span class="o">=</span> <span class="s1">&#39;60G&#39;</span><span class="p">,</span> <span class="kp">cores</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">tags</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{step_name}_{_output[0]:bn}&#39;</span>
+<span class="kn">python:</span> <span class="n">expand</span> <span class="o">=</span> <span class="s1">&#39;${ }&#39;</span><span class="p">,</span> <span class="nb">input</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{cwd:a}/utils.py&#39;</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output[0]:n}.stderr&#39;</span><span class="p">,</span> <span class="n">stdout</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output[0]:n}.stdout&#39;</span>
+    
+
+    <span class="kn">import</span> <span class="nn">os</span>
+    <span class="c1"># output path files that we will need in our final version</span>
+    <span class="n">output_sumstats</span> <span class="o">=</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">[</span><span class="s1">&#39;sumstats&#39;</span><span class="p">]:</span><span class="n">r</span><span class="p">}</span>
+    <span class="n">output_genotype</span> <span class="o">=</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">[</span><span class="s1">&#39;genotype&#39;</span><span class="p">]:</span><span class="n">r</span><span class="p">}</span>
+    <span class="n">output_pld</span> <span class="o">=</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">[</span><span class="s1">&#39;pld&#39;</span><span class="p">]:</span><span class="n">r</span><span class="p">}</span>
+    <span class="n">output_sld</span> <span class="o">=</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">[</span><span class="s1">&#39;sld&#39;</span><span class="p">]:</span><span class="n">r</span><span class="p">}</span>
+
+    <span class="c1"># this general path is used to create other temporary files that we need to calculate the ld matrices later on</span>
+    <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+    <span class="n">output_general</span> <span class="o">=</span> <span class="s1">&#39;${cwd}/${_regions[0]}_${_regions[1]}_${_regions[2]}/${sumstats_path:bn}_${_regions[0]}_${_regions[1]}_${_regions[2]}&#39;</span>
+
+    <span class="n">input_sample_path</span> <span class="o">=</span> <span class="err">$</span><span class="p">{</span><span class="n">bgen_sample_path</span><span class="p">:</span><span class="n">r</span><span class="p">}</span>
+    <span class="n">input_geno_path</span> <span class="o">=</span> <span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">r</span><span class="p">}</span>
+    <span class="n">input_pheno_path</span> <span class="o">=</span> <span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span><span class="n">r</span><span class="p">}</span>
+    <span class="n">input_sumstats_path</span> <span class="o">=</span> <span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span><span class="n">r</span><span class="p">}</span>
+    <span class="n">input_unrelated_samples</span> <span class="o">=</span> <span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">[</span><span class="mi">3</span><span class="p">]:</span><span class="n">r</span><span class="p">}</span>
+    <span class="n">input_format_config</span> <span class="o">=</span> <span class="err">$</span><span class="p">{</span><span class="n">format_config_path</span><span class="p">:</span><span class="n">r</span><span class="p">}</span> <span class="k">if</span> <span class="err">$</span><span class="p">{</span><span class="n">format_config_path</span><span class="o">.</span><span class="n">is_file</span><span class="p">()}</span> <span class="k">else</span> <span class="bp">None</span>
+
+    
+    <span class="c1"># Load genotype file for the region of interest</span>
+    <span class="n">geno_inventory</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">open</span><span class="p">(</span><span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">r</span><span class="p">})</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()])</span>
+    <span class="n">chrom</span> <span class="o">=</span> <span class="s2">&quot;${_regions[0]}&quot;</span>
+    <span class="k">if</span> <span class="n">chrom</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;chr&#39;</span><span class="p">):</span>
+        <span class="n">chrom</span> <span class="o">=</span> <span class="n">chrom</span><span class="p">[</span><span class="mi">3</span><span class="p">:]</span>
+    <span class="k">if</span> <span class="n">chrom</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">geno_inventory</span><span class="p">:</span>
+        <span class="n">geno_file</span> <span class="o">=</span> <span class="n">geno_inventory</span><span class="p">[</span><span class="s1">&#39;0&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">geno_file</span> <span class="o">=</span> <span class="n">geno_inventory</span><span class="p">[</span><span class="n">chrom</span><span class="p">]</span>
+
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">geno_file</span><span class="p">):</span>
+        <span class="c1"># relative path</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="s1">&#39;${_input[0]:ad}/&#39;</span> <span class="o">+</span> <span class="n">geno_file</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Cannot find genotype file {geno_file}&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">geno_file</span> <span class="o">=</span> <span class="s1">&#39;${_input[0]:ad}/&#39;</span> <span class="o">+</span> <span class="n">geno_file</span>
+
+
+    <span class="n">region</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">chrom</span><span class="p">),</span> <span class="err">$</span><span class="p">{</span><span class="n">_regions</span><span class="p">[</span><span class="mi">1</span><span class="p">]},</span> <span class="err">$</span><span class="p">{</span><span class="n">_regions</span><span class="p">[</span><span class="mi">2</span><span class="p">]})</span>
+    <span class="n">rg_info</span> <span class="o">=</span> <span class="n">extract_region</span><span class="p">(</span><span class="n">region</span><span class="p">,</span> <span class="n">input_sumstats_path</span><span class="p">,</span> <span class="n">input_format_config</span><span class="p">,</span> <span class="n">geno_file</span><span class="p">,</span> <span class="n">input_pheno_path</span><span class="p">,</span> <span class="n">input_unrelated_samples</span><span class="p">,</span>
+                                <span class="n">output_sumstats</span><span class="p">,</span> <span class="n">output_genotype</span><span class="p">,</span> <span class="n">output_pld</span><span class="p">,</span> <span class="n">output_sld</span><span class="p">,</span> <span class="n">output_general</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="p">[</span><span class="n">default_3</span> <span class="p">(</span><span class="n">compute</span> <span class="n">LD</span><span class="p">)]</span>
+<span class="kn">output:</span> <span class="n">pld</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;{_input[&#39;pld&#39;]:nn}.population_ld.gz&quot;</span><span class="p">,</span> 
+        <span class="n">sld</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;{_input[&#39;sld&#39;]:nn}.sample_ld.gz&quot;</span>
+<span class="kn">task:</span> <span class="kp">trunk_workers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">trunk_size</span> <span class="o">=</span> <span class="n">job_size</span><span class="p">,</span> <span class="kp">walltime</span> <span class="o">=</span> <span class="s1">&#39;12h&#39;</span><span class="p">,</span> <span class="kp">mem</span> <span class="o">=</span> <span class="s1">&#39;60G&#39;</span><span class="p">,</span> <span class="kp">cores</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="kp">tags</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{step_name}_{_output[0]:bn}&#39;</span>
+<span class="kn">python:</span> <span class="n">expand</span> <span class="o">=</span> <span class="s1">&#39;${ }&#39;</span><span class="p">,</span> <span class="nb">input</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{cwd:a}/utils.py&#39;</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output[0]:n}.stderr&#39;</span><span class="p">,</span> <span class="n">stdout</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output[0]:n}.stdout&#39;</span>
+    <span class="n">get_ld</span><span class="p">(</span><span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">[</span><span class="s2">&quot;sld&quot;</span><span class="p">]:</span><span class="n">r</span><span class="p">},</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">[</span><span class="s2">&quot;sld&quot;</span><span class="p">]:</span><span class="n">r</span><span class="p">})</span>    
+    <span class="n">get_ld</span><span class="p">(</span><span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">[</span><span class="s2">&quot;pld&quot;</span><span class="p">]:</span><span class="n">r</span><span class="p">},</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">[</span><span class="s2">&quot;pld&quot;</span><span class="p">]:</span><span class="n">r</span><span class="p">})</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<hr>
+&copy 2020-current Gao Wang and others, Department of Neurology at Columbia University
+<p><small>Exported from <a href="http://github.com/cumc/bioworkflows/blob/5922084216b3e5bafac9a171f73824f0366d5f27/GWAS/Region_Extraction.ipynb"><code>GWAS/Region_Extraction.ipynb</code></a> committed by tfabiha on Mon May 3 23:14:43 2021 <a href="http://github.com/cumc/bioworkflows/commit/5922084216b3e5bafac9a171f73824f0366d5f27">revision 18, 5922084</a> <a href="https://stephenslab.github.io/ipynb-website/notes.html#Note-about-commit-ids"><span class="fa fa-question-circle"></span></a></small></p>
+</div>
+</div>
+</body>
+</html>

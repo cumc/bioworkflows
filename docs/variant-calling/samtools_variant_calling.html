@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="ipynb_website:version" content="0.9.7" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="stylesheet" type="text/css" href="../css/jt.css">
+
+<link rel="stylesheet" type="text/css" href="../css/toc2.css">
+
+<link href="../site_libs/jqueryui-1.11.4/jquery-ui.css">
+<link rel="stylesheet" href="../site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="../site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.9.1/jquery-ui.min.js"></script>
+<script src="../site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="../site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="../site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+
+<link rel="stylesheet"
+      href="../site_libs/highlightjs/null.min.css"
+      type="text/css" />
+
+<script src="../site_libs/highlightjs/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+<script src="../js/doc_toc.js"></script>
+<script src="../js/docs.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script>
+    MathJax.Hub.Config({
+        extensions: ["tex2jax.js"],
+        jax: ["input/TeX", "output/HTML-CSS"],
+        tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+        displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+        processEscapes: true
+        },
+        "HTML-CSS": {
+            preferredFont: "TeX",
+            availableFonts: ["TeX"],
+            styles: {
+                scale: 110,
+                ".MathJax_Display": {
+                    "font-size": "110%",
+                }
+            }
+        }
+    });
+</script>
+<script>
+function filterDataFrame(id) {
+    var input = document.getElementById("search_" + id);
+    var filter = input.value.toUpperCase();
+    var table = document.getElementById("dataframe_" + id);
+    var tr = table.getElementsByTagName("tr");
+    // Loop through all table rows, and hide those who don't match the search query
+    for (var i = 1; i < tr.length; i++) {
+        for (var j = 0; j < tr[i].cells.length; ++j) {
+            var matched = false;
+            if (tr[i].cells[j].innerHTML.toUpperCase().indexOf(filter) != -1) {
+                tr[i].style.display = "";
+                matched = true
+                break;
+            }
+            if (!matched)
+                tr[i].style.display = "none";
+        }
+    }
+}
+function sortDataFrame(id, n, dtype) {
+    var table = document.getElementById("dataframe_" + id);
+    var tb = table.tBodies[0]; // use `<tbody>` to ignore `<thead>` and `<tfoot>` rows
+    var tr = Array.prototype.slice.call(tb.rows, 0); // put rows into array
+    if (dtype === 'numeric') {
+        var fn = function(a, b) { 
+            return parseFloat(a.cells[n].textContent) <= parseFloat(b.cells[n].textContent) ? -1 : 1;
+        }
+    } else {
+        var fn = function(a, b) {
+            var c = a.cells[n].textContent.trim().localeCompare(b.cells[n].textContent.trim()); 
+            return c > 0 ? 1 : (c < 0 ? -1 : 0) }
+    }
+    var isSorted = function(array, fn) {
+        if (array.length < 2)
+            return 1;
+        var direction = fn(array[0], array[1]); 
+        for (var i = 1; i < array.length - 1; ++i) {
+            var d = fn(array[i], array[i+1]);
+            if (d == 0)
+                continue;
+            else if (direction == 0)
+                direction = d;
+            else if (direction != d)
+                return 0;
+            }
+        return direction;
+    }
+    var sorted = isSorted(tr, fn);
+    if (sorted == 1 || sorted == -1) {
+        // if sorted already, reverse it
+        for(var i = tr.length - 1; i >= 0; --i)
+            tb.appendChild(tr[i]); // append each row in order
+    } else {
+        tr = tr.sort(fn);
+        for(var i = 0; i < tr.length; ++i)
+            tb.appendChild(tr[i]); // append each row in order
+    }
+}
+</script>
+
+<script>
+$( document ).ready(function(){
+            var cfg={'threshold':3,     // depth of toc (number of levels)
+             'number_sections': false,
+             'toc_cell': false,          // useless here
+             'toc_window_display': true, // display the toc window
+             "toc_section_display": "block", // display toc contents in the window
+             'sideBar':true,       // sidebar or floating window
+             'navigate_menu':false       // navigation menu (only in liveNotebook -- do not change)
+            }
+            var st={};                  // some variables used in the script
+            st.rendering_toc_cell = false;
+            st.config_loaded = false;
+            st.extension_initialized=false;
+            st.nbcontainer_marginleft = $('#notebook-container').css('margin-left')
+            st.nbcontainer_marginright = $('#notebook-container').css('margin-right')
+            st.nbcontainer_width = $('#notebook-container').css('width')
+            st.oldTocHeight = undefined
+            st.cell_toc = undefined;
+            st.toc_index=0;
+            // fire the main function with these parameters
+            table_of_contents(cfg, st);
+            var file=variant-callingDict[$("h1:first").attr("id")];
+            $("#toc-level0 a").css("color","#126dce");
+            $('a[href="#'+$("h1:first").attr("id")+'"]').hide()
+            var docs=variant-callingArray;
+            var docs_map=variant-callingArrayMap;
+            var pos=variant-callingArray.indexOf(file);
+            for (var a=pos;a>=0;a--){
+                  $('<li><a href="'+docs[a]+'.html"><font color="#073642"><b>'+docs_map[docs[a]].replace(/_/g," ")+'</b></font></a></li>').insertBefore("#toc-level0 li:eq(0)");
+            }
+            $('a[href="'+file+'.html'+'"]').css("color","#126dce");
+            for (var a=pos+1;a<docs.length;a++){
+                  $(".toc #toc-level0").append('<li><a href="'+docs[a]+'.html"><font color="#073642"><b>'+docs_map[docs[a]].replace(/_/g," ")+'</b></font></a></li>');
+            }
+            // $("#toc-header").hide(); // comment out because it prevents search bar from displaying
+    });
+</script>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+  // mark it active
+  menuAnchor.parent().addClass('active');
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+<div class="container-fluid main-container">
+<!-- tabsets -->
+<script src="../site_libs/navigation-1.1/tabsets.js"></script>
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+
+
+<title>Some computational genomics workflows</title>
+
+<style type = "text/css">
+body {
+  font-family: "Droid Sans";
+  padding-top: 66px;
+  padding-bottom: 40px;
+}
+</style>
+</head>
+
+<body>
+<div tabindex="-1" id="notebook" class="border-box-sizing">
+<div class="container" id="notebook-container">
+
+<!-- code folding -->
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="../index.html">Some computational genomics workflows</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        
+<li>
+  <a href="../index.html">Overview</a>
+</li>
+        
+      </ul>
+        
+<ul class="nav navbar-nav navbar-right">
+<li>
+   <a href="http://github.com/cumc/bioworkflows"> <span class="fa fa-github"></span> </a>
+</li>
+</ul>
+        
+      </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="WGS-Mapping-to-Variant-Calls---Version-1.0">WGS Mapping to Variant Calls - Version 1.0<a class="anchor-link" href="#WGS-Mapping-to-Variant-Calls---Version-1.0">&#182;</a></h1><p>Implementing one of the <a href="http://www.htslib.org/workflow/#mapping_to_variant"><code>samtools</code> Workflows</a> in <a href="https://github.com/vatlab/SOS">SoS</a>. Some steps were re-implemented using <code>GATK4</code> instead of <code>GATK3</code> / <code>Pichard</code> or <code>samtools</code>, for better performance.</p>
+<p><strong>Multithreading: since GATK4 the multi-thread option <code>-nct</code> is not available. One has to use Spark version to achieve it</strong></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[1]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="o">%</span><span class="n">revisions</span> <span class="o">-</span><span class="n">s</span> <span class="o">-</span><span class="n">n</span> <span class="mi">10</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+<div class="output_html rendered_html output_subarea ">
+
+        <table class="revision_table">
+        <tr>
+        <th>Revision</th>
+        <th>Author</th>
+        <th>Date</th>
+        <th>Message</th>
+        <tr>
+        <tr><td><a target="_blank" href="git@github.com:vatlab/sos-docs/blob/924d9ab8661df089356214df645840a61c7717e4/WGS_Call.ipynb"><span class="revision_id">924d9ab<span></a></td>
+<td>Gao Wang</td>
+<td>2018-10-14</td>
+<td>Add docker image tags to workflow examples</td></tr><tr><td><a target="_blank" href="git@github.com:vatlab/sos-docs/blob/c70ac4484b928b5d819781271a032ec3b7ee1654/WGS_Call.ipynb"><span class="revision_id">c70ac44<span></a></td>
+<td>Gao Wang</td>
+<td>2018-09-04</td>
+<td>Add a check for index files</td></tr><tr><td><a target="_blank" href="git@github.com:vatlab/sos-docs/blob/1ea76f267b9cfe3d32f17b2160f1f1b6f3d08df2/WGS_Call.ipynb"><span class="revision_id">1ea76f2<span></a></td>
+<td>Gao Wang</td>
+<td>2018-09-04</td>
+<td>Set zap to True by default</td></tr><tr><td><a target="_blank" href="git@github.com:vatlab/sos-docs/blob/b98d99ebb16666979b617db95dcd243903711309/WGS_Call.ipynb"><span class="revision_id">b98d99e<span></a></td>
+<td>Gao Wang</td>
+<td>2018-09-03</td>
+<td>Update docker option</td></tr><tr><td><a target="_blank" href="git@github.com:vatlab/sos-docs/blob/3bf8f4dd4a6a3a8cbd9cfd5019ac39fb8d243f1a/WGS_Call.ipynb"><span class="revision_id">3bf8f4d<span></a></td>
+<td>Gao Wang</td>
+<td>2018-09-03</td>
+<td>Add a step to select given list of variants</td></tr><tr><td><a target="_blank" href="git@github.com:vatlab/sos-docs/blob/33fd12cb7d223ae379484d38472f2438437139bf/WGS_Call.ipynb"><span class="revision_id">33fd12c<span></a></td>
+<td>Gao Wang</td>
+<td>2018-09-03</td>
+<td>Get toy example to work</td></tr><tr><td><a target="_blank" href="git@github.com:vatlab/sos-docs/blob/8f3b701b2e3bcd99b30714b9b15e5dd16210343f/WGS_Call.ipynb"><span class="revision_id">8f3b701<span></a></td>
+<td>Gao Wang</td>
+<td>2018-09-03</td>
+<td>Add links to toy reference data</td></tr></table>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Overview">Overview<a class="anchor-link" href="#Overview">&#182;</a></h2><p>This SoS workflow notebook contains three workflows:</p>
+<ul>
+<li><code>get_ref_genome</code> which downloads reference genome data, in preparation for genotype calling</li>
+<li><code>get_known_variants</code> which downloads known variants data, in preparation of genotype calling</li>
+<li><code>default</code>, a sequence of commands to perform multi-sample genotype calling for given list of samples</li>
+</ul>
+<p>All workflow steps are numerically ordered to reflect the execution logic. This is the most straightforward SoS workflow style, the "process-oriented" style.</p>
+<p>To view available workflows and options,</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[2]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="err">!</span><span class="n">sos</span> <span class="n">run</span> <span class="n">WGS_Call</span><span class="o">.</span><span class="n">ipynb</span> <span class="o">-</span><span class="n">h</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>usage: sos run WGS_Call.ipynb [workflow_name | -t targets] [options] [workflow_options]
+  workflow_name:        Single or combined workflows defined in this script
+  targets:              One or more targets to generate
+  options:              Single-hyphen sos parameters (see &#34;sos run -h&#34; for details)
+  workflow_options:     Double-hyphen workflow-specific parameters
+
+Workflows:
+  get_ref_genome
+  get_known_variants
+  
+
+Global Workflow Options:
+  --samples . (as path)
+                        a file containing sample names
+  --wd WGS_Call_SoS (as path)
+                        work directory
+  --ref-genome  path(f&#39;{wd:a}/ref/reference.fa&#39;)
+
+                        name of reference genome file
+  --ref-variants  path(f&#39;{wd:a}/ref/known_variants.vcf.gz&#39;)
+
+                        name of known variant sites file
+  --ref-indel  path(f&#39;{wd:a}/ref/known_variants.vcf.gz&#39;)
+
+                        name of known indel file
+  --genome-url &#39;https://github.com/vatlab/sos-docs/raw/master/src/examples/k9-test/reference.fa.gz&#39;
+                        download link for reference fasta file, in gz format
+  --variants-url &#39;https://github.com/vatlab/sos-docs/raw/master/src/examples/k9-test/known.vcf.gz&#39;
+                        download link for known variants vcf file, in gz format
+  --[no-]zap (default to True)
+                        whether or not to remove files from intermediate steps
+  --bcftools-filter &#39;%QUAL&gt;10&#39;
+                        bcftools default quality filter
+  --ncpu 3 (as int)
+                        number of CPU threads to use per process
+  --chr-prefix chr
+                        can be empty, or chr, or Chr depending on input data-
+                        set.
+  --n-chrom 38 (as int)
+                        Human is 23, Bovine is 29, Canine is 38; we focus on
+                        autosome and X.
+  --[no-]variants-only (default to False)
+                        Set to True to only call variant sites not &#34;wildtype&#34;
+  --keep-coord . (as path)
+                        Keep a list of specified variants only
+
+Sections
+  get_ref_genome_1:     Download reference genome
+  get_ref_genome_2:     Index reference genome
+  get_known_variants_1: Download known variants
+  get_known_variants_2: Index known variants
+  :                     Export workflow to HTML file
+  :                     BWA mapping &amp; samtools postprocessing
+  :                     Sort BAM files
+  :                     Extract relevant chromosomes for analysis
+  :                     Re-order bam files
+  :                     Indel re-alignment
+  :                     Base recalibration
+  :                     Mark duplicates
+  :                     Multi-sample variant calling -- pileup
+  :                     Multi-sample variant calling -- call
+  :                     Quality summary plots for VCF file
+  :                     Quality filtering
+  :                     Only extract regions we are interested in
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Input-data">Input data<a class="anchor-link" href="#Input-data">&#182;</a></h2><p>Input in <code>fastq</code> format, paired-ended:</p>
+
+<pre><code>Sample_75641_2.fq.gz Sample_75641_2.fq.gz</code></pre>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Reference-data-preparation">Reference data preparation<a class="anchor-link" href="#Reference-data-preparation">&#182;</a></h2><p>To prepare reference genome data, run:</p>
+
+<pre><code>sos run WGS_Call.ipynb get_ref_genome</code></pre>
+<p>To prepare reference known variants data, run:</p>
+
+<pre><code>sos run WGS_Call.ipynb get_known_variants</code></pre>
+<p>These commands will download reference data to <code>./WGS_Call_SoS/ref</code> 
+(work directory, can be configured via <code>--wd</code> option as shown in the workflow help message above).</p>
+<p>If you already have reference genome data bundle and known variants data you can use <code>--ref-genome</code>, 
+<code>--ref-variants</code> and <code>--ref-indel</code> to specify them. Otherwise you should edit <code>get_ref_genome</code> and <code>get_known_variants</code>
+steps below to download them. The default is pointed to a toy example data-set for demonstration</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Run-the-workflow">Run the workflow<a class="anchor-link" href="#Run-the-workflow">&#182;</a></h2><p>The workflow has been tested on Linux and Mac. 
+In brief, after installing <a href="https://github.com/vatlab/SOS">SoS</a> (see "Software Configuration" below), 
+you provide a text file of sample list named eg <code>k9-test/test_samples.manifest</code>, with contents:</p>
+
+<pre><code>Sample_79162
+Sample_75641</code></pre>
+<p>Under the same folder as this list file, you keep all the listed sample <code>fastq</code> files. Then you run</p>
+
+<pre><code>sos run WGS_Call.ipynb --samples k9-test/test_samples.manifest -j2</code></pre>
+<p>to perform variant calling. <code>-j2</code> option means to run 2 processes in parallel. 
+After it completes you'll find under folder <code>./WGS_Call_SoS</code> (can be configured):</p>
+<ol>
+<li><code>WGS_Call.html</code> of this document</li>
+<li><code>bam</code> folder of intermediate and processed BAM files. Only BAM files from the last preprocessing step is kept by default, unless option <code>--no-zap</code> (which changes <code>parameter: zap = ...</code> in the workflow) is appended to the command above.</li>
+<li><code>vcf</code> folder of genotype call. The final output is <code>vcf/test_samples.filtered.vcf.gz</code> -- the file name is derived after your input sample list <code>/path/to/this/test_samples.manifest</code></li>
+</ol>
+<p>You can also "dryrun" the workflow to see what is actually going on:</p>
+
+<pre><code>sos dryrun WGS_Call.ipynb --samples k9-test/test_samples.manifest</code></pre>
+<p>Or, run / dryrun a few steps, eg, the first 5 steps.</p>
+
+<pre><code>sos dryrun WGS_Call.ipynb default:1-5 --samples k9-test/test_samples.manifest</code></pre>
+<p><code>dryrun</code> will print out all commands which you can collect to a file and run them separately (for debugging, for example).</p>
+<h3 id="Do-we-keep-all-loci-even-if-they-are-not-variants?">Do we keep all loci even if they are not variants?<a class="anchor-link" href="#Do-we-keep-all-loci-even-if-they-are-not-variants?">&#182;</a></h3><p>Yes we do (for obvious reasons)! This is why <code>--variants_only</code> is <code>False</code> by default. However it is a huge file to work on. We include an option <code>--keep_coord</code> that provides a list of genomic coordinates like this:</p>
+
+<pre><code>1   2815013
+1   7421527
+1   11653215
+1   12326997
+1   14892273
+1   16663755</code></pre>
+<p>This case, only selected loci (variants of interest) are kept for further investigation.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Software-configuration">Software configuration<a class="anchor-link" href="#Software-configuration">&#182;</a></h2><p>To install SoS, make sure you have Python 3.6, then:</p>
+
+<pre><code>pip install -U sos sos-notebook sos-pbs
+python -m sos_notebook.install</code></pre>
+<p>To open the notebook:</p>
+
+<pre><code>jupyter notebook WGS_Call.ipynb &amp;&gt; /dev/null &amp;</code></pre>
+<p>If you do not already have <code>sos_notebook</code> on your computer, you will need to close this notebook after installation and open it again to see the <code>sos_notebook</code> kernel take effect in your Juptyer.</p>
+<p>To better display notebook edits from <code>git</code>:</p>
+
+<pre><code>pip install nbdime
+nbdime config-git --enable --global</code></pre>
+<p>Finally you need to install and configure <code>docker</code>:</p>
+<ol>
+<li>Run commands below:
+<pre><code>curl -fsSL get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+sudo usermod -aG docker $USER</code></pre>
+</li>
+<li>Log out and log back in (no need to reboot computer)</li>
+</ol>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Global-parameter-settings">Global parameter settings<a class="anchor-link" href="#Global-parameter-settings">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[3]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="p">[</span><span class="k">global</span><span class="p">]</span>
+<span class="c1"># a file containing sample names</span>
+<span class="kn">parameter:</span> <span class="n">samples</span> <span class="o">=</span> <span class="n">path</span><span class="p">()</span> 
+<span class="c1"># work directory</span>
+<span class="kn">parameter:</span> <span class="n">wd</span> <span class="o">=</span> <span class="n">path</span><span class="p">(</span><span class="s1">&#39;./WGS_Call_SoS&#39;</span><span class="p">)</span>
+<span class="c1"># name of reference genome file</span>
+<span class="kn">parameter:</span> <span class="n">ref_genome</span> <span class="o">=</span> <span class="n">path</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{wd:a}/ref/reference.fa&#39;</span><span class="p">)</span>
+<span class="c1"># name of known variant sites file</span>
+<span class="kn">parameter:</span> <span class="n">ref_variants</span> <span class="o">=</span> <span class="n">path</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{wd:a}/ref/known_variants.vcf.gz&#39;</span><span class="p">)</span>
+<span class="c1"># name of known indel file</span>
+<span class="kn">parameter:</span> <span class="n">ref_indel</span> <span class="o">=</span> <span class="n">path</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{wd:a}/ref/known_variants.vcf.gz&#39;</span><span class="p">)</span>
+<span class="c1"># download link for reference fasta file, in gz format</span>
+<span class="kn">parameter:</span> <span class="n">genome_url</span> <span class="o">=</span> <span class="s2">&quot;https://github.com/vatlab/sos-docs/raw/master/src/examples/k9-test/reference.fa.gz&quot;</span>
+<span class="c1"># download link for known variants vcf file, in gz format</span>
+<span class="kn">parameter:</span> <span class="n">variants_url</span> <span class="o">=</span> <span class="s2">&quot;https://github.com/vatlab/sos-docs/raw/master/src/examples/k9-test/known.vcf.gz&quot;</span>
+<span class="c1"># whether or not to remove files from intermediate steps</span>
+<span class="kn">parameter:</span> <span class="n">zap</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="c1"># bcftools default quality filter</span>
+<span class="kn">parameter:</span> <span class="n">bcftools_filter</span> <span class="o">=</span> <span class="s1">&#39;%QUAL&gt;10&#39;</span>
+<span class="c1"># number of CPU threads to use per process</span>
+<span class="kn">parameter:</span> <span class="n">ncpu</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="c1"># can be empty, or chr, or Chr depending on input data-set.</span>
+<span class="kn">parameter:</span> <span class="n">chr_prefix</span> <span class="o">=</span> <span class="s1">&#39;chr&#39;</span>
+<span class="c1"># Human is 23, Bovine is 29, Canine is 38; </span>
+<span class="c1"># we focus on autosome and X.</span>
+<span class="kn">parameter:</span> <span class="n">n_chrom</span> <span class="o">=</span> <span class="mi">38</span>
+<span class="n">chroms</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">f</span><span class="s1">&#39;{chr_prefix}{x+1}&#39;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_chrom</span><span class="p">)]</span> <span class="o">+</span> <span class="p">[</span><span class="n">f</span><span class="s1">&#39;{chr_prefix}X&#39;</span><span class="p">])</span>
+<span class="c1"># Set to True to only call variant sites not &quot;wildtype&quot;</span>
+<span class="kn">parameter:</span> <span class="n">variants_only</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="c1"># Keep a list of specified variants only</span>
+<span class="kn">parameter:</span> <span class="n">keep_coord</span> <span class="o">=</span> <span class="n">path</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Reference-preparation">Reference preparation<a class="anchor-link" href="#Reference-preparation">&#182;</a></h2><h3 id="Reference-genome">Reference genome<a class="anchor-link" href="#Reference-genome">&#182;</a></h3><p>Use primary assembly sequence. See <a href="https://bioinformatics.stackexchange.com/questions/540/what-ensembl-genome-version-should-i-use-for-alignments-e-g-toplevel-fa-vs-p?rq=1">this post</a> for details.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[4]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Download reference genome</span>
+<span class="p">[</span><span class="n">get_ref_genome_1</span><span class="p">]</span>
+<span class="kn">output:</span> <span class="n">ref_genome</span>
+<span class="kn">download:</span> <span class="n">dest_file</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output}.gz&#39;</span><span class="p">,</span> <span class="n">expand</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="p">{</span><span class="n">genome_url</span><span class="p">}</span>
+<span class="kn">bash:</span> <span class="n">container</span><span class="o">=</span><span class="s1">&#39;gaow/debian-ngs:1.0&#39;</span><span class="p">,</span> <span class="n">volumes</span><span class="o">=</span><span class="p">[</span><span class="n">f</span><span class="s1">&#39;{wd:a}:{wd:a}&#39;</span><span class="p">],</span> <span class="n">expand</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">gunzip</span> <span class="o">-</span><span class="n">f</span> <span class="p">{</span><span class="n">ref_genome</span><span class="p">}</span><span class="o">.</span><span class="n">gz</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>create reference index and dict files</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[5]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Index reference genome</span>
+<span class="p">[</span><span class="n">get_ref_genome_2</span><span class="p">]</span>
+<span class="kn">depends:</span> <span class="n">system_resource</span><span class="p">(</span><span class="kp">mem</span> <span class="o">=</span> <span class="s1">&#39;4G&#39;</span><span class="p">)</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{ref_genome:n}.dict&#39;</span><span class="p">,</span> <span class="n">f</span><span class="s1">&#39;{ref_genome}.fai&#39;</span><span class="p">,</span> <span class="n">f</span><span class="s1">&#39;{ref_genome}.bwt&#39;</span><span class="p">,</span>
+        <span class="n">f</span><span class="s1">&#39;{ref_genome}.pac&#39;</span><span class="p">,</span> <span class="n">f</span><span class="s1">&#39;{ref_genome}.ann&#39;</span><span class="p">,</span> <span class="n">f</span><span class="s1">&#39;{ref_genome}.amb&#39;</span><span class="p">,</span> <span class="n">f</span><span class="s1">&#39;{ref_genome}.sa&#39;</span>
+<span class="n">stop_if</span><span class="p">(</span><span class="nb">all</span><span class="p">([</span><span class="n">path</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">_output</span><span class="p">]))</span>
+<span class="kn">run:</span> <span class="n">container</span><span class="o">=</span><span class="s1">&#39;gaow/debian-ngs-gatk4:1.0&#39;</span><span class="p">,</span> <span class="n">volumes</span><span class="o">=</span><span class="p">[</span><span class="n">f</span><span class="s1">&#39;{wd:a}:{wd:a}&#39;</span><span class="p">],</span> <span class="n">expand</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{ref_genome}.err&#39;</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{ref_genome}.out&#39;</span>
+    <span class="n">rm</span> <span class="o">-</span><span class="n">f</span> <span class="p">{</span><span class="n">_output</span><span class="p">}</span>
+    <span class="n">samtools</span> <span class="n">faidx</span> <span class="p">{</span><span class="n">_input</span><span class="p">}</span> <span class="o">&amp;&amp;</span> \
+    <span class="n">bwa</span> <span class="n">index</span> <span class="p">{</span><span class="n">_input</span><span class="p">}</span> <span class="o">&amp;&amp;</span> \
+    <span class="n">gatk</span> <span class="n">CreateSequenceDictionary</span> <span class="o">-</span><span class="n">R</span> <span class="p">{</span><span class="n">_input</span><span class="p">}</span> <span class="o">-</span><span class="n">O</span> <span class="p">{</span><span class="n">_output</span><span class="p">[</span><span class="mi">0</span><span class="p">]}</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Known-sites">Known sites<a class="anchor-link" href="#Known-sites">&#182;</a></h3><p><a href="ftp://ftp.ncbi.nih.gov/snp/organisms/archive">NCBI dbSNP</a> has reference SNP files for various species.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[6]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Download known variants</span>
+<span class="p">[</span><span class="n">get_known_variants_1</span><span class="p">]</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{ref_variants:nn}.unsorted.vcf.gz&#39;</span>
+<span class="kn">download:</span> <span class="n">dest_file</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output}&#39;</span><span class="p">,</span> <span class="n">expand</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="p">{</span><span class="n">variants_url</span><span class="p">}</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Sort and index VCF</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[7]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Index known variants</span>
+<span class="p">[</span><span class="n">get_known_variants_2</span><span class="p">]</span>
+<span class="kn">depends:</span> <span class="n">system_resource</span><span class="p">(</span><span class="kp">mem</span> <span class="o">=</span> <span class="s1">&#39;4G&#39;</span><span class="p">)</span>
+<span class="kn">output:</span> <span class="n">ref_variants</span>
+<span class="kn">bash:</span> <span class="n">container</span><span class="o">=</span><span class="s1">&#39;gaow/debian-ngs-gatk4:1.0&#39;</span><span class="p">,</span> <span class="n">volumes</span><span class="o">=</span><span class="p">[</span><span class="n">f</span><span class="s1">&#39;{wd:a}:{wd:a}&#39;</span><span class="p">],</span> <span class="n">expand</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:n}.err&#39;</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:n}.out&#39;</span>
+    <span class="n">gatk</span> <span class="n">SortVcf</span> <span class="o">-</span><span class="n">I</span> <span class="p">{</span><span class="n">_input</span><span class="p">}</span> <span class="o">-</span><span class="n">O</span> <span class="p">{</span><span class="n">_output</span><span class="p">}</span> \
+        <span class="o">--</span><span class="n">SEQUENCE_DICTIONARY</span> <span class="p">{</span><span class="n">ref_genome</span><span class="p">:</span><span class="n">n</span><span class="p">}</span><span class="o">.</span><span class="n">dict</span> \
+        <span class="o">--</span><span class="n">COMPRESSION_LEVEL</span> <span class="mi">9</span> <span class="o">&amp;&amp;</span> \
+    <span class="n">gatk</span> <span class="n">IndexFeatureFile</span> <span class="o">-</span><span class="n">F</span> <span class="p">{</span><span class="n">_output</span><span class="p">}</span>
+<span class="k">if</span> <span class="n">zap</span><span class="p">:</span>
+    <span class="n">_input</span><span class="o">.</span><span class="n">zap</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The standard workflow for working with DNA sequence data consists of three major steps:</p>
+<ul>
+<li>Mapping</li>
+<li>Improvement</li>
+<li>Variant Calling</li>
+</ul>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[8]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Export workflow to HTML file</span>
+<span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="kn">input:</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span> <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.ipynb&#39;</span><span class="p">)],</span> <span class="n">group_by</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">pattern</span> <span class="o">=</span> <span class="s1">&#39;{fn}.ipynb&#39;</span>
+<span class="kn">output:</span> <span class="n">expand_pattern</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{wd:a}/{path(_fn[0]):b}.html&#39;</span><span class="p">)</span>
+<span class="kn">bash:</span> <span class="n">expand</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="bp">False</span>
+  <span class="n">sos</span> <span class="n">convert</span> <span class="p">{</span><span class="n">_input</span><span class="p">}</span> <span class="p">{</span><span class="n">_output</span><span class="p">}</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Mapping">Mapping<a class="anchor-link" href="#Mapping">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We skip the <code>bwa</code> steps because our data has already been mapped.</p>
+<p>Because BWA can sometimes leave unusual FLAG information on SAM records, it is helpful when working with many tools to first clean up read pairing information and flags.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[9]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># BWA mapping &amp; samtools postprocessing</span>
+<span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="kn">depends:</span> <span class="n">system_resource</span><span class="p">(</span><span class="kp">mem</span> <span class="o">=</span> <span class="s1">&#39;4G&#39;</span><span class="p">)</span>
+<span class="n">fail_if</span><span class="p">(</span><span class="ow">not</span> <span class="n">samples</span><span class="o">.</span><span class="n">is_file</span><span class="p">(),</span> <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Need sample name list file!&#39;</span><span class="p">)</span>
+<span class="n">sample_files</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">get_output</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;awk &#39;{{print $1}}&#39; {samples:e}&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)))</span>
+<span class="n">fail_if</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sample_files</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Need input sample files!&#39;</span><span class="p">)</span>
+<span class="kn">input:</span> <span class="p">[(</span><span class="n">f</span><span class="s1">&#39;{samples:d}/{x}_1.fq.gz&#39;</span><span class="p">,</span> <span class="n">f</span><span class="s1">&#39;{samples:d}/{x}_2.fq.gz&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sample_files</span><span class="p">],</span> <span class="n">group_by</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{wd:a}/{samples:bn}_bam/{_input[0]:bnn}.fixmate.bam&#39;</span>
+<span class="kn">run:</span> <span class="n">container</span><span class="o">=</span><span class="s1">&#39;gaow/debian-ngs:1.0&#39;</span><span class="p">,</span> <span class="n">volumes</span><span class="o">=</span><span class="p">[</span><span class="n">f</span><span class="s1">&#39;{samples:da}:{samples:da}&#39;</span><span class="p">,</span> <span class="n">f</span><span class="s1">&#39;{wd:a}:{wd:a}&#39;</span><span class="p">],</span> <span class="n">expand</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:n}.err&#39;</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:n}.out&#39;</span>
+    <span class="n">bwa</span> <span class="kp">mem</span> <span class="o">-</span><span class="n">t</span> <span class="p">{</span><span class="n">ncpu</span><span class="p">}</span> <span class="o">-</span><span class="n">M</span> <span class="o">-</span><span class="n">R</span> <span class="s2">&quot;@RG</span><span class="se">\\</span><span class="s2">tID:{os.path.basename(sample_files[_index].replace(&#39;-&#39;, &#39;_&#39;))}</span><span class="se">\\</span><span class="s2">tSM:{os.path.basename(sample_files[_index].replace(&#39;-&#39;, &#39;_&#39;))}</span><span class="se">\\</span><span class="s2">tLB:library1</span><span class="se">\\</span><span class="s2">tPL:ILLUMINA</span><span class="se">\\</span><span class="s2">tPU:{os.path.basename(sample_files[_index].replace(&#39;-&#39;, &#39;_&#39;))}.library1&quot;</span> <span class="p">{</span><span class="n">ref_genome</span><span class="p">}</span> <span class="p">{</span><span class="n">_input</span><span class="p">[</span><span class="mi">0</span><span class="p">]}</span> <span class="p">{</span><span class="n">_input</span><span class="p">[</span><span class="mi">1</span><span class="p">]}</span> <span class="o">|</span> <span class="n">samtools</span> <span class="n">sort</span> <span class="o">-</span><span class="n">n</span> <span class="o">-</span> <span class="o">|</span> <span class="n">samtools</span> <span class="n">fixmate</span> <span class="o">-</span><span class="n">O</span> <span class="n">bam</span> <span class="o">-</span> <span class="p">{</span><span class="n">_output</span><span class="p">}</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>To sort them from name order into coordinate order,</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[10]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Sort BAM files</span>
+<span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+<span class="c1"># sort via GATK4 is way faster</span>
+<span class="c1"># https://software.broadinstitute.org/gatk/blog?id=9644</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{_input:n}.sorted.bam&#39;</span>
+<span class="kn">run:</span> <span class="n">container</span><span class="o">=</span><span class="s1">&#39;gaow/debian-ngs-gatk4:1.0&#39;</span><span class="p">,</span> <span class="n">volumes</span><span class="o">=</span><span class="p">[</span><span class="n">f</span><span class="s1">&#39;{wd:a}:{wd:a}&#39;</span><span class="p">],</span> <span class="n">expand</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:n}.err&#39;</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:n}.out&#39;</span>
+    <span class="n">gatk</span> <span class="n">SortSam</span> <span class="o">-</span><span class="n">I</span> <span class="p">{</span><span class="n">_input</span><span class="p">}</span> <span class="o">-</span><span class="n">O</span> <span class="p">{</span><span class="n">_output</span><span class="p">}</span> <span class="o">-</span><span class="n">SO</span> <span class="n">coordinate</span>
+<span class="k">if</span> <span class="n">zap</span><span class="p">:</span>
+    <span class="n">_input</span><span class="o">.</span><span class="n">zap</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We extract relevant chromosomes and re-order to match ordering in reference,</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[11]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Extract relevant chromosomes for analysis</span>
+<span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{_input:n}.cleaned.bam&#39;</span>
+<span class="kn">run:</span> <span class="n">container</span><span class="o">=</span><span class="s1">&#39;gaow/debian-ngs-gatk4:1.0&#39;</span><span class="p">,</span> <span class="n">volumes</span><span class="o">=</span><span class="p">[</span><span class="n">f</span><span class="s1">&#39;{wd:a}:{wd:a}&#39;</span><span class="p">],</span> <span class="n">expand</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:n}.err&#39;</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:n}.out&#39;</span>
+    <span class="n">samtools</span> <span class="n">index</span> <span class="p">{</span><span class="n">_input</span><span class="p">}</span>
+    <span class="n">samtools</span> <span class="n">view</span> <span class="o">-</span><span class="err">@</span> <span class="p">{</span><span class="n">ncpu</span><span class="p">}</span> <span class="o">-</span><span class="n">b</span> <span class="p">{</span><span class="n">_input</span><span class="p">}</span> <span class="p">{</span><span class="n">chroms</span><span class="p">}</span> <span class="o">&gt;</span> <span class="p">{</span><span class="n">_output</span><span class="p">}</span>
+<span class="k">if</span> <span class="n">zap</span><span class="p">:</span>
+    <span class="n">_input</span><span class="o">.</span><span class="n">zap</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[12]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Re-order bam files</span>
+<span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{_input:n}.reordered.bam&#39;</span>
+<span class="kn">run:</span> <span class="n">container</span><span class="o">=</span><span class="s1">&#39;gaow/debian-ngs-gatk4:1.0&#39;</span><span class="p">,</span> <span class="n">volumes</span><span class="o">=</span><span class="p">[</span><span class="n">f</span><span class="s1">&#39;{wd:a}:{wd:a}&#39;</span><span class="p">],</span> <span class="n">expand</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:n}.err&#39;</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:n}.out&#39;</span>
+    <span class="n">gatk</span> <span class="n">ReorderSam</span> <span class="o">-</span><span class="n">I</span> <span class="p">{</span><span class="n">_input</span><span class="p">}</span> <span class="o">-</span><span class="n">O</span> <span class="p">{</span><span class="n">_output</span><span class="p">}</span> <span class="o">-</span><span class="n">R</span> <span class="p">{</span><span class="n">ref_genome</span><span class="p">}</span> \
+        <span class="o">--</span><span class="n">CREATE_INDEX</span> <span class="n">TRUE</span> \
+        <span class="o">--</span><span class="n">ALLOW_INCOMPLETE_DICT_CONCORDANCE</span> <span class="n">TRUE</span>
+<span class="k">if</span> <span class="n">zap</span><span class="p">:</span>
+    <span class="n">_input</span><span class="o">.</span><span class="n">zap</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Improvement">Improvement<a class="anchor-link" href="#Improvement">&#182;</a></h2><p>In order to reduce the number of miscalls of INDELs in your data it is helpful to realign your raw gapped alignment with the Broad’s GATK3 Realigner. This is necessary only when used with other genotype callers. In GATK4 best practice pipeline this step can be skipped if HaplotypeCaller is used.</p>
+<p>Note: option <code>-nct</code> does not apply to <code>RealignerTargetCreator</code> and <code>IndelRealigner</code>.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[13]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Indel re-alignment</span>
+<span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{_input:n}.realigned.bam&#39;</span>
+<span class="kn">run:</span> <span class="n">container</span><span class="o">=</span><span class="s1">&#39;gaow/gatk3:2.0&#39;</span><span class="p">,</span> <span class="n">volumes</span><span class="o">=</span><span class="p">[</span><span class="n">f</span><span class="s1">&#39;{wd:a}:{wd:a}&#39;</span><span class="p">],</span> <span class="n">expand</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:n}.err&#39;</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:n}.out&#39;</span>
+    <span class="n">java</span> <span class="o">-</span><span class="n">jar</span> <span class="o">/</span><span class="n">opt</span><span class="o">/</span><span class="n">GenomeAnalysisTK</span><span class="o">.</span><span class="n">jar</span> <span class="o">-</span><span class="n">T</span> <span class="n">RealignerTargetCreator</span> \
+        <span class="o">-</span><span class="n">R</span> <span class="p">{</span><span class="n">ref_genome</span><span class="p">}</span> \
+        <span class="o">-</span><span class="n">I</span> <span class="p">{</span><span class="n">_input</span><span class="p">}</span> \
+        <span class="o">-</span><span class="n">o</span> <span class="p">{</span><span class="n">_input</span><span class="p">:</span><span class="n">n</span><span class="p">}</span><span class="o">.</span><span class="n">intervals</span> \
+        <span class="o">--</span><span class="n">known</span> <span class="p">{</span><span class="n">ref_indel</span><span class="p">}</span> <span class="o">&amp;&amp;</span> \
+    <span class="n">java</span> <span class="o">-</span><span class="n">jar</span> <span class="o">/</span><span class="n">opt</span><span class="o">/</span><span class="n">GenomeAnalysisTK</span><span class="o">.</span><span class="n">jar</span> <span class="o">-</span><span class="n">T</span> <span class="n">IndelRealigner</span> \
+        <span class="o">-</span><span class="n">R</span> <span class="p">{</span><span class="n">ref_genome</span><span class="p">}</span> \
+        <span class="o">-</span><span class="n">I</span> <span class="p">{</span><span class="n">_input</span><span class="p">}</span> \
+        <span class="o">-</span><span class="n">targetIntervals</span> <span class="p">{</span><span class="n">_input</span><span class="p">:</span><span class="n">n</span><span class="p">}</span><span class="o">.</span><span class="n">intervals</span> \
+        <span class="o">-</span><span class="n">known</span> <span class="p">{</span><span class="n">ref_indel</span><span class="p">}</span> \
+        <span class="o">-</span><span class="n">o</span> <span class="p">{</span><span class="n">_output</span><span class="p">}</span>
+<span class="k">if</span> <span class="n">zap</span><span class="p">:</span>
+    <span class="n">_input</span><span class="o">.</span><span class="n">zap</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>BQSR from the Broad’s GATK allows you to reduce the effects of analysis artefacts produced by your sequencing machines. It does this in two steps, the first analyses your data to detect covariates and the second compensates for those covariates by adjusting quality scores.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[14]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Base recalibration</span>
+<span class="p">[</span><span class="mi">6</span><span class="p">]</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{_input:n}.recal.bam&#39;</span>
+<span class="kn">run:</span> <span class="n">container</span><span class="o">=</span><span class="s1">&#39;gaow/debian-ngs-gatk4:1.0&#39;</span><span class="p">,</span> <span class="n">volumes</span><span class="o">=</span><span class="p">[</span><span class="n">f</span><span class="s1">&#39;{wd:a}:{wd:a}&#39;</span><span class="p">],</span> <span class="n">expand</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output}.err&#39;</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output}.out&#39;</span>
+    <span class="n">gatk</span> <span class="n">BaseRecalibrator</span> \
+        <span class="o">-</span><span class="n">R</span> <span class="p">{</span><span class="n">ref_genome</span><span class="p">}</span> \
+        <span class="o">--</span><span class="n">known</span><span class="o">-</span><span class="n">sites</span> <span class="p">{</span><span class="n">ref_variants</span><span class="p">}</span> \
+        <span class="o">-</span><span class="n">I</span> <span class="p">{</span><span class="n">_input</span><span class="p">}</span> <span class="o">-</span><span class="n">O</span> <span class="p">{</span><span class="n">_input</span><span class="p">:</span><span class="n">n</span><span class="p">}</span><span class="o">.</span><span class="n">table</span> <span class="o">&amp;&amp;</span> \
+    <span class="n">gatk</span> <span class="n">ApplyBQSR</span> <span class="o">-</span><span class="n">I</span> <span class="p">{</span><span class="n">_input</span><span class="p">}</span> <span class="o">-</span><span class="n">bqsr</span> <span class="p">{</span><span class="n">_input</span><span class="p">:</span><span class="n">n</span><span class="p">}</span><span class="o">.</span><span class="n">table</span> <span class="o">-</span><span class="n">O</span> <span class="p">{</span><span class="n">_output</span><span class="p">}</span> <span class="c1"># --create-output-bam-index TRUE</span>
+<span class="k">if</span> <span class="n">zap</span><span class="p">:</span>
+    <span class="n">_input</span><span class="o">.</span><span class="n">zap</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>It is helpful at this point to compile all of the reads from each library together into one BAM, which can be done at the same time as marking PCR and optical duplicates. To identify duplicates we currently recommend the use of either the Picard or biobambam’s mark duplicates tool.</p>
+<p><em>The following step only Marks duplicates instead of removing duplicates</em></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[15]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Mark duplicates</span>
+<span class="p">[</span><span class="mi">7</span><span class="p">]</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{_input:n}.dedup.bam&#39;</span>
+<span class="kn">run:</span> <span class="n">container</span><span class="o">=</span><span class="s1">&#39;gaow/debian-ngs-gatk4:1.0&#39;</span><span class="p">,</span> <span class="n">volumes</span><span class="o">=</span><span class="p">[</span><span class="n">f</span><span class="s1">&#39;{wd:a}:{wd:a}&#39;</span><span class="p">],</span> <span class="n">expand</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:n}.err&#39;</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:n}.out&#39;</span>
+    <span class="n">gatk</span> <span class="n">MarkDuplicates</span> \
+        <span class="o">--</span><span class="n">VALIDATION_STRINGENCY</span> <span class="n">LENIENT</span> \
+        <span class="o">--</span><span class="n">INPUT</span> <span class="p">{</span><span class="n">_input</span><span class="p">}</span> <span class="o">--</span><span class="n">OUTPUT</span> <span class="p">{</span><span class="n">_output</span><span class="p">}</span> \
+        <span class="o">--</span><span class="n">METRICS_FILE</span> <span class="p">{</span><span class="n">_output</span><span class="p">:</span><span class="n">n</span><span class="p">}</span><span class="o">.</span><span class="n">metrics_file</span> \
+        <span class="o">--</span><span class="n">CREATE_INDEX</span> <span class="n">TRUE</span>
+<span class="k">if</span> <span class="n">zap</span><span class="p">:</span>
+    <span class="n">_input</span><span class="o">.</span><span class="n">zap</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>It is possible to view summary of BAM files in SoS, using <code>%preview</code> feature, for example,</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[16]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="o">%</span><span class="n">preview</span> <span class="n">WGS_Call_SoS</span><span class="o">/</span><span class="n">test_samples_bam</span><span class="o">/</span><span class="n">Sample_75641_1</span><span class="o">.</span><span class="n">fixmate</span><span class="o">.</span><span class="n">sorted</span><span class="o">.</span><span class="n">cleaned</span><span class="o">.</span><span class="n">reordered</span><span class="o">.</span><span class="n">realigned</span><span class="o">.</span><span class="n">recal</span><span class="o">.</span><span class="n">dedup</span><span class="o">.</span><span class="n">bam</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+<div class="output_html rendered_html output_subarea ">
+<div class="sos_hint">%preview WGS_Call_SoS/test_samples_bam/Sample_75641_1.fixmate.sorted.cleaned.reordered.realigned.recal.dedup.bam</div>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+<div class="output_html rendered_html output_subarea ">
+<div class="sos_hint">> WGS_Call_SoS/test_samples_bam/Sample_75641_1.fixmate.sorted.cleaned.reordered.realigned.recal.dedup.bam (335.6 KiB):</div>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>RG:
+  ID: &#39;Sample_75641&#39;    SM: &#39;Sample_75641&#39;    LB: &#39;library1&#39;    PL: &#39;ILLUMINA&#39;    ...
+PG:
+  ID: &#39;bwa&#39;    PN: &#39;bwa&#39;    VN: &#39;0.7.15-r1140&#39;    CL: bwa mem -t 3 -M -R @RG\tID:Sample_75641\tSM:Sample_75641\tLB...Sample_75641_2.fq.gz    
+  ID: &#39;GATK IndelRealigner&#39;    VN: &#39;3.8-1-0-gf15c1c3ef&#39;    CL: knownAlleles=[(RodBinding name=knownAlleles source=/home/gao...ileForDebugging=null    
+  ID: &#39;GATK ApplyBQSR&#39;    VN: &#39;4.0.3.0&#39;    CL: ApplyBQSR  --output /home/gaow/Documents/GIT/wiki/sos-docs/s...se	PN:GATK ApplyBQSR    
+  ID: &#39;MarkDuplicates&#39;    VN: &#39;Version:4.0.3.0&#39;    CL: MarkDuplicates  --INPUT /home/gaow/Documents/GIT/wiki/sos-do...se	PN:MarkDuplicates    
+SQ:
+  SN: &#39;chr36&#39;    LN: 30001    M5: &#39;68869954ee006c7821633a97b0a62430&#39;    UR: file:/home/gaow/Documents/GIT/wiki/sos-docs/src/examples/WGS...SoS/ref/reference.fa    
+  SN: &#39;chr37&#39;    LN: 30001    M5: &#39;af868c903d4fa5e8484cff65c55a6368&#39;    UR: file:/home/gaow/Documents/GIT/wiki/sos-docs/src/examples/WGS...SoS/ref/reference.fa    
+  SN: &#39;chr38&#39;    LN: 30001    M5: &#39;357ef977363e01badd94e19051529270&#39;    UR: file:/home/gaow/Documents/GIT/wiki/sos-docs/src/examples/WGS...SoS/ref/reference.fa    
+  SN: &#39;chrX&#39;    LN: 30001    M5: &#39;f7a40f22108352fa28a6f721315ad064&#39;    UR: file:/home/gaow/Documents/GIT/wiki/sos-docs/src/examples/WGS...SoS/ref/reference.fa    
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Variant-Calling">Variant Calling<a class="anchor-link" href="#Variant-Calling">&#182;</a></h2><p>To convert your BAM file into genomic positions we first use mpileup to produce a BCF file that contains all of the locations in the genome. We use this information to call genotypes and reduce our list of sites to those found to be variant by passing this file into bcftools call.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[17]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Multi-sample variant calling -- pileup</span>
+<span class="p">[</span><span class="mi">8</span><span class="p">]</span>
+<span class="c1"># the 2nd line can have many samples separated by space</span>
+<span class="kn">input:</span> <span class="n">group_by</span> <span class="o">=</span> <span class="s1">&#39;all&#39;</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{wd:a}/{samples:bn}_vcf/{samples:bn}.bcf&#39;</span>
+<span class="kn">run:</span> <span class="n">container</span><span class="o">=</span><span class="s1">&#39;gaow/debian-ngs:1.0&#39;</span><span class="p">,</span> <span class="n">volumes</span><span class="o">=</span><span class="p">[</span><span class="n">f</span><span class="s1">&#39;{wd:a}:{wd:a}&#39;</span><span class="p">],</span> <span class="n">expand</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:n}.err&#39;</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:n}.out&#39;</span>
+    <span class="n">bcftools</span> <span class="n">mpileup</span> <span class="o">-</span><span class="n">Ob</span> <span class="o">-</span><span class="n">f</span> <span class="p">{</span><span class="n">ref_genome</span><span class="p">}</span> <span class="o">--</span><span class="n">threads</span> <span class="p">{</span><span class="n">ncpu</span><span class="p">}</span> <span class="o">-</span><span class="n">o</span> <span class="p">{</span><span class="n">_output</span><span class="p">}</span> <span class="p">{</span><span class="n">_input</span><span class="p">}</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[18]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Multi-sample variant calling -- call</span>
+<span class="p">[</span><span class="mi">9</span><span class="p">]</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{_input:n}.vcf.gz&#39;</span>
+<span class="kn">run:</span> <span class="n">container</span><span class="o">=</span><span class="s1">&#39;gaow/debian-ngs:1.0&#39;</span><span class="p">,</span> <span class="n">volumes</span><span class="o">=</span><span class="p">[</span><span class="n">f</span><span class="s1">&#39;{wd:a}:{wd:a}&#39;</span><span class="p">],</span> <span class="n">expand</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:n}.err&#39;</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:n}.out&#39;</span>
+    <span class="n">bcftools</span> <span class="n">call</span> <span class="o">-</span><span class="p">{</span><span class="s2">&quot;v&quot;</span> <span class="k">if</span> <span class="n">variants_only</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">}</span><span class="n">mO</span> <span class="n">z</span> <span class="o">--</span><span class="n">threads</span> <span class="p">{</span><span class="n">ncpu</span><span class="p">}</span> <span class="o">-</span><span class="n">o</span> <span class="p">{</span><span class="n">_output</span><span class="p">}</span> <span class="p">{</span><span class="n">_input</span><span class="p">}</span> \
+    <span class="o">&amp;&amp;</span> <span class="n">tabix</span> <span class="o">-</span><span class="n">p</span> <span class="n">vcf</span> <span class="p">{</span><span class="n">_output</span><span class="p">}</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Additionally you may find it helpful to prepare graphs and statistics to assist you in filtering your variants:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[19]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Quality summary plots for VCF file</span>
+<span class="p">[</span><span class="mi">10</span><span class="p">]</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{_input:n}.stats&#39;</span>
+<span class="kn">run:</span> <span class="n">container</span><span class="o">=</span><span class="s1">&#39;gaow/debian-ngs-gatk4:1.0&#39;</span><span class="p">,</span> <span class="n">volumes</span><span class="o">=</span><span class="p">[</span><span class="n">f</span><span class="s1">&#39;{wd:a}:{wd:a}&#39;</span><span class="p">],</span> <span class="n">expand</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:n}.err&#39;</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:n}.out&#39;</span>
+    <span class="n">bcftools</span> <span class="n">stats</span> <span class="o">-</span><span class="n">F</span> <span class="p">{</span><span class="n">ref_genome</span><span class="p">}</span> <span class="o">-</span><span class="n">s</span> <span class="o">-</span> <span class="p">{</span><span class="n">_input</span><span class="p">}</span> <span class="o">&gt;</span> <span class="p">{</span><span class="n">_output</span><span class="p">}</span>
+    <span class="n">mkdir</span> <span class="o">-</span><span class="n">p</span> <span class="p">{</span><span class="n">_input</span><span class="p">:</span><span class="n">nn</span><span class="p">}</span><span class="n">_plots</span>
+    <span class="n">plot</span><span class="o">-</span><span class="n">vcfstats</span> <span class="o">-</span><span class="n">P</span> <span class="o">-</span><span class="n">p</span> <span class="p">{</span><span class="n">_input</span><span class="p">:</span><span class="n">nn</span><span class="p">}</span><span class="n">_plots</span> <span class="p">{</span><span class="n">_output</span><span class="p">}</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>To view one of the summary plot in SoS,</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[20]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="o">%</span><span class="n">preview</span> <span class="n">WGS_Call_SoS</span><span class="o">/</span><span class="n">test_samples_vcf</span><span class="o">/</span><span class="n">test_samples_plots</span><span class="o">/</span><span class="n">substitutions</span><span class="o">.</span><span class="mf">0.</span><span class="n">pdf</span> <span class="o">-</span><span class="n">s</span> <span class="n">png</span> <span class="o">--</span><span class="n">dpi</span> <span class="mi">80</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+<div class="output_html rendered_html output_subarea ">
+<div class="sos_hint">%preview WGS_Call_SoS/test_samples_vcf/test_samples_plots/substitutions.0.pdf</div>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+<div class="output_html rendered_html output_subarea ">
+<div class="sos_hint">> WGS_Call_SoS/test_samples_vcf/test_samples_plots/substitutions.0.pdf (9.8 KiB):</div>
+</div>
+
+</div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+
+
+<div class="output_png output_subarea ">
+<img src="data:image/png;base64,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"
+>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Finally you will probably need to filter your data using commands such as:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[21]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Quality filtering</span>
+<span class="p">[</span><span class="mi">11</span><span class="p">]</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{_input:nn}.filtered.vcf.gz&#39;</span>
+<span class="kn">run:</span> <span class="n">container</span><span class="o">=</span><span class="s1">&#39;gaow/debian-ngs:1.0&#39;</span><span class="p">,</span> <span class="n">volumes</span><span class="o">=</span><span class="p">[</span><span class="n">f</span><span class="s1">&#39;{wd:a}:{wd:a}&#39;</span><span class="p">],</span> <span class="n">expand</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:n}.err&#39;</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:n}.out&#39;</span>
+    <span class="n">bcftools</span> <span class="nb">filter</span> <span class="o">-</span><span class="n">O</span> <span class="n">z</span> <span class="o">-</span><span class="n">o</span> <span class="p">{</span><span class="n">_output</span><span class="p">}</span> \
+        <span class="o">-</span><span class="n">s</span> <span class="n">LOWQUAL</span> <span class="o">-</span><span class="n">i</span><span class="s1">&#39;{bcftools_filter}&#39;</span> <span class="p">{</span><span class="n">_input</span><span class="p">:</span><span class="n">nn</span><span class="p">}</span><span class="o">.</span><span class="n">vcf</span><span class="o">.</span><span class="n">gz</span> \
+    <span class="o">&amp;&amp;</span> <span class="n">tabix</span> <span class="o">-</span><span class="n">p</span> <span class="n">vcf</span> <span class="p">{</span><span class="n">_output</span><span class="p">}</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Variant filtration is a subject worthy of an article in itself and the exact filters you will need to use will depend on the purpose of your study and quality and depth of the data used to call the variants.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[22]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Only extract regions we are interested in</span>
+<span class="p">[</span><span class="mi">12</span><span class="p">]</span>
+<span class="n">stop_if</span><span class="p">(</span><span class="ow">not</span> <span class="n">keep_coord</span><span class="o">.</span><span class="n">is_file</span><span class="p">(),</span> <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Skip extracting selected SNPs because no list (--keep_coord coord.list) was provided to extract from.&#39;</span><span class="p">)</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{_input:nn}.extracted.vcf.gz&#39;</span>
+<span class="kn">run:</span> <span class="n">container</span><span class="o">=</span><span class="s1">&#39;gaow/debian-ngs:1.0&#39;</span><span class="p">,</span> <span class="n">volumes</span><span class="o">=</span><span class="p">[</span><span class="n">f</span><span class="s1">&#39;{wd:a}:{wd:a}&#39;</span><span class="p">],</span> <span class="n">expand</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:n}.err&#39;</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:n}.out&#39;</span>
+    <span class="n">tabix</span> <span class="o">-</span><span class="n">H</span> <span class="p">{</span><span class="n">_input</span><span class="p">}</span> <span class="o">&gt;</span> <span class="p">{</span><span class="n">_output</span><span class="p">:</span><span class="n">n</span><span class="p">}</span>
+    <span class="n">tabix</span> <span class="p">{</span><span class="n">_input</span><span class="p">}</span> <span class="o">-</span><span class="n">R</span> <span class="p">{</span><span class="n">keep_coord</span><span class="p">}</span> <span class="o">&gt;&gt;</span> <span class="p">{</span><span class="n">_output</span><span class="p">:</span><span class="n">n</span><span class="p">}</span>
+    <span class="n">bgzip</span> <span class="p">{</span><span class="n">_output</span><span class="p">:</span><span class="n">n</span><span class="p">}</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="References">References<a class="anchor-link" href="#References">&#182;</a></h2><ul>
+<li>The 1000 Genomes Project Consortium - An Integrated map of genetic variation from 1092 human genomes Nature 491, 56–65 (01 November 2012) doi:10.1038/nature11632</li>
+<li><a href="http://www.broadinstitute.org/gatk/guide/best-practices">GATK Best Practices</a></li>
+</ul>
+
+</div>
+</div>
+</div>
+<hr>
+&copy 2020-current Gao Wang and others, Department of Neurology at Columbia University
+<p><small>Exported from <a href="http://github.com/cumc/bioworkflows/blob/afe343c7a569b6bc3c33146f102a27c056f87614/variant-calling/samtools_variant_calling.ipynb"><code>variant-calling/samtools_variant_calling.ipynb</code></a> committed by Gao Wang on Thu Aug 20 20:24:42 2020 <a href="http://github.com/cumc/bioworkflows/commit/afe343c7a569b6bc3c33146f102a27c056f87614">revision 1, afe343c</a> <a href="https://stephenslab.github.io/ipynb-website/notes.html#Note-about-commit-ids"><span class="fa fa-question-circle"></span></a></small></p>
+</div>
+</div>
+</body>
+</html>
