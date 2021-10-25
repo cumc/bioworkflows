@@ -231,7 +231,7 @@ body {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="LDpred2-Pipeline-for-Polygenic-Risk-Score-Prediction">LDpred2 Pipeline for Polygenic Risk Score Prediction<a class="anchor-link" href="#LDpred2-Pipeline-for-Polygenic-Risk-Score-Prediction">&#182;</a></h1><p>This notebook shows the pipepline for genome-wide PRS prediction using R package <a href="https://privefl.github.io/bigsnpr/">bigsnpr</a> and <a href="https://zzz.bwh.harvard.edu/plink/">PLINK v1.9</a> implementing the <a href="https://pubmed.ncbi.nlm.nih.gov/33326037/">LDpred2</a>  method referenced on the tutorials from <a href="https://privefl.github.io/bigsnpr/articles/LDpred2.html">Florian Privé</a> and <a href="https://choishingwan.github.io/PRS-Tutorial/ldpred/">Shing Wan Choi</a>.</p>
+<h1 id="LDpred2-Pipeline-for-Polygenic-Risk-Score-Prediction">LDpred2 Pipeline for Polygenic Risk Score Prediction<a class="anchor-link" href="#LDpred2-Pipeline-for-Polygenic-Risk-Score-Prediction">&#182;</a></h1><p>This notebook implements the pipepline for genome-wide PRS prediction using R package <a href="https://privefl.github.io/bigsnpr/">bigsnpr</a> and <a href="https://zzz.bwh.harvard.edu/plink/">PLINK v1.9</a> implementing the <a href="https://pubmed.ncbi.nlm.nih.gov/33326037/">LDpred2</a> method. The pipeline is based on tutorials from <a href="https://privefl.github.io/bigsnpr/articles/LDpred2.html">Florian Privé</a> and <a href="https://choishingwan.github.io/PRS-Tutorial/ldpred/">Shing Wan Choi</a>.</p>
 
 </div>
 </div>
@@ -247,7 +247,7 @@ body {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Aim">Aim<a class="anchor-link" href="#Aim">&#182;</a></h2><p>The pipeline is developed to derive PRS from posterior effect size estimated by LDpred model. Plus, this pipeline can perform phenotypes prediction using PRS and covariates, which enables users to explore the association between PRS, covariates and phenotypes.</p>
+<h2 id="Overview">Overview<a class="anchor-link" href="#Overview">&#182;</a></h2><p>This pipeline is developed to integrate GWAS summary statistics data and LD reference panel to compute PRS using the LDpred2 model. The pipeline can also perform phenotypes prediction using PRS computed with other covariates, when individual sample genotype and covariates information are available. are available. When the true phenotypes are also available, the pipeline provides regression analysis for the association between PRS, covariates and phenotypes.</p>
 
 </div>
 </div>
@@ -278,7 +278,7 @@ $$<p>Assuming genotype $X$ is centered and scaled, the (marginal) least-squares 
 <p>Also, a <a href="https://www.nature.com/articles/s41596-020-0353-1">preliminary quality control</a> on genotype reference data should be conducted. This includes but not limited to</p>
 <ol>
 <li>Filter individuals with much (&gt;10%) genotype calls missing and filter SNPs that had a missing rate more than 1% and a minor allele frequency (MAF) greater than 1%</li>
-<li>Remove SNPs that have ambiguous nucleotides, i.e., A/T and G/C. </li>
+<li>Remove SNPs that have strand ambiguous nucleotides, i.e., A/T and G/C. </li>
 </ol>
 <p>In addition to SNP filtering, <a href="http://statgen.us/lab-wiki/compbio_tutorial/allele_qc">SNP flipping</a> may be necessary. It is of importance that GWAS summary stats has the same effect allele, and non-effect allele. Therefore, if the alleles of a SNP in the summary stats is the reverse of the alleles of the reference panel, the sign of z-scores (also effect size, log odds ratio, etc) is need to be flipped. At the end, summary statistics and reference panel will be matched on the basis of the SNP rsID.</p>
 <p>Independent validation cohort or dataset can be used as LD reference panel. Here is an example in the literature: <a href="https://pubmed.ncbi.nlm.nih.gov/26430803/">Bjarni J. Vilhja´lmsson (2015)</a> used 1000 Genome, Hapmap imputed cohort validation dataset as reference panel. He analyzed six large summary-statistics datasets in his study, including schizophrenia with European and non-European ancestry, multiple sclerosis (MS), breast cancer (BC), coronary crtery cisease (CAD), type II diabetes (T2D) and height. For schizophrenia with European ancestry, they used the Psychiatric Genomics Consortium 2 (PGC2) SCZ summary statistics excluding the ISC (International Schizophrenia Consortium) cohorts and the MGS (Molecular Genetics of Schizophrenia) cohorts. ISC and MGS datasets are used as validation datasets. For non-European ancestry, MGS validation datasets was used as an LD reference. To coordinate the summary statistics from Asian population, they used overlap among 1000 Genomes imputed MGS genotypes and the 1000 Genomes imputed validation genotypes for the three Asian validation datasets (JPN1, TCR1, and HOK2), respectively. For African-American (AFAM) population, they used overlap among the 1000 Genomes imputed MGS genotypes and the HapMap 3 imputed AFAM genotypes.</p>
@@ -371,6 +371,29 @@ $$<p>To ensure the validity of the assumption, quality control on summary statis
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h3 id="Method-for-Phenotype-Prediction">Method for Phenotype Prediction<a class="anchor-link" href="#Method-for-Phenotype-Prediction">&#182;</a></h3><p>Target data is splited into train dataset (80%) and test dataset (20%). Fit linear/logistic model on train dataset and then predict the phenotype on testdata. MSE and $R^2$ are calculated to considered as potential metrics to evaluate model performance of prediction. Missing genotypes are imputed with the mean of the genotype dosage for that variant with <code>snp_fastImputeSimple()</code> according to <a href="https://github.com/privefl/bigsnpr/issues/124#issuecomment-668598849">Florian Privé</a>.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Required-software">Required software<a class="anchor-link" href="#Required-software">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Required R packages include <code>data.table</code>, <code>tidyverse</code>, <code>bigsnpr</code>, <code>bigsparser</code>.</p>
+<div class="highlight"><pre><span></span><span class="nf">for </span><span class="p">(</span><span class="n">pkg</span> <span class="n">in</span> <span class="nf">c</span><span class="p">(</span><span class="s">&#39;data.table&#39;</span><span class="p">,</span> <span class="s">&#39;tidyverse&#39;</span><span class="p">,</span> <span class="s">&#39;bigsnpr&#39;</span><span class="p">))</span>
+    <span class="nf">if </span><span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="n">pkg</span> <span class="o">%in%</span> <span class="nf">rownames</span><span class="p">(</span><span class="nf">installed.packages</span><span class="p">())))</span> <span class="nf">install.packages</span><span class="p">(</span><span class="n">pkg</span><span class="p">,</span> <span class="n">repos</span> <span class="o">=</span> <span class="s">&#39;http://cran.rstudio.com&#39;</span><span class="p">)</span>
+</pre></div>
+<p>and PLINK version 1.9. To install on a desktop with <code>sudo</code> privilege, for example,</p>
+<div class="highlight"><pre><span></span>wget http://s3.amazonaws.com/plink1-assets/plink_linux_x86_64_20201019.zip <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    unzip plink_linux_x86_64_20201019.zip <span class="o">&amp;&amp;</span> <span class="se">\</span>
+    sudo mv plink prettify /usr/local/bin
+</pre></div>
 
 </div>
 </div>
@@ -483,8 +506,7 @@ cat $work_dir/gwas_hdl.intersect.stdout</code></pre>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Quality-Control-on-Summary-Statistics">Quality Control on Summary Statistics<a class="anchor-link" href="#Quality-Control-on-Summary-Statistics">&#182;</a></h3><p>See section <code>Ldpred2</code>.</p>
-<h4 id="Output">Output<a class="anchor-link" href="#Output">&#182;</a></h4><ul>
+<h3 id="Quality-Control-on-Summary-Statistics">Quality Control on Summary Statistics<a class="anchor-link" href="#Quality-Control-on-Summary-Statistics">&#182;</a></h3><h4 id="Output">Output<a class="anchor-link" href="#Output">&#182;</a></h4><ul>
 <li>Summary statistics after quality control saved to <code>work_dir/sumstats.snp_matched.qc.rds</code>.</li>
 <li>Plot showing the removed SNPs saved to <code>work_dir/sumstats.snp_matched.qc.png</code>.</li>
 <li>The SNPs used to fit LDpred model, also the SNPs we need to predict PRS in target data saved to <code>work_dir/sumstats.snp_matched.qc.snplist</code>.</li>
@@ -595,7 +617,7 @@ cat $work_dir/gwas_hdl.intersect.stdout</code></pre>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Example-analysis">Example analysis<a class="anchor-link" href="#Example-analysis">&#182;</a></h2><p>See notebook <a href="HDL_example.html">HDL_exmple.ipynb</a> for demonstration of results of traits HDL prediction using MVP summary statistics, 1000G as reference panel and UK biobank data as target data.</p>
+<h2 id="Example-analysis">Example analysis<a class="anchor-link" href="#Example-analysis">&#182;</a></h2><p>See notebook <a href="ldpred2_example.html">ldpred2_example.ipynb</a> for demonstration of results of a simulated data-set using UK biobank variants and 1000 genomes reference panel.</p>
 
 </div>
 </div>
@@ -844,7 +866,7 @@ Sections
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-sos"><pre><span></span><span class="c1"># Filter SNPs and select individuals </span>
-<span class="p">[</span><span class="n">preprocess_1</span> <span class="p">(</span><span class="n">basic</span> <span class="n">QC</span> <span class="n">filters</span><span class="p">)]</span>
+<span class="p">[</span><span class="n">preprocess_1</span><span class="p">,</span> <span class="n">snp_qc</span> <span class="p">(</span><span class="n">basic</span> <span class="n">QC</span> <span class="n">filters</span><span class="p">)]</span>
 <span class="c1"># PLINK binary files</span>
 <span class="kn">parameter:</span> <span class="n">genoFiles</span> <span class="o">=</span> <span class="n">paths</span>
 <span class="c1"># The path to the file that contains the list of samples to remove (format FID, IID)</span>
@@ -1260,6 +1282,7 @@ Sections
 
         <span class="c1"># Get adjusted beta from grid model</span>
         <span class="n">gird_beta</span> <span class="o">&lt;-</span> <span class="n">snp_ldpred2_grid</span><span class="p">(</span><span class="n">ldsc</span><span class="err">$</span><span class="n">corr</span><span class="p">,</span> <span class="n">df_beta</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">param</span><span class="p">,</span> <span class="n">ncores</span> <span class="o">=</span> <span class="n">NCORES</span><span class="p">)</span>
+        <span class="n">gird_beta</span><span class="p">[</span><span class="ow">is</span><span class="o">.</span><span class="n">na</span><span class="p">(</span><span class="n">gird_beta</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
 
         <span class="c1"># Prediction</span>
         <span class="n">grid_pred</span> <span class="o">&lt;-</span> <span class="n">big_prodMat</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">test</span><span class="err">$</span><span class="n">genotypes</span><span class="p">,</span> <span class="n">gird_beta</span><span class="p">[</span><span class="n">index</span><span class="p">,],</span> 
@@ -1453,7 +1476,7 @@ Sections
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Predict-phenotype">Predict phenotype<a class="anchor-link" href="#Predict-phenotype">&#182;</a></h2><p><strong>FIXME: in the future we should do K-fold cross validation and summarize average results</strong></p>
+<h2 id="Predict-phenotype">Predict phenotype<a class="anchor-link" href="#Predict-phenotype">&#182;</a></h2><p><strong>Note: currently the prediction evaluation is based on one random split of train and test data. A possible improvement should be performing K-fold cross validation and summarize average results</strong></p>
 
 </div>
 </div>
@@ -1542,7 +1565,7 @@ Sections
 </div>
 <hr>
 &copy 2020-current Gao Wang and others, Department of Neurology at Columbia University
-<p><small>Exported from <a href="http://github.com/cumc/bioworkflows/blob/711ce963d9ca6ee8fe37bff1e599bde0bba6144f/ldpred/ldpred.ipynb"><code>ldpred/ldpred.ipynb</code></a> committed by gaow on Tue May 25 02:01:01 2021 <a href="http://github.com/cumc/bioworkflows/commit/711ce963d9ca6ee8fe37bff1e599bde0bba6144f">revision 38, 711ce96</a> <a href="https://stephenslab.github.io/ipynb-website/notes.html#Note-about-commit-ids"><span class="fa fa-question-circle"></span></a></small></p>
+<p><small>Exported from <a href="http://github.com/cumc/bioworkflows/blob/6379d68f26291fb84852f57672351c425ffc5c2b/ldpred/ldpred.ipynb"><code>ldpred/ldpred.ipynb</code></a> committed by Gao Wang on Sun Oct 24 14:41:57 2021 <a href="http://github.com/cumc/bioworkflows/commit/6379d68f26291fb84852f57672351c425ffc5c2b">revision 42, 6379d68</a> <a href="https://stephenslab.github.io/ipynb-website/notes.html#Note-about-commit-ids"><span class="fa fa-question-circle"></span></a></small></p>
 </div>
 </div>
 </body>
