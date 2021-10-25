@@ -1,0 +1,8 @@
+# Regenie summary statistics template
+# default is to use the last allele of bgen file as the reference
+CHR: Chr
+POS: Start
+SNP: group
+N: samplesize
+P: B.pval
+SCORE: B.score
