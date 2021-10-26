@@ -394,20 +394,29 @@ Sections
     --cwd output \
     --bim_name ukb23156_c22.merged.filtered.bim \
     --humandb /gpfs/ysm/datasets/db/annovar/humandb \
-    --ukbb /gpfs/gibbs/pi/dewan/data/UKBiobank \
+    --xref_path /gpfs/gibbs/pi/dewan/data/UKBiobank \
     --job_size 1 \
     --name_prefix mwe_chr22 \
     --container_annovar /gpfs/gibbs/pi/dewan/data/UKBiobank/annovar.sif</code></pre>
-<p>On Columbia's cluster</p>
+<p>On Columbia's cluster running <code>annovar</code></p>
 
 <pre><code>sos run ~/project/bioworkflows/variant-annotation/annovar.ipynb annovar \
     --cwd output \
     --bim_name /mnt/mfs/statgen/UKBiobank/data/exome_files/project_VCF/plink_files/ukb23156_c22.merged.filtered.bim \
     --humandb /mnt/mfs/statgen/isabelle/REF/humandb  \
-    --ukbb /mnt/mfs/statgen/isabelle/REF/humandb \
+    --xref_path /mnt/mfs/statgen/isabelle/REF/humandb \
     --job_size 1 \
     --name_prefix mwe_chr22 \
     --container_annovar /mnt/mfs/statgen/containers/gatk4-annovar.sif</code></pre>
+<p>On Columbia's cluster running <code>burden_files</code></p>
+
+<pre><code>sos run ~/project/bioworkflows/variant-annotation/annovar.ipynb burden_files\
+    --cwd ~/output \
+    --annotated_file /mnt/mfs/statgen/UKBiobank/results/annovar_exome/ukb32285_exomespb_chr1_22.hg38.hg38_multianno.csv\
+    --bim_name /mnt/mfs/statgen/UKBiobank/data/exome_files/project_VCF/plink_files/ukb23156_c1.merged.filtered.bim \
+    --job_size 1 \
+    --name_prefix test \
+    --container_lmm /mnt/mfs/statgen/containers/lmm.sif</code></pre>
 
 </div>
 </div>
@@ -424,12 +433,16 @@ Sections
 <span class="kn">parameter:</span> <span class="n">numThreads</span> <span class="o">=</span> <span class="mi">2</span>
 <span class="c1"># For cluster jobs, number commands to run per job</span>
 <span class="kn">parameter:</span> <span class="n">job_size</span> <span class="o">=</span> <span class="mi">1</span>
-<span class="c1"># Human genome build</span>
-<span class="kn">parameter:</span> <span class="n">build</span> <span class="o">=</span> <span class="s1">&#39;hg38&#39;</span>
-<span class="c1"># Name for the merged bimfiles</span>
+<span class="c1"># Name for the merged bimfiles to use</span>
 <span class="kn">parameter:</span> <span class="n">bim_name</span> <span class="o">=</span> <span class="n">path</span>
+<span class="c1"># Human genome build hg19 or hg38</span>
+<span class="kn">parameter:</span> <span class="n">build</span> <span class="o">=</span> <span class="s1">&#39;hg38&#39;</span>
 <span class="c1"># Prefix for the name based on common/rare variant filtering</span>
 <span class="kn">parameter:</span> <span class="n">name_prefix</span> <span class="o">=</span> <span class="nb">str</span>
+<span class="c1"># Wall clock time expected</span>
+<span class="kn">parameter:</span> <span class="kp">walltime</span> <span class="o">=</span> <span class="s2">&quot;15h&quot;</span>
+<span class="c1"># Memory expected</span>
+<span class="kn">parameter:</span> <span class="kp">mem</span> <span class="o">=</span> <span class="s2">&quot;30G&quot;</span>
 <span class="c1"># Load annovar module from cluster</span>
 <span class="kn">parameter:</span> <span class="n">annovar_module</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
 <span class="s1">module load ANNOVAR/2020Jun08-foss-2018b-Perl-5.28.0</span>
@@ -438,7 +451,7 @@ Sections
 <span class="s1">&#39;&#39;&#39;</span>
 <span class="c1"># Software container option</span>
 <span class="kn">parameter:</span> <span class="n">container_annovar</span> <span class="o">=</span> <span class="s1">&#39;gaow/gatk4-annovar&#39;</span>
-<span class="kn">parameter:</span> <span class="n">container_lmm</span> <span class="o">=</span> <span class="s1">&#39;statisticalgenetics/lmm:2.0&#39;</span>
+<span class="kn">parameter:</span> <span class="n">container_lmm</span> <span class="o">=</span> <span class="s1">&#39;statisticalgenetics/lmm:2.4&#39;</span>
 </pre></div>
 
     </div>
@@ -463,20 +476,64 @@ Sections
 </div>
 </div>
 </div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Step-to-merge-*.bim-files-from-plink-formatted-data-(e.g-exome-data-in-the-UKBB,-genotype-array-data)">Step to merge *.bim files from plink formatted data (e.g exome data in the UKBB, genotype array data)<a class="anchor-link" href="#Step-to-merge-*.bim-files-from-plink-formatted-data-(e.g-exome-data-in-the-UKBB,-genotype-array-data)">&#182;</a></h2>
+</div>
+</div>
+</div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Merge all the bimfiles into a single file to use later with awk</span>
-<span class="c1"># Only need to run this cell once</span>
-<span class="p">[</span><span class="n">bim_merge</span><span class="p">:</span> <span class="kp">provides</span> <span class="o">=</span> <span class="n">bim_name</span><span class="p">]</span>
-<span class="kn">parameter:</span> <span class="n">bimfiles</span> <span class="o">=</span> <span class="n">paths</span>
-<span class="kn">input:</span> <span class="n">bimfiles</span>
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Merge all the *.bim files into a single file. Needs to be run once per type of data (e.g. genotype, exome)</span>
+<span class="p">[</span><span class="n">bim_from_plink</span><span class="p">]</span>
+<span class="c1"># Path to the *.bim files to merge</span>
+<span class="kn">parameter:</span> <span class="n">bimfiles</span><span class="o">=</span> <span class="n">paths</span>
+<span class="c1"># Specify path of the merged bim file</span>
+<span class="kn">parameter:</span> <span class="n">bim_name</span> <span class="o">=</span> <span class="n">path</span>
+<span class="kn">input:</span> <span class="n">bimfiles</span> 
 <span class="kn">output:</span> <span class="n">bim_name</span>
-<span class="kn">task:</span> <span class="kp">trunk_workers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">walltime</span> <span class="o">=</span> <span class="s1">&#39;10h&#39;</span><span class="p">,</span> <span class="kp">mem</span> <span class="o">=</span> <span class="s1">&#39;10G&#39;</span><span class="p">,</span> <span class="kp">cores</span> <span class="o">=</span> <span class="n">numThreads</span><span class="p">,</span> <span class="kp">tags</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{step_name}_{_output:bn}&#39;</span>
+<span class="kn">task:</span> <span class="kp">trunk_workers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">walltime</span> <span class="o">=</span> <span class="kp">walltime</span><span class="p">,</span> <span class="kp">mem</span> <span class="o">=</span> <span class="kp">mem</span><span class="p">,</span> <span class="kp">cores</span> <span class="o">=</span> <span class="n">numThreads</span><span class="p">,</span> <span class="kp">tags</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{step_name}_{_output:bn}&#39;</span>
 <span class="kn">bash:</span> <span class="n">expand</span><span class="o">=</span> <span class="s2">&quot;${ }&quot;</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output:n}.stderr&#39;</span><span class="p">,</span> <span class="n">stdout</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output:n}.stdout&#39;</span> 
-      <span class="n">cat</span> <span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">}</span> <span class="o">&gt;</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">}</span>
+      <span class="n">cat</span> <span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">}</span> <span class="o">&gt;&gt;</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">}</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Step-to-create-the-bim-files-from-mfi-(bgen)-files-to-annotate-(e.g-imputed-genotype-data-UKBB)">Step to create the bim files from mfi (bgen) files to annotate (e.g imputed genotype data UKBB)<a class="anchor-link" href="#Step-to-create-the-bim-files-from-mfi-(bgen)-files-to-annotate-(e.g-imputed-genotype-data-UKBB)">&#182;</a></h2><p>For further information please take a look at this <a href="https://github.com/statgenetics/UKBB_GWAS_dev/analysis/cluster_scripts/annotate_bim_files.ipynb">notebook</a> where each step is precisely explained</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Create a merged *.bim file from mfi files</span>
+<span class="p">[</span><span class="n">bim_from_bgen</span><span class="p">]</span>
+<span class="c1"># Specify bgen files path</span>
+<span class="kn">parameter:</span> <span class="n">genoFile</span> <span class="o">=</span> <span class="n">paths</span>
+<span class="c1"># Specify name of the merged bim file</span>
+<span class="kn">parameter:</span> <span class="n">bim_name</span> <span class="o">=</span> <span class="nb">str</span>
+<span class="c1"># The input here is the bgen file from which to extract the list of variants</span>
+<span class="kn">input:</span> <span class="n">genoFile</span><span class="p">,</span> <span class="n">group_by</span><span class="o">=</span><span class="mi">1</span>
+<span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{cwd}/{_input:bn}.bim&#39;</span>
+<span class="kn">task:</span> <span class="kp">trunk_workers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">walltime</span> <span class="o">=</span> <span class="kp">walltime</span><span class="p">,</span> <span class="kp">mem</span> <span class="o">=</span> <span class="kp">mem</span><span class="p">,</span> <span class="kp">cores</span> <span class="o">=</span> <span class="n">numThreads</span><span class="p">,</span> <span class="kp">tags</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{step_name}_{_output:bn}&#39;</span>
+<span class="kn">bash:</span> <span class="n">container</span><span class="o">=</span><span class="n">container_lmm</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span> <span class="s2">&quot;${ }&quot;</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output:n}.stderr&#39;</span><span class="p">,</span> <span class="n">stdout</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output:n}.stdout&#39;</span>
+    <span class="c1"># Create the bim for each mfi </span>
+    <span class="c1"># From the ubk_mfi file get the chr, alternate_id, pos, allele 1 (alternative and usually minor) and allele 2 (reference and usually major)</span>
+    <span class="c1"># Add the 0 cM column </span>
+    <span class="n">cat</span> <span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">}</span><span class="o">|</span> <span class="n">awk</span> <span class="s1">&#39; { gsub(&quot;_&quot;,&quot;:&quot;,$1); print substr($1,1,1), $1, $3, $5, $4 }&#39;</span> <span class="o">|</span><span class="n">awk</span> <span class="s1">&#39;BEGIN{FS=OFS=&quot; &quot;}{$2 = $2 OFS 0}1&#39;</span><span class="o">&gt;</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">}</span>
 </pre></div>
 
     </div>
@@ -505,7 +562,7 @@ Sections
 <span class="kn">parameter:</span> <span class="n">mind_filter</span> <span class="o">=</span> <span class="mf">0.0</span>
 <span class="kn">input:</span> <span class="n">bfiles</span><span class="p">,</span> <span class="n">group_by</span><span class="o">=</span><span class="mi">1</span>
 <span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{cwd}/cache/{_input:bn}.{name_prefix}.snplist&#39;</span>
-<span class="kn">task:</span> <span class="kp">trunk_workers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">walltime</span> <span class="o">=</span> <span class="s1">&#39;10h&#39;</span><span class="p">,</span> <span class="kp">mem</span> <span class="o">=</span> <span class="s1">&#39;30G&#39;</span><span class="p">,</span> <span class="kp">cores</span> <span class="o">=</span> <span class="n">numThreads</span><span class="p">,</span> <span class="kp">tags</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{step_name}_{_output:bn}&#39;</span>
+<span class="kn">task:</span> <span class="kp">trunk_workers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">walltime</span> <span class="o">=</span> <span class="kp">walltime</span><span class="p">,</span> <span class="kp">mem</span> <span class="o">=</span> <span class="kp">mem</span><span class="p">,</span> <span class="kp">cores</span> <span class="o">=</span> <span class="n">numThreads</span><span class="p">,</span> <span class="kp">tags</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{step_name}_{_output:bn}&#39;</span>
 <span class="kn">bash:</span> <span class="n">container</span><span class="o">=</span><span class="n">container_lmm</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span> <span class="s2">&quot;${ }&quot;</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output:n}.stderr&#39;</span><span class="p">,</span> <span class="n">stdout</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output:n}.stdout&#39;</span> 
     <span class="n">plink2</span> \
       <span class="o">--</span><span class="n">bfile</span> <span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">:</span><span class="n">n</span><span class="p">}</span>\
@@ -534,7 +591,7 @@ Sections
 <span class="p">[</span><span class="n">get_snps_2</span><span class="p">]</span>
 <span class="kn">input:</span> <span class="n">group_by</span><span class="o">=</span><span class="s1">&#39;all&#39;</span>
 <span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{cwd}/cache/{name_prefix}.snplist&#39;</span>
-<span class="kn">task:</span> <span class="kp">trunk_workers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">walltime</span> <span class="o">=</span> <span class="s1">&#39;10h&#39;</span><span class="p">,</span> <span class="kp">mem</span> <span class="o">=</span> <span class="s1">&#39;10G&#39;</span><span class="p">,</span> <span class="kp">cores</span> <span class="o">=</span> <span class="n">numThreads</span><span class="p">,</span> <span class="kp">tags</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{step_name}_{_output:bn}&#39;</span>
+<span class="kn">task:</span> <span class="kp">trunk_workers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">walltime</span> <span class="o">=</span> <span class="kp">walltime</span><span class="p">,</span> <span class="kp">mem</span> <span class="o">=</span> <span class="kp">mem</span><span class="p">,</span> <span class="kp">cores</span> <span class="o">=</span> <span class="n">numThreads</span><span class="p">,</span> <span class="kp">tags</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{step_name}_{_output:bn}&#39;</span>
 <span class="kn">bash:</span> <span class="n">expand</span><span class="o">=</span> <span class="s2">&quot;${ }&quot;</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output[0]:n}.stderr&#39;</span><span class="p">,</span> <span class="n">stdout</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output:n}.stdout&#39;</span> 
       <span class="n">cat</span> <span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">}</span> <span class="o">&gt;</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">}</span>
 </pre></div>
@@ -553,7 +610,7 @@ Sections
 <span class="p">[</span><span class="n">get_snps_3</span><span class="p">]</span>
 <span class="kn">depends:</span> <span class="n">bim_name</span>
 <span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{cwd}/{_input:bn}.avinput&#39;</span>
-<span class="kn">task:</span> <span class="kp">trunk_workers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">walltime</span> <span class="o">=</span> <span class="s1">&#39;10h&#39;</span><span class="p">,</span> <span class="kp">mem</span> <span class="o">=</span> <span class="s1">&#39;10G&#39;</span><span class="p">,</span> <span class="kp">cores</span> <span class="o">=</span> <span class="n">numThreads</span><span class="p">,</span> <span class="kp">tags</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{step_name}_{_output:bn}&#39;</span>
+<span class="kn">task:</span> <span class="kp">trunk_workers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">walltime</span> <span class="o">=</span> <span class="kp">walltime</span><span class="p">,</span> <span class="kp">mem</span> <span class="o">=</span> <span class="kp">mem</span><span class="p">,</span> <span class="kp">cores</span> <span class="o">=</span> <span class="n">numThreads</span><span class="p">,</span> <span class="kp">tags</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{step_name}_{_output:bn}&#39;</span>
 <span class="kn">bash:</span> <span class="n">expand</span><span class="o">=</span> <span class="s2">&quot;${ }&quot;</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output:n}.stderr&#39;</span><span class="p">,</span> <span class="n">stdout</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output:n}.stdout&#39;</span> 
     <span class="n">awk</span> <span class="o">-</span><span class="n">F</span><span class="s2">&quot; &quot;</span> <span class="s1">&#39;FNR==NR {lines[$1]; next} $2 in lines &#39;</span> <span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">}</span> <span class="err">$</span><span class="p">{</span><span class="n">bim_name</span><span class="p">}</span> <span class="o">&gt;</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">:</span><span class="n">n</span><span class="p">}</span><span class="o">.</span><span class="n">tmp</span>
     <span class="n">awk</span> <span class="s1">&#39;{if ($2 ~ /D/) {print $1, $4, $4 + (length ($6) - length ($5)), $6, $5 } else {print $1, $4, $4, $6, $5 }}&#39;</span>  <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">:</span><span class="n">n</span><span class="p">}</span><span class="o">.</span><span class="n">tmp</span> <span class="o">&gt;</span>  <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">}</span>
@@ -573,7 +630,7 @@ Sections
 <p>On Farnam's Yale HPC there is a folder for shared databases
 <code>/gpfs/ysm/datasets/db/annovar/humandb</code></p>
 <p>and a folder for the x_ref database <code>/gpfs/gibbs/pi/dewan/data/UKBiobank/mart_export_2019_LOFtools3.txt</code></p>
-<p>On Yale's cluster there folder for shared databases for build hg19 is under Isabelle's folder
+<p>On Columbia's cluster there folder for shared databases for build hg19 is under Isabelle's folder
 <code>/mnt/mfs/statgen/isabelle/REF/humandb</code></p>
 <p>and the x_ref database is under that same folder <code>/mnt/mfs/statgen/isabelle/REF/humandb</code></p>
 <h3 id="Important-note">Important note<a class="anchor-link" href="#Important-note">&#182;</a></h3><p>Please make sure you are using the correct build for your annotations UKBB exome data for 200K individuals need hg38 build</p>
@@ -598,9 +655,11 @@ Sections
 <span class="p">[</span><span class="n">annovar_1</span><span class="p">]</span>
 <span class="kn">input:</span> <span class="n">bim_name</span>
 <span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{cwd}/{_input:bn}.{build}.avinput&#39;</span>
-<span class="kn">task:</span> <span class="kp">trunk_workers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">walltime</span> <span class="o">=</span> <span class="s1">&#39;10h&#39;</span><span class="p">,</span> <span class="kp">mem</span> <span class="o">=</span> <span class="s1">&#39;10G&#39;</span><span class="p">,</span> <span class="kp">cores</span> <span class="o">=</span> <span class="n">numThreads</span><span class="p">,</span> <span class="kp">tags</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output:bn}&#39;</span>
+<span class="kn">task:</span> <span class="kp">trunk_workers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">walltime</span> <span class="o">=</span> <span class="kp">walltime</span><span class="p">,</span> <span class="kp">mem</span> <span class="o">=</span> <span class="kp">mem</span><span class="p">,</span> <span class="kp">cores</span> <span class="o">=</span> <span class="n">numThreads</span><span class="p">,</span> <span class="kp">tags</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output:bn}&#39;</span>
 <span class="kn">bash:</span> <span class="n">expand</span><span class="o">=</span> <span class="s2">&quot;${ }&quot;</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output:n}.err&#39;</span><span class="p">,</span> <span class="n">stdout</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output:n}.out&#39;</span> 
-    <span class="n">awk</span> <span class="s1">&#39;{if ($2 ~ /D/) {print $1, $4, $4 + (length ($6) - length ($5)), $6, $5, $2} else {print $1, $4, $4, $6, $5, $2}}&#39;</span>  <span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">}</span> <span class="o">&gt;</span>  <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">}</span>
+    <span class="c1"># $6 ref_allele, $5 alt_allele in the bim files </span>
+    <span class="c1"># Output as annovar avinput chr, start, end (has to be calculated depending on allele length), reference, alternative</span>
+     <span class="n">awk</span> <span class="s1">&#39;{print $1, $4, $4 + (length($6) - 1), $6, $5, $2}&#39;</span>   <span class="err">$</span><span class="p">{</span><span class="n">_input</span><span class="p">}</span> <span class="o">&gt;</span>  <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">}</span>
 </pre></div>
 
     </div>
@@ -613,22 +672,26 @@ Sections
 <div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Annotate vcf file using ANNOVAR</span>
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Annotate variants file using ANNOVAR</span>
 <span class="p">[</span><span class="n">annovar_2</span><span class="p">]</span>
 <span class="c1"># humandb path for ANNOVAR</span>
 <span class="kn">parameter:</span> <span class="n">humandb</span> <span class="o">=</span> <span class="n">path</span>
-<span class="kn">parameter:</span> <span class="n">ukbb</span> <span class="o">=</span> <span class="n">path</span>
+<span class="c1"># Path to x-ref file</span>
+<span class="kn">parameter:</span> <span class="n">xref_path</span> <span class="o">=</span> <span class="n">path</span>
+<span class="c1"># Annovar protocol</span>
+<span class="k">if</span> <span class="n">build</span> <span class="o">==</span> <span class="s1">&#39;hg19&#39;</span><span class="p">:</span>
+    <span class="n">protocol</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;refGene&#39;</span><span class="p">,</span> <span class="s1">&#39;refGeneWithVer&#39;</span><span class="p">,</span> <span class="s1">&#39;knownGene&#39;</span><span class="p">,</span> <span class="s1">&#39;ensGene&#39;</span><span class="p">,</span> <span class="s1">&#39;phastConsElements46way&#39;</span><span class="p">,</span> <span class="s1">&#39;tfbsConsSites&#39;</span><span class="p">,</span> <span class="s1">&#39;gwasCatalog&#39;</span><span class="p">,</span> <span class="s1">&#39;gnomad211_genome&#39;</span><span class="p">,</span> <span class="s1">&#39;gnomad211_exome&#39;</span><span class="p">,</span> <span class="s1">&#39;gme&#39;</span><span class="p">,</span> <span class="s1">&#39;kaviar_20150923&#39;</span><span class="p">,</span> <span class="s1">&#39;abraom&#39;</span><span class="p">,</span> <span class="s1">&#39;avsnp150&#39;</span><span class="p">,</span> <span class="s1">&#39;dbnsfp42a&#39;</span><span class="p">,</span> <span class="s1">&#39;dbscsnv11&#39;</span><span class="p">,</span> <span class="s1">&#39;regsnpintron&#39;</span><span class="p">,</span> <span class="s1">&#39;clinvar_20210501&#39;</span><span class="p">,</span> <span class="s1">&#39;gene4denovo201907&#39;</span><span class="p">]</span>
+<span class="kn">else:</span>
+    <span class="n">protocol</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;refGene&#39;</span><span class="p">,</span> <span class="s1">&#39;refGeneWithVer&#39;</span><span class="p">,</span> <span class="s1">&#39;knownGene&#39;</span><span class="p">,</span> <span class="s1">&#39;ensGene&#39;</span><span class="p">,</span> <span class="s1">&#39;phastConsElements30way&#39;</span><span class="p">,</span> <span class="s1">&#39;encRegTfbsClustered&#39;</span><span class="p">,</span> <span class="s1">&#39;gwasCatalog&#39;</span><span class="p">,</span> <span class="s1">&#39;gnomad30_genome&#39;</span><span class="p">,</span> <span class="s1">&#39;gnomad211_exome&#39;</span><span class="p">,</span> <span class="s1">&#39;gme&#39;</span><span class="p">,</span> <span class="s1">&#39;kaviar_20150923&#39;</span><span class="p">,</span> <span class="s1">&#39;abraom&#39;</span><span class="p">,</span> <span class="s1">&#39;avsnp150&#39;</span><span class="p">,</span> <span class="s1">&#39;dbnsfp41a&#39;</span><span class="p">,</span> <span class="s1">&#39;dbscsnv11&#39;</span><span class="p">,</span> <span class="s1">&#39;regsnpintron&#39;</span><span class="p">,</span> <span class="s1">&#39;clinvar_20200316&#39;</span><span class="p">,</span> <span class="s1">&#39;gene4denovo201907&#39;</span><span class="p">]</span>
 <span class="c1">#add xreffile to option without -exonicsplicing</span>
 <span class="c1">#mart_export_2019_LOFtools3.txt #xreffile latest option -&gt; Phenotype description,HGNC symbol,MIM morbid description,CGD_CONDITION,CGD_inh,CGD_man,CGD_comm,LOF_tools</span>
-<span class="kn">parameter:</span> <span class="n">x_ref</span> <span class="o">=</span> <span class="n">path</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;{ukbb}/mart_export_2019_LOFtools3.txt&quot;</span><span class="p">)</span>
-<span class="c1"># Annovar protocol</span>
-<span class="kn">parameter:</span> <span class="n">protocol</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;refGene&#39;</span><span class="p">,</span> <span class="s1">&#39;refGeneWithVer&#39;</span><span class="p">,</span> <span class="s1">&#39;knownGene&#39;</span><span class="p">,</span> <span class="s1">&#39;ensGene&#39;</span><span class="p">,</span> <span class="s1">&#39;phastConsElements30way&#39;</span><span class="p">,</span> <span class="s1">&#39;encRegTfbsClustered&#39;</span><span class="p">,</span> <span class="s1">&#39;gwasCatalog&#39;</span><span class="p">,</span> <span class="s1">&#39;gnomad211_genome&#39;</span><span class="p">,</span> <span class="s1">&#39;gnomad211_exome&#39;</span><span class="p">,</span> <span class="s1">&#39;gme&#39;</span><span class="p">,</span> <span class="s1">&#39;kaviar_20150923&#39;</span><span class="p">,</span> <span class="s1">&#39;abraom&#39;</span><span class="p">,</span> <span class="s1">&#39;avsnp150&#39;</span><span class="p">,</span> <span class="s1">&#39;dbnsfp41a&#39;</span><span class="p">,</span> <span class="s1">&#39;dbscsnv11&#39;</span><span class="p">,</span> <span class="s1">&#39;regsnpintron&#39;</span><span class="p">,</span> <span class="s1">&#39;clinvar_20200316&#39;</span><span class="p">,</span> <span class="s1">&#39;gene4denovo201907&#39;</span><span class="p">]</span>
+<span class="kn">parameter:</span> <span class="n">x_ref</span> <span class="o">=</span> <span class="n">path</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;{xref_path}/mart_export_2021_LOFtools.txt&quot;</span><span class="p">)</span>
 <span class="c1"># Annovar operation</span>
 <span class="kn">parameter:</span> <span class="n">operation</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="s1">&#39;gx&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">]</span>
 <span class="c1"># Annovar args</span>
 <span class="kn">parameter:</span> <span class="n">arg</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&quot;-splicing 12 -exonicsplicing&quot;&#39;</span><span class="p">,</span> <span class="s1">&#39;&quot;-splicing 30&quot;&#39;</span><span class="p">,</span> <span class="s1">&#39;&quot;-splicing 12 -exonicsplicing&quot;&#39;</span><span class="p">,</span> <span class="s1">&#39;&quot;-splicing 12&quot;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">]</span>
 <span class="kn">output:</span> <span class="n">f</span><span class="s1">&#39;{cwd}/{_input:bn}.{build}_multianno.csv&#39;</span>
-<span class="kn">task:</span> <span class="kp">trunk_workers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">walltime</span> <span class="o">=</span> <span class="s1">&#39;60h&#39;</span><span class="p">,</span> <span class="kp">mem</span> <span class="o">=</span> <span class="s1">&#39;48G&#39;</span><span class="p">,</span> <span class="kp">cores</span> <span class="o">=</span> <span class="n">numThreads</span><span class="p">,</span> <span class="kp">tags</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output:bn}&#39;</span>
+<span class="kn">task:</span> <span class="kp">trunk_workers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">walltime</span> <span class="o">=</span> <span class="kp">walltime</span><span class="p">,</span> <span class="kp">mem</span> <span class="o">=</span> <span class="kp">mem</span><span class="p">,</span> <span class="kp">cores</span> <span class="o">=</span> <span class="n">numThreads</span><span class="p">,</span> <span class="kp">tags</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{step_name}_{_output:bn}&#39;</span><span class="p">,</span> <span class="n">template</span> <span class="o">=</span> <span class="s1">&#39;{cmd}&#39;</span> <span class="k">if</span> <span class="n">executable</span><span class="p">(</span><span class="s1">&#39;annotate_variation.pl&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">target_exists</span><span class="p">()</span> <span class="k">else</span> <span class="n">annovar_module</span>
 <span class="kn">bash:</span> <span class="n">container</span><span class="o">=</span><span class="n">container_annovar</span><span class="p">,</span> <span class="n">volumes</span><span class="o">=</span><span class="p">[</span><span class="n">f</span><span class="s1">&#39;{humandb:a}:{humandb:a}&#39;</span><span class="p">,</span> <span class="n">f</span><span class="s1">&#39;{x_ref:ad}:{x_ref:ad}&#39;</span><span class="p">],</span> <span class="n">expand</span><span class="o">=</span><span class="s2">&quot;${ }&quot;</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:n}.err&#39;</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output:n}.out&#39;</span>
     <span class="c1">#do not add -intronhgvs as option -&gt; writes cDNA variants as HGVS but creates issues (+2 splice site reported only)</span>
     <span class="c1">#-nastring . can only be . for VCF files</span>
@@ -638,10 +701,11 @@ Sections
         <span class="err">$</span><span class="p">{</span><span class="n">humandb</span><span class="p">}</span> \
         <span class="o">-</span><span class="n">buildver</span> <span class="err">$</span><span class="p">{</span><span class="n">build</span><span class="p">}</span> \
         <span class="o">-</span><span class="n">out</span> <span class="err">$</span><span class="p">{</span><span class="n">_output</span><span class="p">:</span><span class="n">nn</span><span class="p">}</span>\
+        <span class="o">-</span><span class="n">otherinfo</span>\
         <span class="o">-</span><span class="n">remove</span> \
         <span class="o">-</span><span class="n">polish</span> \
         <span class="o">-</span><span class="n">nastring</span> <span class="o">.</span> \
-        <span class="o">-</span><span class="n">protocol</span> <span class="err">$</span><span class="p">{</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">protocol</span><span class="p">)}</span> \
+        <span class="o">-</span><span class="n">protocol</span> <span class="err">$</span><span class="p">{</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">protocol</span><span class="p">)}</span>\
         <span class="o">-</span><span class="n">operation</span> <span class="err">$</span><span class="p">{</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">operation</span><span class="p">)}</span> \
         <span class="o">-</span><span class="n">arg</span> <span class="err">$</span><span class="p">{</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">arg</span><span class="p">)}</span> \
         <span class="o">-</span><span class="n">csvout</span> \
@@ -653,9 +717,136 @@ Sections
 </div>
 
 </div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Generate-files-for-burden_test-regenie-from-the-annotated-file">Generate files for burden_test regenie from the annotated file<a class="anchor-link" href="#Generate-files-for-burden_test-regenie-from-the-annotated-file">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>This workflow's aim is to generate the <code>--anno_file</code> and the <code>--set_list</code> files needed to run regenie_burden in the LMM.ipynb</p>
+<p>Required files</p>
+<ol>
+<li>The anno_files: define variant sets and functional annotations that will be used to generate the masks. The format is <code>chr:start:ref:alt gene_name functional_annot</code></li>
+<li>The set-list-files: lists variants within each set/gene to use when building masks. The format is set/gene chr start_pos and a comma separated list of variants included in that gene</li>
+<li>Mask file: this file specifies which annotation categories should be combined into masks</li>
+</ol>
+<p>Optional files</p>
+<ol>
+<li>Set inclusion/exclusion file: one column with a list of sets/genes to be included/excluded from the set-list-file</li>
+<li>Alternative allele frequency file (AAF): by default the AAF is computed by the sample but you can specify an AAF for each variant using this file</li>
+</ol>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-sos"><pre><span></span><span class="c1"># Make the anno_file and set_list_file for regenie_burden analysis</span>
+<span class="p">[</span><span class="n">burden_files</span><span class="p">]</span>
+<span class="kn">parameter:</span> <span class="n">annotated_file</span> <span class="o">=</span> <span class="n">path</span>
+<span class="kn">parameter:</span> <span class="n">rsid</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="kn">input:</span> <span class="n">annotated_file</span>
+<span class="kn">output:</span><span class="n">f</span><span class="s1">&#39;{cwd}/{_input:bn}.anno_file&#39;</span><span class="p">,</span>
+       <span class="n">f</span><span class="s1">&#39;{cwd}/{_input:bn}.aff_file&#39;</span><span class="p">,</span>     
+       <span class="n">f</span><span class="s1">&#39;{cwd}/{_input:bn}.set_list_file&#39;</span>
+<span class="kn">task:</span> <span class="kp">trunk_workers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="kp">walltime</span> <span class="o">=</span> <span class="s1">&#39;10h&#39;</span><span class="p">,</span> <span class="kp">mem</span> <span class="o">=</span> <span class="s1">&#39;20G&#39;</span><span class="p">,</span> <span class="kp">cores</span> <span class="o">=</span> <span class="n">numThreads</span><span class="p">,</span> <span class="kp">tags</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{_output[0]:bn}&#39;</span>
+<span class="kn">python:</span> <span class="n">container</span><span class="o">=</span><span class="n">container_lmm</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span><span class="s2">&quot;${ }&quot;</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output[0]:n}.err&#39;</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{_output[0]:n}.out&#39;</span>
+    <span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+    <span class="kn">import</span> <span class="nn">csv</span>
+
+    <span class="n">columns</span><span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Chr&#39;</span><span class="p">,</span> <span class="s2">&quot;Start&quot;</span><span class="p">,</span> <span class="s2">&quot;Ref&quot;</span><span class="p">,</span> <span class="s2">&quot;Alt&quot;</span><span class="p">,</span> <span class="s2">&quot;Gene.refGene&quot;</span><span class="p">,</span> <span class="s2">&quot;ExonicFunc.refGene&quot;</span><span class="p">,</span> <span class="s2">&quot;avsnp150&quot;</span><span class="p">,</span> <span class="s2">&quot;AF_nfe&quot;</span> <span class="p">]</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;${_input}&#39;</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;gzip&#39;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;string&#39;</span><span class="p">,</span> <span class="n">usecols</span><span class="o">=</span><span class="n">columns</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+    <span class="c1"># Get the refGene definition</span>
+
+    <span class="c1"># Get only the first gene name present</span>
+    <span class="n">df1</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;Gene.refGene&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;;&quot;</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">expand</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+    <span class="n">df</span><span class="p">[</span><span class="s2">&quot;Gene&quot;</span><span class="p">]</span><span class="o">=</span> <span class="n">df1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># Get the variants in the chr, pos, ref, alt format</span>
+
+    <span class="k">if</span> <span class="err">$</span><span class="p">{</span><span class="n">rsid</span><span class="p">}</span> <span class="o">==</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">df</span><span class="p">[</span><span class="s2">&quot;varID&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">avsnp150</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">df</span><span class="p">[</span><span class="s2">&quot;varID&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">Chr</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">others</span><span class="o">=</span><span class="p">[</span><span class="n">df</span><span class="o">.</span><span class="n">Start</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">Ref</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">Alt</span><span class="p">],</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Drop duplicated variants</span>
+    <span class="n">df2</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="s1">&#39;varID&#39;</span><span class="p">,</span> <span class="n">keep</span><span class="o">=</span><span class="s1">&#39;first&#39;</span><span class="p">)</span>
+    
+
+    <span class="c1"># Find duplicated genes in the file</span>
+    <span class="n">genes</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">find_chrom</span><span class="p">(</span><span class="n">row</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;Gene&quot;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">genes</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">genes</span><span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;Gene&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">genes</span><span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;Gene&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;Chr&quot;</span><span class="p">])</span>
+    <span class="n">df2</span><span class="p">[[</span><span class="s2">&quot;Chr&quot;</span><span class="p">,</span> <span class="s2">&quot;Gene&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">find_chrom</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    
+    <span class="c1"># Rename the duplicated genes adding the chromosome number to make them unique</span>
+    <span class="k">def</span> <span class="nf">rename_chrom</span><span class="p">(</span><span class="n">row</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">genes</span><span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;Gene&quot;</span><span class="p">]])</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">f</span><span class="s1">&#39;{row[&quot;Gene&quot;]}-{row[&quot;Chr&quot;]}&#39;</span>
+        <span class="k">return</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;Gene&quot;</span><span class="p">]</span>
+    <span class="n">df2</span><span class="p">[</span><span class="s2">&quot;Gene&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df2</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">rename_chrom</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    
+    <span class="c1"># Match annovar annotations with regenie_burden needs </span>
+    <span class="n">annotation_mappings</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;nonsynonymous&quot;</span><span class="p">:</span><span class="s1">&#39;missense&#39;</span><span class="p">,</span> <span class="s2">&quot;frameshift&quot;</span><span class="p">:</span><span class="s1">&#39;LoF&#39;</span><span class="p">,</span> <span class="s2">&quot;stopgain&quot;</span><span class="p">:</span><span class="s1">&#39;LoF&#39;</span><span class="p">,</span> <span class="s2">&quot;stoploss&quot;</span><span class="p">:</span><span class="s1">&#39;LoF&#39;</span><span class="p">,</span> <span class="s2">&quot;synonymous&quot;</span><span class="p">:</span><span class="s1">&#39;synonymous&#39;</span><span class="p">}</span>
+    <span class="k">def</span> <span class="nf">annotation</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">annotation_mappings</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">return</span> <span class="n">annotation_mappings</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">return</span> <span class="s1">&#39;other&#39;</span>
+    <span class="n">df2</span><span class="p">[</span><span class="s2">&quot;anno_cat&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df2</span><span class="p">[</span><span class="s2">&quot;ExonicFunc.refGene&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">annotation</span><span class="p">)</span>
+    
+    <span class="c1"># Create the anno_file and add chr in the beggining to match the plink bim files</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;${_output[0]}&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">output</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">df2</span><span class="p">[[</span><span class="s2">&quot;varID&quot;</span><span class="p">,</span> <span class="s2">&quot;Gene&quot;</span><span class="p">,</span> <span class="s2">&quot;anno_cat&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">():</span>
+            <span class="k">if</span> <span class="err">$</span><span class="p">{</span><span class="n">rsid</span><span class="p">}</span> <span class="o">==</span> <span class="bp">True</span><span class="p">:</span>
+                <span class="n">output</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{row[0]} {row[1]} {row[2]}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span> 
+                <span class="n">output</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;chr{row[0]} {row[1]} {row[2]}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="c1"># Create the aaf-file for allele frequencies using gnomAD dataset</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;${_output[1]}&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">output</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">df2</span><span class="p">[[</span><span class="s2">&quot;varID&quot;</span><span class="p">,</span> <span class="s2">&quot;AF_nfe&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">():</span>
+            <span class="k">if</span> <span class="err">$</span><span class="p">{</span><span class="n">rsid</span><span class="p">}</span> <span class="o">==</span> <span class="bp">True</span><span class="p">:</span>
+                <span class="n">output</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{row[0]} {row[1]}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span> 
+                <span class="n">output</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;chr{row[0]} {row[1]}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    
+    <span class="c1"># Create the set_list_file grouping variants per gene. Format gene chrom start varIDs</span>
+    <span class="n">grouped</span> <span class="o">=</span> <span class="n">df2</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;Gene&quot;</span><span class="p">])</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;${_output[2]}&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">output</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">grouped</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;Start&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+            <span class="n">chrom</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="s2">&quot;Chr&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+            <span class="k">def</span> <span class="nf">addToS</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+                <span class="k">if</span> <span class="err">$</span><span class="p">{</span><span class="n">rsid</span><span class="p">}</span> <span class="o">==</span> <span class="bp">True</span><span class="p">:</span>
+                    <span class="n">s</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s2">&quot;varID&quot;</span><span class="p">]))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">s</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="s2">&quot;chr&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s2">&quot;varID&quot;</span><span class="p">]))</span>                   
+            <span class="n">fxn</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">addToS</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+            <span class="n">values</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">fxn</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">output</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">key</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">chrom</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">start</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
 <hr>
 &copy 2020-current Gao Wang and others, Department of Neurology at Columbia University
-<p><small>Exported from <a href="http://github.com/cumc/bioworkflows/blob/9ff8d6758674b2dd00fa44908723d589a81e8d8a/variant-annotation/annovar.ipynb"><code>variant-annotation/annovar.ipynb</code></a> committed by dmc2245 on Thu Apr 29 20:28:29 2021 <a href="http://github.com/cumc/bioworkflows/commit/9ff8d6758674b2dd00fa44908723d589a81e8d8a">revision 5, 9ff8d67</a> <a href="https://stephenslab.github.io/ipynb-website/notes.html#Note-about-commit-ids"><span class="fa fa-question-circle"></span></a></small></p>
+<p><small>Exported from <a href="http://github.com/cumc/bioworkflows/blob/25d97af5ea078563f97be17f0e64e26e2b536c52/variant-annotation/annovar.ipynb"><code>variant-annotation/annovar.ipynb</code></a> committed by dmc2245 on Mon Oct 11 21:58:21 2021 <a href="http://github.com/cumc/bioworkflows/commit/25d97af5ea078563f97be17f0e64e26e2b536c52">revision 17, 25d97af</a> <a href="https://stephenslab.github.io/ipynb-website/notes.html#Note-about-commit-ids"><span class="fa fa-question-circle"></span></a></small></p>
 </div>
 </div>
 </body>

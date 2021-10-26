@@ -7,6 +7,7 @@ docs/GWAS/PCA.html
 docs/GWAS/Region_Extraction.html
 docs/fine-mapping.tpl
 docs/fine-mapping/SuSiE_RSS.html
+docs/fine-mapping/SuSiE_RSS_before_initialization.html
 docs/fine-mapping/finemapping_results_wrangler.html
 docs/fine-mapping/finemapping_to_ldsc.pipeline.html
 docs/fine-mapping/gwas_enrichment.html
@@ -16,8 +17,8 @@ docs/index.html
 docs/index.tpl
 docs/js/docs.js
 docs/ldpred.tpl
-docs/ldpred/HDL_example.html
 docs/ldpred/index.html
+docs/ldpred/ldpred2_example.html
 docs/multivariate-fine-mapping.tpl
 docs/multivariate-fine-mapping/mixture_prior.html
 docs/multivariate-fine-mapping/mvSuSiE.html
