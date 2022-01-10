@@ -27,9 +27,9 @@ hosts:
       module load Singularity
       module load R
       export PATH=$HOME/miniconda3/bin:$PATH
-      export SINGULARITY_BIND="/mnt/mfs/ctcn/:/mnt/mfs/ctcn/"
+      export SINGULARITY_BIND="/mnt/mfs/:/mnt/mfs/"
       set -e
-      sos execute {task} -v {verbosity} -s {sig_mode}&> {job_name}.log
+      sos execute {task} -v {verbosity} -s {sig_mode}
     kill_cmd: qdel {job_id}
     max_cores: 40
     max_mem: 128G
