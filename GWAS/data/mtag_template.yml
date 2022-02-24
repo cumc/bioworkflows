@@ -1,0 +1,11 @@
+# mtag summary statistics template
+snpid: ID
+chr: CHROM
+bpos: GENPOS 
+a1: ALLELE1 #A1 needs to be the effect allele
+a2: ALLELE0 # The other allele
+freq: A1FREQ
+beta: BETA
+se: SE
+pval: LOG10P
+n: N
