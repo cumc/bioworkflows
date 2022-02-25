@@ -1,0 +1,139 @@
+#!/usr/bin/env sos-runner
+#fileformat=SOS1.0
+
+[train_model]
+
+bash: container='/mnt/mfs/statgen/Anmol/deepsea_latest.sif'
+
+    python3.7 /mnt/mfs/statgen/Anmol/training_files/tutorial/run_neuron_full_tutorial.py 
+
+[make_annot]
+
+#path to feature list file
+parameter: feature_list = str
+#path to trained model location
+parameter: model = str
+#path to output directory
+parameter: output = str
+#number of features
+parameter: num_features = int
+
+python3: container='/mnt/mfs/statgen/Anmol/deepsea_latest.sif'
+
+    from selene_sdk.utils import load_path
+    from selene_sdk.utils import parse_configs_and_run
+    from selene_sdk.predict import AnalyzeSequences
+    from selene_sdk.sequences import Genome
+    from selene_sdk.utils import load_features_list
+    from selene_sdk.utils import NonStrandSpecific
+    from selene_sdk.utils import DeeperDeepSEA
+    import glob
+    import os
+    distinct_features = load_features_list({feature_list})
+
+    model_predict = AnalyzeSequences(
+    NonStrandSpecific(DeeperDeepSEA(1000,{num_features})),
+    {model},
+    sequence_length=1000,
+    features=distinct_features,
+    reference_sequence=Genome("/mnt/mfs/statgen/Anmol/training_files/male.hg19.fasta"),
+    use_cuda=False # update this to False if you do not have CUDA on your machine.
+    )
+
+    for i in range(1,22):
+        model_predict.variant_effect_prediction(
+        "/mnt/mfs/statgen/Anmol/training_files/testing/1000G_chr_"+str(i)+".vcf",
+        save_data=["abs_diffs"],  # only want to save the absolute diff score data
+        output_dir={output})
+
+[format_annot]
+
+#path to tsv files directory
+parameter: tsv = path()
+#path to output file directory
+parameter: output = path()
+
+R: expand = "${ }", container="/mnt/mfs/statgen/Anmol/r-packages.sif"
+    library(data.table)
+    library(tidyverse)
+    data = fread(paste0("${tsv}","/tutorial_1000G_chr_",22,"_abs_diffs.tsv"))
+    features = colnames(data)[9:ncol(data)]
+    features = data.frame(features)
+    features$encoding = paste0("feat_",seq(1,nrow(features)))
+    fwrite(features,paste0("${output}","/feature_encoding.txt"),quote=F,sep="\t",row.names=F,col.names=T)
+    for (i in seq(1,22)){
+    data = fread(paste0("${tsv}","/tutorial_1000G_chr_",i,"_abs_diffs.tsv"))
+    data$V1 = gsub("chr","",data$V1)
+    data$V1 = as.numeric(data$V1)
+    data_2 = select(data,-c(seq(4,8)))
+    for (j in seq(4,ncol(data_2))){
+    data_3 = select(data_2,c(1,2,3,j))
+    data_3$CM = 0
+    colnames(data_3) = c("CHR","BP","SNP",paste0("feat_",j),"CM")
+    fwrite(data_3,paste0("${output}","/feat_",j,"_chr_",i,".annot.gz"),quote=F,sep="\t",row.names=F,col.names=T)
+    }
+    }
+
+#This option is for when the summary statistic file does not contain a signed summary statistic (Z or Beta). 
+#In this case,the program will calculate Z for you based on A1 being the risk allele
+[munge_sumstats_no_sign]
+
+
+
+#path to summary statistic file
+parameter: sumst = str
+#path to Hapmap3 SNPs file, keep all columns (SNP, A1, and A2) for the munge_sumstats program
+parameter: alleles = "w_hm3.snplist"
+#path to output file
+parameter: output = str
+
+bash: 
+    python2 munge_sumstats.py --sumstats {sumst} --merge-alleles {alleles} --out {output} --a1-inc
+
+# This option is for when the summary statistic file does contain a signed summary statistic (Z or Beta)
+[munge_sumstats_sign]
+
+
+
+#path to summary statistic file
+parameter: sumst = str
+#path to Hapmap3 SNPs file, keep all columns (SNP, A1, and A2) for the munge_sumstats program
+parameter: alleles = "w_hm3.snplist"
+#path to output file
+parameter: output = str
+
+bash: 
+    python2 munge_sumstats.py --sumstats {sumst} --merge-alleles {alleles} --out {output}
+
+#Calculate LD Scores
+#**Make sure to delete SNP,CHR, and BP columns from annotation files if they are present otherwise this code will not work. Before deleting, if these columns are present, make sure that the annotation file is sorted.**
+[calc_ld_score]
+
+#Path to bim file
+parameter: bim = str
+#Path to annotation File. Make sure to remove the SNP, CHR, and BP columns from the annotation file if present before running.
+parameter: annot_file = str
+#name of output file
+parameter: output = str
+#path to Hapmap3 SNPs file, remove the A1 and A2 columns for the Calculate LD Scores program 
+parameter: snplist = "w_hm3.snplist"
+
+bash: 
+    python2 ldsc.py --bfile {bim} --l2 --ld-wind-cm 1 --annot {annot_file} --thin-annot --out {output} --print-snps {snplist}
+
+[calc_enrichment]
+
+#Path to Summary statistics File
+parameter: sumstats = str
+#Path to Reference LD Scores Files (Base Annotation + Annotation you want to analyze, format like minimal working example)
+parameter: ref_ld = str
+#Path to LD Weight Files (Format like minimal working example)
+parameter: w_ld = str
+#path to frequency files (Format like minimal working example)
+parameter: frq_file = str
+#Output name
+parameter: output = str
+
+bash:
+    python2 ldsc.py --h2 {sumstats} --ref-ld-chr {ref_ld} --w-ld-chr {w_ld} --overlap-annot --frqfile-chr {frq_file} --out {output}
+
