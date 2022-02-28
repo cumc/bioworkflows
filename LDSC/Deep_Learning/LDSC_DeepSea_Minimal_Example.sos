@@ -15,8 +15,7 @@ parameter: feature_list = str
 parameter: model = str
 #path to output directory
 parameter: output = str
-#number of features
-parameter: num_features = int
+
 
 python3: container='/mnt/mfs/statgen/Anmol/deepsea_latest.sif'
 
@@ -63,13 +62,14 @@ R: expand = "${ }", container="/mnt/mfs/statgen/Anmol/r-packages.sif"
     fwrite(features,paste0("${output}","/feature_encoding.txt"),quote=F,sep="\t",row.names=F,col.names=T)
     for (i in seq(1,22)){
     data = fread(paste0("${tsv}","/tutorial_1000G_chr_",i,"_abs_diffs.tsv"))
-    data$V1 = gsub("chr","",data$V1)
-    data$V1 = as.numeric(data$V1)
-    data_2 = select(data,-c(seq(4,8)))
+    data_2 = select(data,-seq(4,8))
+    base = data.frame(base=rep(1,nrow(data_2)))
+    fwrite(base,paste0("${output}","/base_chr_",i,".annot.gz"),quote=F,sep="\t",row.names=F,col.names=T)
     for (j in seq(4,ncol(data_2))){
     data_3 = select(data_2,c(1,2,3,j))
-    data_3$CM = 0
-    colnames(data_3) = c("CHR","BP","SNP",paste0("feat_",j),"CM")
+    colnames(data_3) = c("CHR","BP","SNP",paste0("feat_",j))
+    data_3 = setorder(data_3,BP)
+    data_3 = select(data_3,-c("CHR","BP","SNP"))
     fwrite(data_3,paste0("${output}","/feat_",j,"_chr_",i,".annot.gz"),quote=F,sep="\t",row.names=F,col.names=T)
     }
     }
@@ -105,21 +105,52 @@ parameter: output = str
 bash: 
     python2 munge_sumstats.py --sumstats {sumst} --merge-alleles {alleles} --out {output}
 
-#Calculate LD Scores
-#**Make sure to delete SNP,CHR, and BP columns from annotation files if they are present otherwise this code will not work. Before deleting, if these columns are present, make sure that the annotation file is sorted.**
 [calc_ld_score]
 
-#Path to bim file
-parameter: bim = str
-#Path to annotation File. Make sure to remove the SNP, CHR, and BP columns from the annotation file if present before running.
-parameter: annot_file = str
-#name of output file
-parameter: output = str
-#path to Hapmap3 SNPs file, remove the A1 and A2 columns for the Calculate LD Scores program 
-parameter: snplist = "w_hm3.snplist"
+#Path to directory with bim files
+parameter: bim = path()
+#Path to directory with annotation files, output will appear here too. Make sure to remove the SNP, CHR, and BP columns from the annotation files if present before running.
+parameter: annot_files = path()
+#number of features
+parameter: num_features = int
 
 bash: 
-    python2 ldsc.py --bfile {bim} --l2 --ld-wind-cm 1 --annot {annot_file} --thin-annot --out {output} --print-snps {snplist}
+   #echo {annot_files} > out.txt
+   for i in $(seq 1 {num_features});do for j in {1..22}; do python2 /mnt/mfs/statgen/Anmol/ldsc/ldsc.py --bfile {bim}/1000G.EUR.QC.${j} --l2 --ld-wind-cm 1 --annot {annot_files}/feat_${i}_chr_${j}.annot.gz --thin-annot --out {annot_files}/feat_${i}_chr_${j} --print-snps /mnt/mfs/statgen/Anmol/ldsc/tutorial_data/w_hm3.snplist/snplist.txt; done; done
+   for j in {1..22}; do python2 /mnt/mfs/statgen/Anmol/ldsc/ldsc.py --bfile {bim}/1000G.EUR.QC.${j} --l2 --ld-wind-cm 1 --annot {annot_files}/base_chr_${j}.annot.gz --thin-annot --out {annot_files}/base_chr_${j} --print-snps /mnt/mfs/statgen/Anmol/ldsc/tutorial_data/w_hm3.snplist/snplist.txt; done
+
+[convert_ld_snps]
+
+#Path to directory with ld score files AND annotation files
+parameter: ld_scores = str
+
+parameter: num_features = int
+
+
+R: expand = "${ }", container="/mnt/mfs/statgen/Anmol/r-packages.sif"
+    library(tidyverse)
+    #library(R.utils)
+    library(data.table)
+    for (i in seq(1,22)){
+      data = read.table(gzfile(paste0("${ld_scores}/base_chr_",i,".l2.ldscore.gz")))
+      data_2 = fread(paste0("${ld_scores}/base_chr_",i,".l2.M_5_50"))
+      data_3 = read.table(gzfile(paste0("${ld_scores}/base_chr_",i,".annot.gz")))
+      data$SNP = paste0(data$CHR,":",data$BP)
+      fwrite(data,paste0("${ld_scores}/AD_base_chr_",i,".l2.ldscore.gz"),quote=F,sep="\t",row.names=F,col.names=T)
+      fwrite(data_2,paste0("${ld_scores}/AD_base_chr_",i,".l2.M_5_50"),quote=F,sep="\t",row.names=F,col.names=F)
+      fwrite(data_3,paste0("${ld_scores}/AD_base_chr_",i,".annot.gz"),quote=F,sep="\t",row.names=F,col.names=T)
+      for (j in seq(1,${num_features})){
+      data = read.table(gzfile(paste0("${ld_scores}/feat_",j,"_chr_",i,".l2.ldscore.gz")))
+      data_2 = fread(paste0("${ld_scores}/feat_",j,"_chr_",i,".l2.M_5_50"))
+      data_3 = read.table(gzfile(paste0("${ld_scores}/feat_",j,"_chr_",i,".annot.gz")))
+      data$SNP = paste0(data$CHR,":",data$BP)
+      fwrite(data,paste0("${ld_scores}/AD_feat_",j,"_chr_",i,".l2.ldscore.gz"),quote=F,sep="\t",row.names=F,col.names=T)
+      fwrite(data_2,paste0("${ld_scores}/AD_feat_",j,"_chr_",i,".l2.M_5_50"),quote=F,sep="\t",row.names=F,col.names=F)
+      fwrite(data_3,paste0("${ld_scores}/AD_feat_",j,"_chr_",i,".annot.gz"),quote=F,sep="\t",row.names=F,col.names=T)
+    }
+    }
+  
+
 
 [calc_enrichment]
 
