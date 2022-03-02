@@ -14,9 +14,8 @@ parameter: feature_list = str
 #path to trained model location
 parameter: model = str
 #path to output directory
-parameter: output = str
-#number of features
-parameter: num_features = int
+parameter: output_tsv = str
+
 
 python3: container='/mnt/mfs/statgen/Anmol/deepsea_latest.sif'
 
@@ -33,14 +32,14 @@ python3: container='/mnt/mfs/statgen/Anmol/deepsea_latest.sif'
 
     model_predict = AnalyzeSequences(
     NonStrandSpecific(DeeperDeepSEA(1000,{num_features})),
-    {model},
+    {model}+"/best_model.pth.tar",
     sequence_length=1000,
     features=distinct_features,
     reference_sequence=Genome("/mnt/mfs/statgen/Anmol/training_files/male.hg19.fasta"),
     use_cuda=False # update this to False if you do not have CUDA on your machine.
     )
 
-    for i in range(1,22):
+    for i in range(1,23):
         model_predict.variant_effect_prediction(
         "/mnt/mfs/statgen/Anmol/training_files/testing/1000G_chr_"+str(i)+".vcf",
         save_data=["abs_diffs"],  # only want to save the absolute diff score data
@@ -51,7 +50,7 @@ python3: container='/mnt/mfs/statgen/Anmol/deepsea_latest.sif'
 #path to tsv files directory
 parameter: tsv = path()
 #path to output file directory
-parameter: output = path()
+parameter: annot_files = path()
 
 R: expand = "${ }", container="/mnt/mfs/statgen/Anmol/r-packages.sif"
     library(data.table)
@@ -60,22 +59,21 @@ R: expand = "${ }", container="/mnt/mfs/statgen/Anmol/r-packages.sif"
     features = colnames(data)[9:ncol(data)]
     features = data.frame(features)
     features$encoding = paste0("feat_",seq(1,nrow(features)))
-    fwrite(features,paste0("${output}","/feature_encoding.txt"),quote=F,sep="\t",row.names=F,col.names=T)
+    fwrite(features,paste0("${annot_files}","/feature_encoding.txt"),quote=F,sep="\t",row.names=F,col.names=T)
     for (i in seq(1,22)){
     data = fread(paste0("${tsv}","/tutorial_1000G_chr_",i,"_abs_diffs.tsv"))
-    data$V1 = gsub("chr","",data$V1)
-    data$V1 = as.numeric(data$V1)
-    data_2 = select(data,-c(seq(4,8)))
+    data_2 = select(data,-seq(4,8))
+    base = data.frame(base=rep(1,nrow(data_2)))
+    fwrite(base,paste0("${annot_files}","/base_chr_",i,".annot.gz"),quote=F,sep="\t",row.names=F,col.names=T)
     for (j in seq(4,ncol(data_2))){
     data_3 = select(data_2,c(1,2,3,j))
-    data_3$CM = 0
-    colnames(data_3) = c("CHR","BP","SNP",paste0("feat_",j),"CM")
-    fwrite(data_3,paste0("${output}","/feat_",j,"_chr_",i,".annot.gz"),quote=F,sep="\t",row.names=F,col.names=T)
+    colnames(data_3) = c("CHR","BP","SNP",paste0("feat_",j))
+    data_3 = setorder(data_3,BP)
+    data_3 = select(data_3,-c("CHR","BP","SNP"))
+    fwrite(data_3,paste0("${annot_files}","/feat_",j,"_chr_",i,".annot.gz"),quote=F,sep="\t",row.names=F,col.names=T)
     }
     }
 
-#This option is for when the summary statistic file does not contain a signed summary statistic (Z or Beta). 
-#In this case,the program will calculate Z for you based on A1 being the risk allele
 [munge_sumstats_no_sign]
 
 
@@ -85,10 +83,15 @@ parameter: sumst = str
 #path to Hapmap3 SNPs file, keep all columns (SNP, A1, and A2) for the munge_sumstats program
 parameter: alleles = "w_hm3.snplist"
 #path to output file
-parameter: output = str
+parameter: output_sumst = str
+#does summary statistic contain Z or Beta
+parameter: signed = False
 
-bash: 
-    python2 munge_sumstats.py --sumstats {sumst} --merge-alleles {alleles} --out {output} --a1-inc
+bash: expand = '${ }'
+   if [${signed}==True]
+       then
+           python2 /mnt/mfs/statgen/Anmol/ldsc/munge_sumstats.py --sumstats ${sumst} --merge-alleles ${alleles} --out ${output_sumst} --a1-inc
+       fi
 
 # This option is for when the summary statistic file does contain a signed summary statistic (Z or Beta)
 [munge_sumstats_sign]
@@ -100,40 +103,85 @@ parameter: sumst = str
 #path to Hapmap3 SNPs file, keep all columns (SNP, A1, and A2) for the munge_sumstats program
 parameter: alleles = "w_hm3.snplist"
 #path to output file
-parameter: output = str
+parameter: output_sumst_2 = str
+#does summary statistic contain Z or Beta
+parameter: signed = False
 
-bash: 
-    python2 munge_sumstats.py --sumstats {sumst} --merge-alleles {alleles} --out {output}
+bash: expand = '${ }'
+    if [${signed}==False]
+        then
+            python2 /mnt/mfs/statgen/Anmol/ldsc/munge_sumstats.py --sumstats ${sumst} --merge-alleles ${alleles} --out ${output_sumst_2}
+        fi
 
-#Calculate LD Scores
-#**Make sure to delete SNP,CHR, and BP columns from annotation files if they are present otherwise this code will not work. Before deleting, if these columns are present, make sure that the annotation file is sorted.**
 [calc_ld_score]
 
-#Path to bim file
-parameter: bim = str
-#Path to annotation File. Make sure to remove the SNP, CHR, and BP columns from the annotation file if present before running.
-parameter: annot_file = str
-#name of output file
-parameter: output = str
-#path to Hapmap3 SNPs file, remove the A1 and A2 columns for the Calculate LD Scores program 
-parameter: snplist = "w_hm3.snplist"
+#Path to directory with bim files
+parameter: bim = path()
+#Path to directory with annotation files, output will appear here too. Make sure to remove the SNP, CHR, and BP columns from the annotation files if present before running.
+parameter: annot_files = path()
+#number of features
+parameter: num_features = int
 
-bash: 
-    python2 ldsc.py --bfile {bim} --l2 --ld-wind-cm 1 --annot {annot_file} --thin-annot --out {output} --print-snps {snplist}
+bash: expand = '${ }'
+   #echo {annot_files} > out.txt
+   seq 1 ${num_features}| xargs -n 1 -I j -P 4 python2 /mnt/mfs/statgen/Anmol/ldsc/ldsc.py --bfile ${bim}/1000G.EUR.QC.22 --l2 --ld-wind-cm 1 --annot ${annot_files}/feat_j_chr_22.annot.gz --thin-annot --out ${annot_files}/feat_j_chr_22 --print-snps /mnt/mfs/statgen/Anmol/ldsc/tutorial_data/w_hm3.snplist/snplist.txt
+   seq 1 22| xargs -n 1 -I j -P 4 python2 /mnt/mfs/statgen/Anmol/ldsc/ldsc.py --bfile ${bim}/1000G.EUR.QC.j --l2 --ld-wind-cm 1 --annot ${annot_files}/base_chr_j.annot.gz --thin-annot --out ${annot_files}/base_chr_j --print-snps /mnt/mfs/statgen/Anmol/ldsc/tutorial_data/w_hm3.snplist/snplist.txt
+
+[convert_ld_snps]
+
+#Path to directory with ld score files AND annotation files
+parameter: ld_scores = str
+
+parameter: num_features = int
+
+
+R: expand = "${ }", container="/mnt/mfs/statgen/Anmol/r-packages.sif"
+    library(tidyverse)
+    #library(R.utils)
+    library(data.table)
+    for (i in seq(1,22)){
+      data = read.table(gzfile(paste0("${ld_scores}/base_chr_",i,".l2.ldscore.gz")),header=T)
+      data_2 = fread(paste0("${ld_scores}/base_chr_",i,".l2.M_5_50"))
+      data_3 = read.table(gzfile(paste0("${ld_scores}/base_chr_",i,".annot.gz")),header=T)
+      data$SNP = paste0(data$CHR,":",data$BP)
+      fwrite(data,paste0("${ld_scores}/AD_base_chr_",i,".l2.ldscore.gz"),quote=F,sep="\t",row.names=F,col.names=T)
+      fwrite(data_2,paste0("${ld_scores}/AD_base_chr_",i,".l2.M_5_50"),quote=F,sep="\t",row.names=F,col.names=F)
+      fwrite(data_3,paste0("${ld_scores}/AD_base_chr_",i,".annot.gz"),quote=F,sep="\t",row.names=F,col.names=T)
+      for (j in seq(1,${num_features})){
+      data = read.table(gzfile(paste0("${ld_scores}/feat_",j,"_chr_",i,".l2.ldscore.gz")),header=T)
+      data_2 = fread(paste0("${ld_scores}/feat_",j,"_chr_",i,".l2.M_5_50"))
+      data_3 = read.table(gzfile(paste0("${ld_scores}/feat_",j,"_chr_",i,".annot.gz")),header=T)
+      data$SNP = paste0(data$CHR,":",data$BP)
+      fwrite(data,paste0("${ld_scores}/AD_feat_",j,"_chr_",i,".l2.ldscore.gz"),quote=F,sep="\t",row.names=F,col.names=T)
+      fwrite(data_2,paste0("${ld_scores}/AD_feat_",j,"_chr_",i,".l2.M_5_50"),quote=F,sep="\t",row.names=F,col.names=F)
+      fwrite(data_3,paste0("${ld_scores}/AD_feat_",j,"_chr_",i,".annot.gz"),quote=F,sep="\t",row.names=F,col.names=T)
+    }
+    }
+  
+
 
 [calc_enrichment]
 
-#Path to Summary statistics File
-parameter: sumstats = str
-#Path to Reference LD Scores Files (Base Annotation + Annotation you want to analyze, format like minimal working example)
+#Path to Control Summary statistics File
+parameter: ctrl_sumstats = str
+#Path to AD Summary statistics File
+parameter: AD_sumstats = str
+#Path to Reference LD Scores File Directory 
 parameter: ref_ld = str
-#Path to LD Weight Files (Format like minimal working example)
-parameter: w_ld = str
-#path to frequency files (Format like minimal working example)
-parameter: frq_file = str
-#Output name
-parameter: output = str
+#Path to LD Weight Files for Control Sumstats (Format like minimal working example)
+parameter: w_ld_ctrl = str
+#path to frequency files for Control Sumstats (Format like minimal working example)
+parameter: frq_file_ctrl = str
+#Path to LD Weight Files for AD Sumstats (Format like minimal working example)
+parameter: w_ld_AD = str
+#path to frequency files for AD Sumstats (Format like minimal working example)
+parameter: frq_file_AD = str
+#Number of Features
+parameter: num_features = int 
+#Control Phenotype, For Output
+parameter: pheno = str
 
-bash:
-    python2 ldsc.py --h2 {sumstats} --ref-ld-chr {ref_ld} --w-ld-chr {w_ld} --overlap-annot --frqfile-chr {frq_file} --out {output}
+bash: expand = '${ }'
+    seq 1 ${num_features}| xargs -n 1 -I j -P 4 python2 /mnt/mfs/statgen/Anmol/ldsc/ldsc.py --h2 ${ctrl_sumstats} --ref-ld-chr ${ref_ld}/base_chr_,${ref_ld}/feat_j_chr_ --w-ld-chr ${w_ld_ctrl} --overlap-annot --frqfile-chr ${frq_file_ctrl} --out ${ref_ld}/${pheno}_feat_j
+    seq 1 ${num_features}| xargs -n 1 -I j -P 4 python2 /mnt/mfs/statgen/Anmol/ldsc/ldsc.py --h2 ${AD_sumstats} --ref-ld-chr ${ref_ld}/AD_base_chr_,${ref_ld}/AD_feat_j_chr_ --w-ld-chr ${w_ld_AD} --overlap-annot --frqfile-chr ${frq_file_AD} --out ${ref_ld}/AD_feat_j
 
