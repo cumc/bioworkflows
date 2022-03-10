@@ -11,8 +11,8 @@ parameter: bed = str
 parameter: bim = str
 #name of output annotation file
 parameter: annot = str
-bash: 
-    python2 /mnt/mfs/statgen/Anmol/ldsc/make_annot.py --bed-file {bed} --bimfile {bim} --annot-file {annot}
+bash: expand = '${ }'
+    python2 /mnt/mfs/statgen/Anmol/ldsc/make_annot.py --bed-file ${bed} --bimfile ${bim} --annot-file ${annot}
 
 [munge_sumstats_no_sign]
 
@@ -28,7 +28,7 @@ parameter: output_sumst = str
 parameter: signed = False
 
 bash: expand = '${ }'
-   if [${signed}==True]
+   if [${signed}==False]
        then
            python2 /mnt/mfs/statgen/Anmol/ldsc/munge_sumstats.py --sumstats ${sumst} --merge-alleles ${alleles} --out ${output_sumst} --a1-inc
        fi
@@ -48,7 +48,7 @@ parameter: output_sumst_2 = str
 parameter: signed = False
 
 bash: expand = '${ }'
-    if [${signed}==False]
+    if [${signed}==True]
         then
             python2 /mnt/mfs/statgen/Anmol/ldsc/munge_sumstats.py --sumstats ${sumst} --merge-alleles ${alleles} --out ${output_sumst_2}
         fi
@@ -61,9 +61,30 @@ parameter: bim = path()
 parameter: annot_files = path()
 #number of features
 parameter: num_features = int
-
+  
 bash: expand = '${ }'
    #echo {annot_files} > out.txt
+   seq 1 ${num_features}| xargs -n 1 -I j -P 4 python2 /mnt/mfs/statgen/Anmol/ldsc/ldsc.py --bfile ${bim}/1000G.EUR.QC.1 --l2 --ld-wind-cm 1 --annot ${annot_files}/feat_j_chr_1.annot.gz --thin-annot --out ${annot_files}/feat_j_chr_1 --print-snps /mnt/mfs/statgen/Anmol/ldsc/tutorial_data/w_hm3.snplist/snplist.txt
+   seq 1 ${num_features}| xargs -n 1 -I j -P 4 python2 /mnt/mfs/statgen/Anmol/ldsc/ldsc.py --bfile ${bim}/1000G.EUR.QC.2 --l2 --ld-wind-cm 1 --annot ${annot_files}/feat_j_chr_2.annot.gz --thin-annot --out ${annot_files}/feat_j_chr_2 --print-snps /mnt/mfs/statgen/Anmol/ldsc/tutorial_data/w_hm3.snplist/snplist.txt
+   seq 1 ${num_features}| xargs -n 1 -I j -P 4 python2 /mnt/mfs/statgen/Anmol/ldsc/ldsc.py --bfile ${bim}/1000G.EUR.QC.3 --l2 --ld-wind-cm 1 --annot ${annot_files}/feat_j_chr_3.annot.gz --thin-annot --out ${annot_files}/feat_j_chr_3 --print-snps /mnt/mfs/statgen/Anmol/ldsc/tutorial_data/w_hm3.snplist/snplist.txt
+   seq 1 ${num_features}| xargs -n 1 -I j -P 4 python2 /mnt/mfs/statgen/Anmol/ldsc/ldsc.py --bfile ${bim}/1000G.EUR.QC.4 --l2 --ld-wind-cm 1 --annot ${annot_files}/feat_j_chr_4.annot.gz --thin-annot --out ${annot_files}/feat_j_chr_4 --print-snps /mnt/mfs/statgen/Anmol/ldsc/tutorial_data/w_hm3.snplist/snplist.txt
+   seq 1 ${num_features}| xargs -n 1 -I j -P 4 python2 /mnt/mfs/statgen/Anmol/ldsc/ldsc.py --bfile ${bim}/1000G.EUR.QC.5 --l2 --ld-wind-cm 1 --annot ${annot_files}/feat_j_chr_5.annot.gz --thin-annot --out ${annot_files}/feat_j_chr_5 --print-snps /mnt/mfs/statgen/Anmol/ldsc/tutorial_data/w_hm3.snplist/snplist.txt
+   seq 1 ${num_features}| xargs -n 1 -I j -P 4 python2 /mnt/mfs/statgen/Anmol/ldsc/ldsc.py --bfile ${bim}/1000G.EUR.QC.6 --l2 --ld-wind-cm 1 --annot ${annot_files}/feat_j_chr_6.annot.gz --thin-annot --out ${annot_files}/feat_j_chr_6 --print-snps /mnt/mfs/statgen/Anmol/ldsc/tutorial_data/w_hm3.snplist/snplist.txt
+   seq 1 ${num_features}| xargs -n 1 -I j -P 4 python2 /mnt/mfs/statgen/Anmol/ldsc/ldsc.py --bfile ${bim}/1000G.EUR.QC.7 --l2 --ld-wind-cm 1 --annot ${annot_files}/feat_j_chr_7.annot.gz --thin-annot --out ${annot_files}/feat_j_chr_7 --print-snps /mnt/mfs/statgen/Anmol/ldsc/tutorial_data/w_hm3.snplist/snplist.txt
+   seq 1 ${num_features}| xargs -n 1 -I j -P 4 python2 /mnt/mfs/statgen/Anmol/ldsc/ldsc.py --bfile ${bim}/1000G.EUR.QC.8 --l2 --ld-wind-cm 1 --annot ${annot_files}/feat_j_chr_8.annot.gz --thin-annot --out ${annot_files}/feat_j_chr_8 --print-snps /mnt/mfs/statgen/Anmol/ldsc/tutorial_data/w_hm3.snplist/snplist.txt
+   seq 1 ${num_features}| xargs -n 1 -I j -P 4 python2 /mnt/mfs/statgen/Anmol/ldsc/ldsc.py --bfile ${bim}/1000G.EUR.QC.9 --l2 --ld-wind-cm 1 --annot ${annot_files}/feat_j_chr_9.annot.gz --thin-annot --out ${annot_files}/feat_j_chr_9 --print-snps /mnt/mfs/statgen/Anmol/ldsc/tutorial_data/w_hm3.snplist/snplist.txt
+   seq 1 ${num_features}| xargs -n 1 -I j -P 4 python2 /mnt/mfs/statgen/Anmol/ldsc/ldsc.py --bfile ${bim}/1000G.EUR.QC.10 --l2 --ld-wind-cm 1 --annot ${annot_files}/feat_j_chr_10.annot.gz --thin-annot --out ${annot_files}/feat_j_chr_10 --print-snps /mnt/mfs/statgen/Anmol/ldsc/tutorial_data/w_hm3.snplist/snplist.txt
+   seq 1 ${num_features}| xargs -n 1 -I j -P 4 python2 /mnt/mfs/statgen/Anmol/ldsc/ldsc.py --bfile ${bim}/1000G.EUR.QC.11 --l2 --ld-wind-cm 1 --annot ${annot_files}/feat_j_chr_11.annot.gz --thin-annot --out ${annot_files}/feat_j_chr_11 --print-snps /mnt/mfs/statgen/Anmol/ldsc/tutorial_data/w_hm3.snplist/snplist.txt
+   seq 1 ${num_features}| xargs -n 1 -I j -P 4 python2 /mnt/mfs/statgen/Anmol/ldsc/ldsc.py --bfile ${bim}/1000G.EUR.QC.12 --l2 --ld-wind-cm 1 --annot ${annot_files}/feat_j_chr_12.annot.gz --thin-annot --out ${annot_files}/feat_j_chr_12 --print-snps /mnt/mfs/statgen/Anmol/ldsc/tutorial_data/w_hm3.snplist/snplist.txt
+   seq 1 ${num_features}| xargs -n 1 -I j -P 4 python2 /mnt/mfs/statgen/Anmol/ldsc/ldsc.py --bfile ${bim}/1000G.EUR.QC.13 --l2 --ld-wind-cm 1 --annot ${annot_files}/feat_j_chr_13.annot.gz --thin-annot --out ${annot_files}/feat_j_chr_13 --print-snps /mnt/mfs/statgen/Anmol/ldsc/tutorial_data/w_hm3.snplist/snplist.txt
+   seq 1 ${num_features}| xargs -n 1 -I j -P 4 python2 /mnt/mfs/statgen/Anmol/ldsc/ldsc.py --bfile ${bim}/1000G.EUR.QC.14 --l2 --ld-wind-cm 1 --annot ${annot_files}/feat_j_chr_14.annot.gz --thin-annot --out ${annot_files}/feat_j_chr_14 --print-snps /mnt/mfs/statgen/Anmol/ldsc/tutorial_data/w_hm3.snplist/snplist.txt
+   seq 1 ${num_features}| xargs -n 1 -I j -P 4 python2 /mnt/mfs/statgen/Anmol/ldsc/ldsc.py --bfile ${bim}/1000G.EUR.QC.15 --l2 --ld-wind-cm 1 --annot ${annot_files}/feat_j_chr_15.annot.gz --thin-annot --out ${annot_files}/feat_j_chr_15 --print-snps /mnt/mfs/statgen/Anmol/ldsc/tutorial_data/w_hm3.snplist/snplist.txt
+   seq 1 ${num_features}| xargs -n 1 -I j -P 4 python2 /mnt/mfs/statgen/Anmol/ldsc/ldsc.py --bfile ${bim}/1000G.EUR.QC.16 --l2 --ld-wind-cm 1 --annot ${annot_files}/feat_j_chr_16.annot.gz --thin-annot --out ${annot_files}/feat_j_chr_16 --print-snps /mnt/mfs/statgen/Anmol/ldsc/tutorial_data/w_hm3.snplist/snplist.txt
+   seq 1 ${num_features}| xargs -n 1 -I j -P 4 python2 /mnt/mfs/statgen/Anmol/ldsc/ldsc.py --bfile ${bim}/1000G.EUR.QC.17 --l2 --ld-wind-cm 1 --annot ${annot_files}/feat_j_chr_17.annot.gz --thin-annot --out ${annot_files}/feat_j_chr_17 --print-snps /mnt/mfs/statgen/Anmol/ldsc/tutorial_data/w_hm3.snplist/snplist.txt
+   seq 1 ${num_features}| xargs -n 1 -I j -P 4 python2 /mnt/mfs/statgen/Anmol/ldsc/ldsc.py --bfile ${bim}/1000G.EUR.QC.18 --l2 --ld-wind-cm 1 --annot ${annot_files}/feat_j_chr_18.annot.gz --thin-annot --out ${annot_files}/feat_j_chr_18 --print-snps /mnt/mfs/statgen/Anmol/ldsc/tutorial_data/w_hm3.snplist/snplist.txt
+   seq 1 ${num_features}| xargs -n 1 -I j -P 4 python2 /mnt/mfs/statgen/Anmol/ldsc/ldsc.py --bfile ${bim}/1000G.EUR.QC.19 --l2 --ld-wind-cm 1 --annot ${annot_files}/feat_j_chr_19.annot.gz --thin-annot --out ${annot_files}/feat_j_chr_19 --print-snps /mnt/mfs/statgen/Anmol/ldsc/tutorial_data/w_hm3.snplist/snplist.txt
+   seq 1 ${num_features}| xargs -n 1 -I j -P 4 python2 /mnt/mfs/statgen/Anmol/ldsc/ldsc.py --bfile ${bim}/1000G.EUR.QC.20 --l2 --ld-wind-cm 1 --annot ${annot_files}/feat_j_chr_20.annot.gz --thin-annot --out ${annot_files}/feat_j_chr_20 --print-snps /mnt/mfs/statgen/Anmol/ldsc/tutorial_data/w_hm3.snplist/snplist.txt
+   seq 1 ${num_features}| xargs -n 1 -I j -P 4 python2 /mnt/mfs/statgen/Anmol/ldsc/ldsc.py --bfile ${bim}/1000G.EUR.QC.21 --l2 --ld-wind-cm 1 --annot ${annot_files}/feat_j_chr_21.annot.gz --thin-annot --out ${annot_files}/feat_j_chr_21 --print-snps /mnt/mfs/statgen/Anmol/ldsc/tutorial_data/w_hm3.snplist/snplist.txt
    seq 1 ${num_features}| xargs -n 1 -I j -P 4 python2 /mnt/mfs/statgen/Anmol/ldsc/ldsc.py --bfile ${bim}/1000G.EUR.QC.22 --l2 --ld-wind-cm 1 --annot ${annot_files}/feat_j_chr_22.annot.gz --thin-annot --out ${annot_files}/feat_j_chr_22 --print-snps /mnt/mfs/statgen/Anmol/ldsc/tutorial_data/w_hm3.snplist/snplist.txt
    seq 1 22| xargs -n 1 -I j -P 4 python2 /mnt/mfs/statgen/Anmol/ldsc/ldsc.py --bfile ${bim}/1000G.EUR.QC.j --l2 --ld-wind-cm 1 --annot ${annot_files}/base_chr_j.annot.gz --thin-annot --out ${annot_files}/base_chr_j --print-snps /mnt/mfs/statgen/Anmol/ldsc/tutorial_data/w_hm3.snplist/snplist.txt
 
@@ -102,26 +123,19 @@ R: expand = "${ }", container="/mnt/mfs/statgen/Anmol/r-packages.sif"
 
 [calc_enrichment]
 
-#Path to Control Summary statistics File
-parameter: ctrl_sumstats = str
-#Path to AD Summary statistics File
-parameter: AD_sumstats = str
+#Path to Summary statistics File
+parameter: sumstats = str
 #Path to Reference LD Scores File Directory 
 parameter: ref_ld = str
-#Path to LD Weight Files for Control Sumstats (Format like minimal working example)
-parameter: w_ld_ctrl = str
-#path to frequency files for Control Sumstats (Format like minimal working example)
-parameter: frq_file_ctrl = str
-#Path to LD Weight Files for AD Sumstats (Format like minimal working example)
-parameter: w_ld_AD = str
-#path to frequency files for AD Sumstats (Format like minimal working example)
-parameter: frq_file_AD = str
-#Number of Features
+#Path to LD Weight Files (Format like minimal working example)
+parameter: w_ld = str
+#path to frequency files (Format like minimal working example)
+parameter: frq_file = str
 parameter: num_features = int 
 #Control Phenotype, For Output
 parameter: pheno = str
 
 bash: expand = '${ }'
-    seq 1 ${num_features}| xargs -n 1 -I j -P 4 python2 /mnt/mfs/statgen/Anmol/ldsc/ldsc.py --h2 ${ctrl_sumstats} --ref-ld-chr ${ref_ld}/base_chr_,${ref_ld}/feat_j_chr_ --w-ld-chr ${w_ld_ctrl} --overlap-annot --frqfile-chr ${frq_file_ctrl} --out ${ref_ld}/${pheno}_feat_j
-    seq 1 ${num_features}| xargs -n 1 -I j -P 4 python2 /mnt/mfs/statgen/Anmol/ldsc/ldsc.py --h2 ${AD_sumstats} --ref-ld-chr ${ref_ld}/AD_base_chr_,${ref_ld}/AD_feat_j_chr_ --w-ld-chr ${w_ld_AD} --overlap-annot --frqfile-chr ${frq_file_AD} --out ${ref_ld}/AD_feat_j
+    seq 1 ${num_features}| xargs -n 1 -I j -P 4 python2 /mnt/mfs/statgen/Anmol/ldsc/ldsc.py --h2 ${sumstats} --ref-ld-chr ${ref_ld}/base_chr_,${ref_ld}/feat_j_chr_ --w-ld-chr ${w_ld} --overlap-annot --frqfile-chr ${frq_file} --out ${ref_ld}/${pheno}_feat_j
+    #seq 1 ${num_features}| xargs -n 1 -I j -P 4 python2 /mnt/mfs/statgen/Anmol/ldsc/ldsc.py --h2 ${AD_sumstats} --ref-ld-chr ${ref_ld}/AD_base_chr_,${ref_ld}/AD_feat_j_chr_ --w-ld-chr ${w_ld_AD} --overlap-annot --frqfile-chr ${frq_file_AD} --out ${ref_ld}/AD_feat_j
 
