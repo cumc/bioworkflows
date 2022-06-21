@@ -23,7 +23,13 @@ RUN curl -L \
     && ln -s /opt/gatk-${GATK_VERSION}/gatk /usr/local/bin/gatk \
     && rm -rf /tmp/gatk.zip
 RUN ln -s /usr/bin/python3 /usr/local/bin/python
-RUN curl http://www.openbioinformatics.org/annovar/download/0wgxR2rIVP/annovar.latest.tar.gz -o /tmp/annovar.latest.tar.gz && tar zxvf /tmp/annovar.latest.tar.gz -C /usr/local/bin && rm -f /tmp/annovar.latest.tar.gz
+#RUN curl http://www.openbioinformatics.org/annovar/download/0wgxR2rIVP/annovar.latest.tar.gz -o /tmp/annovar.latest.tar.gz 
+COPY annovar.latest.tar.gz /tmp
+RUN tar zxvf /tmp/annovar.latest.tar.gz -C /usr/local/bin && rm -f /tmp/annovar.latest.tar.gz && chmod +x /usr/local/bin/*.pl
 
 # Default command
 CMD ["bash"]
+
+# To build singularity image out of this:
+# spython recipe gatk4-annovar.dockerfile | sed 's/Stage: spython-base//g' &> gatk4-annovar.def
+# singularity build --fakeroot gatk4-annovar.sif gatk4-annovar.def
