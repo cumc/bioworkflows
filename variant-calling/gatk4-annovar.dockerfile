@@ -13,7 +13,7 @@ RUN apt-get update -y \
     build-essential zlib1g-dev libbz2-dev liblzma-dev \
     && apt-get autoclean \
     && rm -rf /var/lib/apt/lists/* /var/log/dpkg.log
-ADD https://raw.githubusercontent.com/broadinstitute/gatk/4.1.6.0/scripts/docker/gatkbase/install_R_packages.R /opt
+ADD https://raw.githubusercontent.com/cumc/bioworkflows/master/variant-calling/install_R_packages.R /opt
 RUN Rscript /opt/install_R_packages.R && rm -rf /tmp/*
 ENV GATK_VERSION 4.2.6.1
 RUN curl -L \
@@ -25,7 +25,10 @@ RUN curl -L \
 RUN ln -s /usr/bin/python3 /usr/local/bin/python
 #RUN curl http://www.openbioinformatics.org/annovar/download/0wgxR2rIVP/annovar.latest.tar.gz -o /tmp/annovar.latest.tar.gz 
 COPY annovar.latest.tar.gz /tmp
-RUN tar zxvf /tmp/annovar.latest.tar.gz -C /usr/local/bin && rm -f /tmp/annovar.latest.tar.gz && chmod +x /usr/local/bin/*.pl
+RUN tar zxvf /tmp/annovar.latest.tar.gz \
+    && mv /tmp/annovar/* /usr/local/bin/ \
+    && rm -f /tmp/annovar.latest.tar.gz \
+    && chmod +x /usr/local/bin/*.pl
 
 # Default command
 CMD ["bash"]
