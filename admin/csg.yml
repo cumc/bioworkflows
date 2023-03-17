@@ -19,8 +19,8 @@ hosts:
       #$ -l h_vmem={mem//10**9}G
       #$ -pe {PE} {cores}
       #$ -N job_{job_name}
-      #$ -o {cur_dir}/{job_name}.out
-      #$ -e {cur_dir}/{job_name}.err
+      #$ -o /home/{user_name}/.sos/{job_name}.out
+      #$ -e /home/{user_name}/.sos/{job_name}.err
       #$ -cwd
       #$ -S /bin/bash
       #{partition}
@@ -29,6 +29,7 @@ hosts:
       export PATH=$HOME/miniconda3/bin:$PATH
       export SINGULARITY_BIND="/mnt/mfs/:/mnt/mfs/"
       set -e
+      cd {cur_dir}
       echo $HOSTNAME >& 2 # to write the compute node name to *.err file
       sos execute {task} -v {verbosity} -s {sig_mode}
     kill_cmd: qdel {job_id}
