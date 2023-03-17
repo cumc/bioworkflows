@@ -29,6 +29,7 @@ hosts:
       export PATH=$HOME/miniconda3/bin:$PATH
       export SINGULARITY_BIND="/mnt/mfs/:/mnt/mfs/"
       set -e
+      echo $HOSTNAME >& 2 # to write the compute node name to *.err file
       sos execute {task} -v {verbosity} -s {sig_mode}
     kill_cmd: qdel {job_id}
     max_cores: 40
