@@ -1,0 +1,80 @@
+#!/usr/bin/env sos-runner
+#fileformat=SOS1.0
+
+[train_model]
+
+bash: container='/mnt/mfs/statgen/Anmol/deepsea_latest.sif'
+
+    python3.7 /mnt/mfs/statgen/Anmol/training_files/tutorial/run_neuron_full_tutorial.py 
+
+[make_annot]
+
+#path to feature list file
+parameter: feature_list = str
+#path to trained model location
+parameter: model = str
+#path to output directory
+parameter: output_tsv = str
+#number of features
+parameter: num_features = int
+#VCF files for Reference Genome [Give in this format: tutorial_1000G_chr_, as program will loop over chromsomes and add vcf extension automatically]
+parameter: vcf = str()
+
+
+python3: container='/mnt/mfs/statgen/Anmol/deepsea_latest.sif',expand = "${ }"
+
+    from selene_sdk.utils import load_path
+    from selene_sdk.utils import parse_configs_and_run
+    from selene_sdk.predict import AnalyzeSequences
+    from selene_sdk.sequences import Genome
+    from selene_sdk.utils import load_features_list
+    from selene_sdk.utils import NonStrandSpecific
+    from selene_sdk.utils import DeeperDeepSEA
+    import glob
+    import os
+    distinct_features = load_features_list('${feature_list}')
+
+    model_predict = AnalyzeSequences(
+    NonStrandSpecific(DeeperDeepSEA(1000,${num_features})),
+    '${model}'+"/best_model.pth.tar",
+    sequence_length=1000,
+    features=distinct_features,
+    reference_sequence=Genome("/mnt/mfs/statgen/Anmol/training_files/male.hg19.fasta"),
+    use_cuda=False # update this to False if you do not have CUDA on your machine.
+    )
+
+    for i in range(1,23):
+        model_predict.variant_effect_prediction(
+        ${vcf}+str(i)+".vcf",
+        save_data=["abs_diffs"],  # only want to save the absolute diff score data
+        output_dir='${output_tsv}')
+
+[format_annot]
+
+#path to tsv files [Give in this format: tutorial_1000G_chr_, as program will loop over chromsomes and add tsv extension automatically]
+parameter: tsv = path()
+#path to output file directory
+parameter: annot_files = path()
+
+R: expand = "${ }", container="/mnt/mfs/statgen/Anmol/r-packages.sif"
+    library(data.table)
+    library(tidyverse)
+    data = fread(paste0("${tsv}",22,"_abs_diffs.tsv"))
+    features = colnames(data)[9:ncol(data)]
+    features = data.frame(features)
+    features$encoding = paste0("feat_",seq(1,nrow(features)))
+    fwrite(features,paste0("${annot_files}","/feature_encoding.txt"),quote=F,sep="\t",row.names=F,col.names=T)
+    for (i in seq(1,22)){
+    data = fread(paste0("${tsv}",i,"_abs_diffs.tsv"))
+    data_2 = select(data,-seq(4,8))
+    base = data.frame(base=rep(1,nrow(data_2)))
+    fwrite(base,paste0("${annot_files}","/base_chr_",i,".annot.gz"),quote=F,sep="\t",row.names=F,col.names=T)
+    for (j in seq(4,ncol(data_2))){
+    data_3 = select(data_2,c(1,2,3,j))
+    colnames(data_3) = c("CHR","BP","SNP",paste0("feat_",j))
+    data_3 = setorder(data_3,BP)
+    data_3 = select(data_3,-c("CHR","BP","SNP"))
+    fwrite(data_3,paste0("${annot_files}","/feat_",j,"_chr_",i,".annot.gz"),quote=F,sep="\t",row.names=F,col.names=T)
+    }
+    }
+

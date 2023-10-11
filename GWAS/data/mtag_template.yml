@@ -1,0 +1,10 @@
+# mtag summary statistics template
+chr: CHR
+bpos: POS 
+a2: A0 # The other allele
+a1: A1 #A1 needs to be the effect allele
+freq: freq
+beta: BETA
+se: SE
+pval: P
+n: n
