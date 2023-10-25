@@ -24,9 +24,9 @@ hosts:
       #$ -cwd
       #$ -S /bin/bash
       #{partition}
-      module load Singularity
+      source ~/mamba_activate.sh
+      module load Singularity/3.11.4
       module load R/4.2
-      export PATH=$HOME/miniconda3/bin:$PATH
       export SINGULARITY_BIND="/mnt/mfs/:/mnt/mfs/,/mnt/vast/:/mnt/vast/"
       set -e
       cd {cur_dir}
