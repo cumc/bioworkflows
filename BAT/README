@@ -1,0 +1,22 @@
+# Biobank Association Tools (BAT)
+
+## 1. Data processing
+### 1.1 Genotype
+ 	- VCF quality control [bcftools]
+ 	- Principal Component Analysis (PCA) [fastGWA]
+ 	- Kinship Analysis [PLINK]
+### 1.2 Phenotype
+	- Phenotype selection UK Biobank (FIXME: not sure about this because we only have the example of hearing impairment)
+## 2. Genome-wide association testing (GWAS)
+	- LMM workflow (Regenie, BoltLMM, SAIGE)
+## 3. Burden and rare-variant aggregate testing
+	- Annotation of variants (Annovar & VEP)
+	- Creation of burden files
+	- LMM workflow (specifically for rare-variants)
+## 4. Fine mapping
+	- LD clumping (PLINK)
+	- Region extraction (FIXME: this pipeline needs upgrades)
+	- SuSie RSS
+## 5. Data visualization
+	- Hudson plot
+	- Other ways of visualizing data
