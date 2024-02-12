@@ -1,1 +1,1 @@
-# [obsolete] this workflow will soon be replaced by TWAS workflows in molecular phenotype analysis repo
+# [obsolete] this workflow is now replaced by multivariate TWAS found in this repo: https://cumc.github.io/xqtl-pipeline/ Users should adopt the new resource. These codes are kept here for book keeping purpose.
